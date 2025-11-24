@@ -24,6 +24,9 @@
   <div class="menu-item" onclick="showSection('tension', this)">
     ⚡ Barre de tension
   </div>
+  <div class="menu-item" onclick="showSection('quota', this)">
+    📊 Quota
+  </div>
   <div class="menu-item front-link" onclick="openFront()">
     🎬 Voir le Front
   </div>
@@ -46,6 +49,7 @@
     📤 Cliquez ici pour uploader une image
     <input id="fileInput" type="file" accept="image/*">
   </div>
+  <div id="uploadMessage" class="msg"></div>
 
   <!-- SECTION : VISIBLES -->
   <div id="section-visible" class="section active">
@@ -92,6 +96,32 @@
 
       <button class="btn primary" onclick="changePassword()">Mettre à jour</button>
       <div id="pwdMessage" class="msg"></div>
+    </div>
+  </div>
+
+  <!-- SECTION : QUOTA -->
+  <div id="section-quota" class="section">
+    <div class="section-title">Quota</div>
+    <div class="settings-card">
+      <div class="quota-row">
+        <div>
+          <div class="quota-label">Quota effectif</div>
+          <div id="quotaValue" class="quota-value">—</div>
+        </div>
+        <div>
+          <div class="quota-label">Consommation</div>
+          <div id="quotaUsage" class="quota-value">—</div>
+        </div>
+        <div>
+          <div class="quota-label">% utilisé</div>
+          <div class="progress">
+            <div id="quotaProgress" class="progress-bar" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <p class="help-text">Le quota est défini par le super admin (GodMode). Contactez-le pour toute modification.</p>
+      <div id="quotaMessage" class="msg"></div>
     </div>
   </div>
 

@@ -14,9 +14,12 @@ const PUBLIC_DIR = path.join(__dirname, "public");
 const DATA_DIR = path.join(__dirname, "data");
 const TENANTS_DIR = path.join(__dirname, "tenants");
 const FRONT_FILE = path.join(PUBLIC_DIR, "front", "index.html");
+const GLOBAL_FILE = path.join(DATA_DIR, "global.json");
+const DEFAULT_GLOBAL = { defaultQuotaMB: 100 };
 const DEFAULT_CONFIG = {
   tensionEnabled: true,
-  tensionColors: ["green", "yellow", "orange", "red", "black"]
+  tensionColors: ["green", "yellow", "orange", "red", "black"],
+  quotaMB: null
 };
 
 app.use(express.json());
@@ -39,6 +42,7 @@ const SESSIONS_FILE = path.join(DATA_DIR, "sessions.json");
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
 if (!fs.existsSync(USERS_FILE)) fs.writeFileSync(USERS_FILE, "[]");
 if (!fs.existsSync(SESSIONS_FILE)) fs.writeFileSync(SESSIONS_FILE, "{}");
+if (!fs.existsSync(GLOBAL_FILE)) fs.writeFileSync(GLOBAL_FILE, JSON.stringify(DEFAULT_GLOBAL, null, 2));
 if (!fs.existsSync(TENANTS_DIR)) fs.mkdirSync(TENANTS_DIR);
 
 function loadConfig(tenantId) {
@@ -56,6 +60,47 @@ function loadConfig(tenantId) {
     console.error("Failed to read config, using defaults", err);
     return { ...DEFAULT_CONFIG };
   }
+}
+
+function getGlobalConfig() {
+  if (!fs.existsSync(GLOBAL_FILE)) {
+    fs.writeFileSync(GLOBAL_FILE, JSON.stringify(DEFAULT_GLOBAL, null, 2));
+    return { ...DEFAULT_GLOBAL };
+  }
+
+  try {
+    const data = JSON.parse(fs.readFileSync(GLOBAL_FILE, "utf8"));
+    return { ...DEFAULT_GLOBAL, ...data };
+  } catch (err) {
+    console.error("Failed to read global config, using defaults", err);
+    return { ...DEFAULT_GLOBAL };
+  }
+}
+
+function getTenantQuota(tenantId) {
+  const globalConfig = getGlobalConfig();
+  const config = loadConfig(tenantId);
+  const hasOverride = Object.prototype.hasOwnProperty.call(config, "quotaMB") && config.quotaMB !== null && config.quotaMB !== undefined;
+
+  let quotaMB = hasOverride ? config.quotaMB : globalConfig.defaultQuotaMB;
+  if (quotaMB === null || quotaMB === undefined || typeof quotaMB !== "number" || Number.isNaN(quotaMB)) {
+    quotaMB = globalConfig.defaultQuotaMB;
+  }
+
+  return { quotaMB, override: hasOverride };
+}
+
+function getTenantUsageBytes(tenantId) {
+  const dir = path.join(TENANTS_DIR, tenantId, "images");
+  if (!fs.existsSync(dir)) return 0;
+
+  return fs.readdirSync(dir).reduce((acc, file) => {
+    try {
+      return acc + fs.statSync(path.join(dir, file)).size;
+    } catch {
+      return acc;
+    }
+  }, 0);
 }
 
 function saveConfig(tenantId, config) {
@@ -146,12 +191,7 @@ app.post("/api/signup", async (req, res) => {
   fs.mkdirSync(path.join(dir, "images"));
   fs.writeFileSync(path.join(dir, "order.json"), "[]");
   fs.writeFileSync(path.join(dir, "hidden.json"), "[]");
-  fs.writeFileSync(path.join(dir, "config.json"),
-    JSON.stringify({
-      tensionEnabled: true,
-      tensionColors: ["green", "yellow", "orange", "red", "black"]
-    }, null, 2)
-  );
+  fs.writeFileSync(path.join(dir, "config.json"), JSON.stringify(DEFAULT_CONFIG, null, 2));
 
   const hash = await bcrypt.hash(password, 10);
 
@@ -303,11 +343,28 @@ app.post("/api/:tenantId/images/upload", requireLogin, upload.single("image"), (
   if (tenantId !== req.session.tenantId)
     return res.status(403).json({ error: "Forbidden tenant" });
 
+  if (!req.file) {
+    return res.status(400).json({ error: "No file uploaded" });
+  }
+
   const base = path.join(TENANTS_DIR, tenantId);
-  const order = JSON.parse(fs.readFileSync(path.join(base, "order.json")));
+  const orderFile = path.join(base, "order.json");
+  const uploadedPath = req.file.path || path.join(base, "images", req.file.filename);
+
+  const { quotaMB } = getTenantQuota(tenantId);
+  const quotaBytes = quotaMB * 1024 * 1024;
+  const usageBytes = getTenantUsageBytes(tenantId);
+  const projectedUsage = usageBytes + (req.file.size || 0);
+
+  if (projectedUsage > quotaBytes) {
+    if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath);
+    return res.status(400).json({ error: "Quota exceeded" });
+  }
+
+  const order = JSON.parse(fs.readFileSync(orderFile));
 
   order.push(req.file.filename);
-  fs.writeFileSync(path.join(base, "order.json"), JSON.stringify(order, null, 2));
+  fs.writeFileSync(orderFile, JSON.stringify(order, null, 2));
 
   res.json({ success: true });
 });
@@ -335,6 +392,48 @@ app.get("/api/:tenantId/config", requireLogin, (req, res) => {
 
   const config = loadConfig(tenantId);
   res.json(config);
+});
+
+app.get("/api/:tenantId/quota", requireLogin, (req, res) => {
+  const tenantId = req.params.tenantId;
+
+  if (tenantId !== req.session.tenantId)
+    return res.status(403).json({ error: "Forbidden tenant" });
+
+  const { quotaMB, override } = getTenantQuota(tenantId);
+  const usageBytes = getTenantUsageBytes(tenantId);
+  const usageMB = Number((usageBytes / 1024 / 1024).toFixed(2));
+
+  res.json({ quotaMB, usage: usageMB, override });
+});
+
+app.put("/api/:tenantId/quota", requireLogin, (req, res) => {
+  const tenantId = req.params.tenantId;
+  const { quotaMB } = req.body;
+
+  if (tenantId !== req.session.tenantId)
+    return res.status(403).json({ error: "Forbidden tenant" });
+
+  const config = loadConfig(tenantId);
+
+  if (quotaMB === null || quotaMB === undefined || quotaMB === "") {
+    config.quotaMB = null;
+  } else if (typeof quotaMB === "number" && quotaMB > 0) {
+    config.quotaMB = quotaMB;
+  } else {
+    return res.status(400).json({ error: "quotaMB must be a positive number or null" });
+  }
+
+  saveConfig(tenantId, config);
+  const updated = getTenantQuota(tenantId);
+  const usageBytes = getTenantUsageBytes(tenantId);
+
+  res.json({
+    success: true,
+    quotaMB: updated.quotaMB,
+    override: updated.override,
+    usage: Number((usageBytes / 1024 / 1024).toFixed(2))
+  });
 });
 
 app.put("/api/:tenantId/config/tension", requireLogin, (req, res) => {
@@ -431,6 +530,8 @@ app.get("/api/godmode/users", requireGodMode, (req, res) => {
 
     let quota = 0;
     let count = 0;
+    let effectiveQuotaMB = null;
+    let override = false;
 
     if (fs.existsSync(imagesDir)) {
       const files = fs.readdirSync(imagesDir);
@@ -443,10 +544,18 @@ app.get("/api/godmode/users", requireGodMode, (req, res) => {
       });
     }
 
+    if (u.tenantId) {
+      const tq = getTenantQuota(u.tenantId);
+      effectiveQuotaMB = tq.quotaMB;
+      override = tq.override;
+    }
+
     return {
       ...u,
       imageCount: count,
-      quotaUsedBytes: quota
+      quotaUsedBytes: quota,
+      quotaMB: effectiveQuotaMB,
+      quotaOverride: override
     };
   });
 
@@ -467,6 +576,53 @@ app.put("/api/godmode/toggle", requireGodMode, (req, res) => {
   saveUsers(users);
 
   res.json({ success: true });
+});
+
+app.get("/api/godmode/global-quota", requireGodMode, (req, res) => {
+  const globalConfig = getGlobalConfig();
+  res.json({ defaultQuotaMB: globalConfig.defaultQuotaMB });
+});
+
+app.put("/api/godmode/global-quota", requireGodMode, (req, res) => {
+  const { defaultQuotaMB } = req.body;
+
+  if (typeof defaultQuotaMB !== "number" || Number.isNaN(defaultQuotaMB) || defaultQuotaMB <= 0) {
+    return res.status(400).json({ error: "defaultQuotaMB must be a positive number" });
+  }
+
+  const data = { defaultQuotaMB };
+  fs.writeFileSync(GLOBAL_FILE, JSON.stringify(data, null, 2));
+  res.json({ success: true, defaultQuotaMB });
+});
+
+app.put("/api/godmode/tenant-quota", requireGodMode, (req, res) => {
+  const { tenantId, quotaMB } = req.body;
+
+  if (!tenantId) return res.status(400).json({ error: "Missing tenantId" });
+
+  const tenantDir = path.join(TENANTS_DIR, tenantId);
+  if (!fs.existsSync(tenantDir)) return res.status(404).json({ error: "Tenant not found" });
+
+  const config = loadConfig(tenantId);
+
+  if (quotaMB === null || quotaMB === undefined || quotaMB === "") {
+    config.quotaMB = null;
+  } else if (typeof quotaMB === "number" && quotaMB > 0) {
+    config.quotaMB = quotaMB;
+  } else {
+    return res.status(400).json({ error: "quotaMB must be a positive number or null" });
+  }
+
+  saveConfig(tenantId, config);
+  const updated = getTenantQuota(tenantId);
+  const usageBytes = getTenantUsageBytes(tenantId);
+
+  res.json({
+    success: true,
+    quotaMB: updated.quotaMB,
+    override: updated.override,
+    usage: Number((usageBytes / 1024 / 1024).toFixed(2))
+  });
 });
 
 app.delete("/api/godmode/user/:email", requireGodMode, (req, res) => {

@@ -22,8 +22,13 @@ const currentPwdInput = document.getElementById("currentPassword");
 const newPwdInput = document.getElementById("newPassword");
 const confirmPwdInput = document.getElementById("confirmPassword");
 const pwdMessage = document.getElementById("pwdMessage");
+const uploadMessage = document.getElementById("uploadMessage");
 const tensionToggle = document.getElementById("tensionToggle");
 const tensionMessage = document.getElementById("tensionMessage");
+const quotaValue = document.getElementById("quotaValue");
+const quotaUsage = document.getElementById("quotaUsage");
+const quotaProgress = document.getElementById("quotaProgress");
+const quotaMessage = document.getElementById("quotaMessage");
 
 let imageOrder = [];
 let tenantConfig = { tensionEnabled: true };
@@ -89,12 +94,20 @@ async function loadImages() {
 
   } catch (err) {
     console.error("loadImages ERROR:", err);
+  } finally {
+    loadQuota();
   }
 }
 
 //---------------------------------------------------------
 //  UPLOAD
 //---------------------------------------------------------
+function setUploadMessage(text, type = "error") {
+  if (!uploadMessage) return;
+  uploadMessage.textContent = text;
+  uploadMessage.className = `msg ${type}`;
+}
+
 fileInput.addEventListener("change", async () => {
   const file = fileInput.files[0];
   if (!file) return;
@@ -102,13 +115,38 @@ fileInput.addEventListener("change", async () => {
   const form = new FormData();
   form.append("image", file);
 
-  await fetch(`${API}/api/${tenantId}/images/upload`, {
-    method: "POST",
-    headers: AUTH_HEADERS,
-    body: form
-  });
+  try {
+    const res = await fetch(`${API}/api/${tenantId}/images/upload`, {
+      method: "POST",
+      headers: AUTH_HEADERS,
+      body: form
+    });
 
-  loadImages();
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 400 && data.error === "Quota exceeded") {
+        setQuotaMessage("Quota dépassé : impossible d'ajouter cette image.");
+        setUploadMessage("Quota dépassé : upload impossible.");
+      } else {
+        const msg = data.error || "Échec de l'upload.";
+        setQuotaMessage(msg);
+        setUploadMessage(msg);
+      }
+      fileInput.value = "";
+      loadQuota();
+      return;
+    }
+
+    setQuotaMessage("");
+    setUploadMessage("Image uploadée avec succès.", "success");
+    fileInput.value = "";
+    loadImages();
+  } catch (err) {
+    console.error("Upload ERROR:", err);
+    setQuotaMessage("Upload impossible (réseau).");
+    setUploadMessage("Upload impossible (réseau).");
+    fileInput.value = "";
+  }
 });
 
 //---------------------------------------------------------
@@ -295,3 +333,40 @@ function openFront() {
 //---------------------------------------------------------
 loadImages();
 loadTenantConfig();
+
+//---------------------------------------------------------
+//  QUOTA
+//---------------------------------------------------------
+function setQuotaMessage(text, type = "error") {
+  if (!quotaMessage) return;
+  quotaMessage.textContent = text;
+  quotaMessage.className = `msg ${type}`;
+}
+
+async function loadQuota() {
+  if (!quotaValue || !quotaUsage || !quotaProgress) return;
+
+  try {
+    const res = await fetch(`${API}/api/${tenantId}/quota`, {
+      headers: AUTH_HEADERS
+    });
+    if (!res.ok) throw new Error("Erreur quota");
+    const data = await res.json();
+
+    quotaValue.textContent = `${data.quotaMB} Mo${data.override ? " (perso)" : ""}`;
+    quotaUsage.textContent = `${data.usage} Mo`;
+    const percent = data.quotaMB > 0 ? Math.min(100, (data.usage / data.quotaMB) * 100) : 0;
+    quotaProgress.style.width = `${percent}%`;
+    setQuotaMessage("");
+  } catch (err) {
+    console.error("loadQuota ERROR:", err);
+    quotaValue.textContent = "—";
+    quotaUsage.textContent = "—";
+    quotaProgress.style.width = "0%";
+    setQuotaMessage("Impossible de charger le quota.");
+  }
+}
+
+async function saveTenantQuota() {
+  // Non modifiable côté admin
+}

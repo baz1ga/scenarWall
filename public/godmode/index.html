@@ -19,6 +19,9 @@
   <div class="menu-item active" onclick="showSection('users', this)">
     👥 Utilisateurs
   </div>
+  <div class="menu-item" onclick="showSection('quota', this)">
+    📊 Quotas
+  </div>
   <div class="menu-item" onclick="showSection('password', this)">
     🔑 Changer mon mot de passe
   </div>
@@ -30,13 +33,19 @@
 <div class="content">
   <div id="section-users" class="section active">
     <div class="section-title">Utilisateurs</div>
+    <div class="section-toolbar">
+      <label class="toggle-row">
+        <input type="checkbox" id="filterInactiveUsers">
+        <span>Masquer les inactifs</span>
+      </label>
+    </div>
     <table>
       <thead>
         <tr>
           <th>Email</th>
           <th>Tenant</th>
           <th>Images</th>
-          <th>Quota utilisé</th>
+          <th>Usage</th>
           <th>Dernière connexion</th>
           <th>Statut</th>
           <th>Actions</th>
@@ -44,6 +53,37 @@
       </thead>
 
       <tbody id="user-table"></tbody>
+    </table>
+  </div>
+
+  <div id="section-quota" class="section">
+    <div class="section-title">Quota global & tenants</div>
+    <div class="settings-card">
+      <label for="globalQuotaInput">Quota global par défaut (Mo)</label>
+      <div class="inline-field">
+        <input type="number" id="globalQuotaInput" min="1" step="1" placeholder="Ex: 100">
+        <button class="btn primary" onclick="saveGlobalQuota()">Mettre à jour</button>
+      </div>
+      <div id="globalQuotaMessage" class="msg"></div>
+    </div>
+
+    <div class="section-toolbar">
+      <label class="toggle-row">
+        <input type="checkbox" id="filterInactiveQuota">
+        <span>Masquer les inactifs</span>
+      </label>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Usage</th>
+          <th>Statut</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="quota-user-table"></tbody>
     </table>
   </div>
 
