@@ -23,6 +23,46 @@ body {
   border-right: 2px solid #333;
 }
 
+.sidebar-donation {
+  margin-top: auto;
+  padding: 14px 12px;
+  background: #1f1f1f;
+  border: 1px solid #2f2f2f;
+  border-radius: 8px;
+  color: #d9ffe0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.sw-donation-box .label {
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.sw-donation-box .small {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: #bce7c6;
+}
+
+.sw-donation-box .cta {
+  display: inline-block;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #4caf50;
+  color: #0b0b0b;
+  font-weight: bold;
+  text-decoration: none;
+  font-size: 13px;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.sw-donation-box .cta:hover {
+  background: #58d45a;
+}
+
 .sidebar-footer {
   margin-top: auto;
   padding-top: 18px;
