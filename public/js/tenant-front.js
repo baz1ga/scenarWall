@@ -84,9 +84,34 @@ document.getElementById("carousel-next").addEventListener("click", () => {
 // 7. Barre de tension
 // ---------------------------------------------
 const items = document.querySelectorAll(".tension-item");
+const tensionBar = document.querySelector(".tension-bar");
+let tensionEnabled = true;
+
+function setDefaultTension() {
+  if (!items.length) return;
+  items.forEach(i => i.classList.remove("selected"));
+  items[0].classList.add("selected");
+  zone1.style.borderColor = items[0].dataset.color;
+}
+
+function clearTension() {
+  items.forEach(i => i.classList.remove("selected"));
+  zone1.style.borderColor = "transparent";
+}
+
+function applyTensionState(enabled) {
+  tensionEnabled = enabled !== false;
+  if (tensionBar) tensionBar.classList.toggle("disabled", !tensionEnabled);
+  if (tensionEnabled) {
+    setDefaultTension();
+  } else {
+    clearTension();
+  }
+}
 
 items.forEach(item => {
   item.addEventListener("click", () => {
+    if (!tensionEnabled) return;
 
     // reset visuel
     items.forEach(i => i.classList.remove("selected"));
@@ -117,10 +142,16 @@ items.forEach(item => {
 // ---------------------------------------------
 // 8. Init tension
 // ---------------------------------------------
-function initTension() {
-  const first = items[0];
-  first.classList.add("selected");
-  zone1.style.borderColor = first.dataset.color;
+async function initTension() {
+  try {
+    const res = await fetch(`/t/${TENANT}/api/config`);
+    if (!res.ok) throw new Error("Config fetch failed");
+    const config = await res.json();
+    applyTensionState(config.tensionEnabled);
+  } catch (err) {
+    console.warn("Using default tension config", err);
+    applyTensionState(true);
+  }
 }
 
 // ---------------------------------------------

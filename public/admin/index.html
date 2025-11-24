@@ -17,9 +17,12 @@
   <div class="menu-item active" onclick="showSection('visible', this)">
     📁 Images visibles
   </div>
-  
+
   <div class="menu-item" onclick="showSection('hidden', this)">
     🗂️ Images cachées
+  </div>
+  <div class="menu-item" onclick="showSection('tension', this)">
+    ⚡ Barre de tension
   </div>
   <div class="menu-item front-link" onclick="openFront()">
     🎬 Voir le Front
@@ -54,6 +57,24 @@
   <div id="section-hidden" class="section">
     <div class="section-title">Images cachées</div>
     <div id="list-hidden"></div>
+  </div>
+
+  <!-- SECTION : TENSION BAR -->
+  <div id="section-tension" class="section">
+    <div class="section-title">Barre de tension</div>
+    <div class="settings-card">
+      <div class="toggle-row">
+        <div>
+          <label for="tensionToggle">Afficher la barre de tension</label>
+          <p class="help-text">Permet d'activer ou masquer la colonne de sélection de tension sur le front.</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="tensionToggle">
+          <span class="slider round"></span>
+        </label>
+      </div>
+      <div id="tensionMessage" class="msg"></div>
+    </div>
   </div>
 
   <!-- SECTION : PASSWORD -->

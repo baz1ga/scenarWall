@@ -317,6 +317,10 @@ body.front {
   flex-direction: column;
 }
 
+.tension-bar.disabled {
+  display: none;
+}
+
 .tension-item {
   flex: 1;
   display: flex;
