@@ -82,22 +82,53 @@ document.getElementById("carousel-next").onclick = () => {
 // ---------------------------------------------------------
 const items = document.querySelectorAll(".tension-item");
 const zone1 = document.getElementById("zone1");
+const tensionBar = document.querySelector(".tension-bar");
+let tensionEnabled = true;
+
+function setDefaultTension() {
+  if (!items.length) return;
+  items.forEach(i => i.classList.remove("selected"));
+  items[0].classList.add("selected");
+  zone1.style.borderColor = items[0].dataset.color;
+}
+
+function clearTension() {
+  items.forEach(i => i.classList.remove("selected"));
+  zone1.style.borderColor = "transparent";
+}
+
+function applyTensionState(enabled) {
+  tensionEnabled = enabled !== false;
+  if (tensionBar) tensionBar.classList.toggle("disabled", !tensionEnabled);
+  if (tensionEnabled) {
+    setDefaultTension();
+  } else {
+    clearTension();
+  }
+}
 
 items.forEach(item => {
   item.addEventListener("click", () => {
+    if (!tensionEnabled) return;
     items.forEach(i => i.classList.remove("selected"));
     item.classList.add("selected");
     zone1.style.borderColor = item.dataset.color;
   });
 });
 
-// état par défaut : vert
-(function initTension() {
-  items[0].classList.add("selected");
-  zone1.style.borderColor = items[0].dataset.color;
-})();
+async function loadTensionConfig() {
+  try {
+    const res = await fetch(`/t/${TENANT}/api/config`);
+    if (!res.ok) throw new Error("Config fetch failed");
+    const data = await res.json();
+    applyTensionState(data.tensionEnabled);
+  } catch (err) {
+    console.warn("Using default tension config", err);
+    applyTensionState(true);
+  }
+}
 
 // ---------------------------------------------------------
 // INIT
 // ---------------------------------------------------------
-loadCarouselImages();
+loadTensionConfig().then(loadCarouselImages);

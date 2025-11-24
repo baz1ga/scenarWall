@@ -22,8 +22,11 @@ const currentPwdInput = document.getElementById("currentPassword");
 const newPwdInput = document.getElementById("newPassword");
 const confirmPwdInput = document.getElementById("confirmPassword");
 const pwdMessage = document.getElementById("pwdMessage");
+const tensionToggle = document.getElementById("tensionToggle");
+const tensionMessage = document.getElementById("tensionMessage");
 
 let imageOrder = [];
+let tenantConfig = { tensionEnabled: true };
 
 //---------------------------------------------------------
 //  LOAD IMAGES
@@ -225,6 +228,62 @@ async function changePassword() {
 }
 
 //---------------------------------------------------------
+//  TENSION BAR CONFIG
+//---------------------------------------------------------
+function setTensionMessage(text, type = "error") {
+  if (!tensionMessage) return;
+  tensionMessage.textContent = text;
+  tensionMessage.className = `msg ${type}`;
+}
+
+async function loadTenantConfig() {
+  if (!tensionToggle) return;
+
+  try {
+    const res = await fetch(`${API}/api/${tenantId}/config`, { headers: AUTH_HEADERS });
+    if (!res.ok) throw new Error("Fetch config failed");
+    tenantConfig = await res.json();
+    tensionToggle.checked = tenantConfig.tensionEnabled !== false;
+    setTensionMessage("");
+  } catch (err) {
+    console.error("loadTenantConfig ERROR:", err);
+    setTensionMessage("Impossible de charger la configuration.");
+  }
+}
+
+async function toggleTension(enabled) {
+  if (!tensionToggle) return;
+
+  try {
+    const res = await fetch(`${API}/api/${tenantId}/config/tension`, {
+      method: "PUT",
+      headers: {
+        ...AUTH_HEADERS,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ tensionEnabled: enabled })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || "Échec de la mise à jour");
+    }
+
+    tenantConfig = data.config;
+    setTensionMessage(enabled ? "Barre de tension activée." : "Barre de tension désactivée.", "success");
+  } catch (err) {
+    console.error("toggleTension ERROR:", err);
+    setTensionMessage(err.message || "Erreur réseau.");
+    tensionToggle.checked = tenantConfig.tensionEnabled !== false;
+  }
+}
+
+if (tensionToggle) {
+  tensionToggle.addEventListener("change", () => toggleTension(tensionToggle.checked));
+}
+
+//---------------------------------------------------------
 //  FRONT TENANT
 //---------------------------------------------------------
 function openFront() {
@@ -235,3 +294,4 @@ function openFront() {
 //  INIT
 //---------------------------------------------------------
 loadImages();
+loadTenantConfig();

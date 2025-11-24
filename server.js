@@ -14,6 +14,10 @@ const PUBLIC_DIR = path.join(__dirname, "public");
 const DATA_DIR = path.join(__dirname, "data");
 const TENANTS_DIR = path.join(__dirname, "tenants");
 const FRONT_FILE = path.join(PUBLIC_DIR, "front", "index.html");
+const DEFAULT_CONFIG = {
+  tensionEnabled: true,
+  tensionColors: ["green", "yellow", "orange", "red", "black"]
+};
 
 app.use(express.json());
 app.use(express.static(PUBLIC_DIR)); // serve login, signup, front, admin, godmode UIs
@@ -36,6 +40,28 @@ if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
 if (!fs.existsSync(USERS_FILE)) fs.writeFileSync(USERS_FILE, "[]");
 if (!fs.existsSync(SESSIONS_FILE)) fs.writeFileSync(SESSIONS_FILE, "{}");
 if (!fs.existsSync(TENANTS_DIR)) fs.mkdirSync(TENANTS_DIR);
+
+function loadConfig(tenantId) {
+  const file = path.join(TENANTS_DIR, tenantId, "config.json");
+
+  if (!fs.existsSync(file)) {
+    fs.writeFileSync(file, JSON.stringify(DEFAULT_CONFIG, null, 2));
+    return { ...DEFAULT_CONFIG };
+  }
+
+  try {
+    const data = JSON.parse(fs.readFileSync(file, "utf8"));
+    return { ...DEFAULT_CONFIG, ...data };
+  } catch (err) {
+    console.error("Failed to read config, using defaults", err);
+    return { ...DEFAULT_CONFIG };
+  }
+}
+
+function saveConfig(tenantId, config) {
+  const file = path.join(TENANTS_DIR, tenantId, "config.json");
+  fs.writeFileSync(file, JSON.stringify({ ...DEFAULT_CONFIG, ...config }, null, 2));
+}
 
 //------------------------------------------------------------
 //  AUTH HELPERS
@@ -300,6 +326,35 @@ app.put("/api/:tenantId/images/order", requireLogin, (req, res) => {
   res.json({ success: true });
 });
 
+// TENANT CONFIG
+app.get("/api/:tenantId/config", requireLogin, (req, res) => {
+  const tenantId = req.params.tenantId;
+
+  if (tenantId !== req.session.tenantId)
+    return res.status(403).json({ error: "Forbidden tenant" });
+
+  const config = loadConfig(tenantId);
+  res.json(config);
+});
+
+app.put("/api/:tenantId/config/tension", requireLogin, (req, res) => {
+  const tenantId = req.params.tenantId;
+  const { tensionEnabled } = req.body;
+
+  if (tenantId !== req.session.tenantId)
+    return res.status(403).json({ error: "Forbidden tenant" });
+
+  if (typeof tensionEnabled !== "boolean") {
+    return res.status(400).json({ error: "tensionEnabled must be a boolean" });
+  }
+
+  const config = loadConfig(tenantId);
+  config.tensionEnabled = tensionEnabled;
+  saveConfig(tenantId, config);
+
+  res.json({ success: true, config });
+});
+
 // HIDE
 app.put("/api/:tenantId/images/hide/:name", requireLogin, (req, res) => {
   const tenantId = req.params.tenantId;
@@ -469,6 +524,11 @@ app.get("/t/:tenantId/api/images", (req, res) => {
     }));
 
   res.json(files);
+});
+
+app.get("/t/:tenantId/api/config", (req, res) => {
+  const config = loadConfig(req.params.tenantId);
+  res.json(config);
 });
 //------------------------------------------------------------
 
