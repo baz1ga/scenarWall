@@ -209,6 +209,28 @@ input[type="file"] {
   color: #b5b5b5;
 }
 
+.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sortable::after {
+  content: "⇅";
+  font-size: 10px;
+  opacity: 0.4;
+  margin-left: 6px;
+}
+
+.sortable[data-sort-dir="asc"]::after {
+  content: "▲";
+  opacity: 0.8;
+}
+
+.sortable[data-sort-dir="desc"]::after {
+  content: "▼";
+  opacity: 0.8;
+}
+
 .section-toolbar {
   display: flex;
   justify-content: flex-end;
