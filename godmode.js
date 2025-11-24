@@ -1,12 +1,7 @@
 // =============================================
 // 🌐 CONFIG API
 // =============================================
-let API = "http://localhost:3100";
-
-// Si la page est servie depuis un vrai serveur (pas fichier local)
-if (location.protocol === "http:" || location.protocol === "https:") {
-  API = location.origin;
-}
+const API = getApiBase();
 // =============================================
 // 🔐 Vérification Admin + Chargement
 // =============================================

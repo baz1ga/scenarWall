@@ -2,7 +2,7 @@
 //  ADMIN.JS — Tenant-Aware Version (aligné server.js)
 //-----------------------------------------------------
 
-const API = "http://localhost:3100";
+const API = getApiBase();
 const token = getToken();
 const tenantId = getTenant();
 
