@@ -1,0 +1,10 @@
+{
+  "tensionEnabled": true,
+  "tensionColors": [
+    "green",
+    "yellow",
+    "orange",
+    "red",
+    "black"
+  ]
+}

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>ScenarWall – Connexion</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="front.css">
+  <script src="auth.js"></script>
+</head>
+
+<body>
+
+<div class="form-container">
+  <h1>Connexion</h1>
+
+  <label>Email</label>
+  <input id="email" type="email" placeholder="email@exemple.com">
+
+  <label>Mot de passe</label>
+  <input id="password" type="password" placeholder="Votre mot de passe">
+
+  <button onclick="login()">Connexion</button>
+
+  <div id="error" class="msg error"></div>
+
+  <p style="text-align:center; margin-top:10px;">
+    <a href="signup.html">Créer un compte</a>
+  </p>
+</div>
+
+<script>
+async function login() {
+  const err = document.getElementById("error");
+
+  // 🔧 on récupère d'abord les valeurs AVANT toute logique
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+
+  err.textContent = "";
+
+  if (!email || !password) {
+    err.textContent = "Veuillez remplir tous les champs.";
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      err.textContent = data.error || "Erreur";
+      return;
+    }
+
+    // stockage
+    setToken(data.token);
+    setTenant(data.tenantId);
+    setAdmin(data.admin);
+
+    // routage
+    if (data.admin) {
+      window.location.href = "godmode.html";
+    } else {
+      window.location.href = "admin.html";
+    }
+
+  } catch (e) {
+    err.textContent = "Erreur réseau";
+  }
+}
+</script>
+
+</body>
+</html>
