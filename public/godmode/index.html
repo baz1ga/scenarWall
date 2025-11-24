@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>ScenarWall – GodMode</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="stylesheet" href="/css/back.css">
+
+<script src="/js/common/config.js"></script>
+<script src="/js/common/auth.js"></script>
+<script src="/js/godmode.js"></script>
+
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="menu-title">👑 GodMode – Administration</div>
+  <div class="menu-item active" onclick="showSection('users', this)">
+    👥 Utilisateurs
+  </div>
+  <div class="menu-item" onclick="showSection('password', this)">
+    🔑 Changer mon mot de passe
+  </div>
+  <div class="menu-item logout" onclick="logout()">
+    🚪 Déconnexion
+  </div>
+</div>
+
+<div class="content">
+  <div id="section-users" class="section active">
+    <div class="section-title">Utilisateurs</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Tenant</th>
+          <th>Images</th>
+          <th>Quota utilisé</th>
+          <th>Dernière connexion</th>
+          <th>Statut</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody id="user-table"></tbody>
+    </table>
+  </div>
+
+  <div id="section-password" class="section">
+    <div class="section-title">Changer mon mot de passe</div>
+    <div class="settings-card">
+      <label>Mot de passe actuel</label>
+      <input type="password" id="currentPassword" placeholder="Votre mot de passe actuel">
+
+      <label>Nouveau mot de passe</label>
+      <input type="password" id="newPassword" placeholder="Au moins 8 caractères">
+
+      <label>Confirmation</label>
+      <input type="password" id="confirmPassword" placeholder="Confirmez le nouveau mot de passe">
+
+      <button class="btn primary" onclick="changePassword()">Mettre à jour</button>
+      <div id="pwdMessage" class="msg"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showSection(name, el) {
+    document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+    document.querySelectorAll(".menu-item").forEach(m => m.classList.remove("active"));
+
+    document.getElementById(`section-${name}`).classList.add("active");
+    el.classList.add("active");
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>ScenarWall – Administration</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/css/back.css">
+</head>
+<body>
+
+<!-- ---------------- SIDEBAR ---------------- -->
+<div class="sidebar">
+  <div class="menu-title">Administration</div>
+
+  <div class="menu-item active" onclick="showSection('visible', this)">
+    📁 Images visibles
+  </div>
+  
+  <div class="menu-item" onclick="showSection('hidden', this)">
+    🗂️ Images cachées
+  </div>
+  <div class="menu-item front-link" onclick="openFront()">
+    🎬 Voir le Front
+  </div>
+  <div class="menu-item" onclick="showSection('password', this)">
+    🔑 Changer mon mot de passe
+  </div>
+  <div class="menu-item logout" onclick="logout()">
+    🚪 Déconnexion
+  </div>
+
+</div>
+
+<!-- ---------------- MAIN CONTENT ---------------- -->
+<div class="content">
+
+  <!-- UPLOAD -->
+  <div id="uploadBox" class="upload-box" onclick="fileInput.click()">
+    📤 Cliquez ici pour uploader une image
+    <input id="fileInput" type="file" accept="image/*">
+  </div>
+
+  <!-- SECTION : VISIBLES -->
+  <div id="section-visible" class="section active">
+    <div class="section-title">Images visibles</div>
+    <div id="list-visible"></div>
+  </div>
+
+  <!-- SECTION : CACHÉES -->
+  <div id="section-hidden" class="section">
+    <div class="section-title">Images cachées</div>
+    <div id="list-hidden"></div>
+  </div>
+
+  <!-- SECTION : PASSWORD -->
+  <div id="section-password" class="section">
+    <div class="section-title">Changer mon mot de passe</div>
+    <div class="settings-card">
+      <label>Mot de passe actuel</label>
+      <input type="password" id="currentPassword" placeholder="Votre mot de passe actuel">
+
+      <label>Nouveau mot de passe</label>
+      <input type="password" id="newPassword" placeholder="Au moins 8 caractères">
+
+      <label>Confirmation</label>
+      <input type="password" id="confirmPassword" placeholder="Confirmez le nouveau mot de passe">
+
+      <button class="btn primary" onclick="changePassword()">Mettre à jour</button>
+      <div id="pwdMessage" class="msg"></div>
+    </div>
+  </div>
+
+</div>
+
+<script src="/js/common/config.js"></script>
+<script src="/js/common/auth.js"></script>
+<script src="/js/admin.js"></script>
+
+<script>
+  function showSection(name, el) {
+    document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+    document.querySelectorAll(".menu-item").forEach(m => m.classList.remove("active"));
+
+    document.getElementById(`section-${name}`).classList.add("active");
+    el.classList.add("active");
+
+    const uploadBox = document.getElementById("uploadBox");
+    if (uploadBox) {
+      uploadBox.style.display = (name === "visible" || name === "hidden") ? "block" : "none";
+    }
+  }
+</script>
+
+</body>
+</html>

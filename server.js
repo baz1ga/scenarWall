@@ -10,17 +10,29 @@ const multer = require("multer");
 
 const app = express();
 const PORT = 3100;
+const PUBLIC_DIR = path.join(__dirname, "public");
+const DATA_DIR = path.join(__dirname, "data");
+const TENANTS_DIR = path.join(__dirname, "tenants");
+const FRONT_FILE = path.join(PUBLIC_DIR, "front", "index.html");
 
 app.use(express.json());
-app.use(express.static(__dirname)); // serve login.html, signup.html, admin.html, godmode.html
+app.use(express.static(PUBLIC_DIR)); // serve login, signup, front, admin, godmode UIs
+
+// Legacy filenames → new structured paths
+app.get("/", (req, res) => res.redirect("/login.html"));
+app.get("/admin.html", (req, res) => res.redirect("/admin/"));
+app.get("/admin", (req, res) => res.redirect("/admin/"));
+app.get("/godmode.html", (req, res) => res.redirect("/godmode/"));
+app.get("/godmode", (req, res) => res.redirect("/godmode/"));
+app.get("/front.html", (req, res) => res.redirect("/front/"));
 
 //------------------------------------------------------------
 //  FILES & DIRECTORIES
 //------------------------------------------------------------
-const USERS_FILE = path.join(__dirname, "users.json");
-const SESSIONS_FILE = path.join(__dirname, "sessions.json");
-const TENANTS_DIR = path.join(__dirname, "tenants");
+const USERS_FILE = path.join(DATA_DIR, "users.json");
+const SESSIONS_FILE = path.join(DATA_DIR, "sessions.json");
 
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
 if (!fs.existsSync(USERS_FILE)) fs.writeFileSync(USERS_FILE, "[]");
 if (!fs.existsSync(SESSIONS_FILE)) fs.writeFileSync(SESSIONS_FILE, "{}");
 if (!fs.existsSync(TENANTS_DIR)) fs.mkdirSync(TENANTS_DIR);
@@ -58,6 +70,7 @@ function requireLogin(req, res, next) {
   if (!session) return res.status(401).json({ error: "Invalid session" });
 
   req.session = session;
+  req.token = token;
   next();
 }
 
@@ -168,6 +181,45 @@ app.post("/api/login", async (req, res) => {
 });
 
 //------------------------------------------------------------
+//  CHANGE PASSWORD (connected user)
+//------------------------------------------------------------
+app.post("/api/change-password", requireLogin, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: "Champs requis manquants" });
+  }
+
+  if (newPassword.length < 8) {
+    return res.status(400).json({ error: "Le nouveau mot de passe doit contenir au moins 8 caractères" });
+  }
+
+  const users = getUsers();
+  const user = users.find(u => u.email === req.session.email);
+
+  if (!user) return res.status(404).json({ error: "Utilisateur introuvable" });
+  if (user.disabled) return res.status(403).json({ error: "Compte désactivé" });
+
+  const isValid = await bcrypt.compare(currentPassword, user.password);
+  if (!isValid) return res.status(400).json({ error: "Ancien mot de passe invalide" });
+
+  const hash = await bcrypt.hash(newPassword, 10);
+  user.password = hash;
+  saveUsers(users);
+
+  // Invalide les autres sessions actives de cet utilisateur
+  const sessions = getSessions();
+  Object.keys(sessions).forEach(tok => {
+    if (sessions[tok].email === user.email && tok !== req.token) {
+      delete sessions[tok];
+    }
+  });
+  saveSessions(sessions);
+
+  res.json({ success: true });
+});
+
+//------------------------------------------------------------
 //  MULTER STORAGE
 //------------------------------------------------------------
 const storage = multer.diskStorage({
@@ -212,7 +264,7 @@ app.get("/api/tenant/:tenant/images", requireLogin, (req, res) => {
 
   const list = sorted.map(f => ({
     name: f,
-    url: `/tenants/${tenantId}/images/${f}`,
+    url: `/t/${tenantId}/images/${f}`,
     hidden: hidden.includes(f)
   }));
 
@@ -384,8 +436,7 @@ app.delete("/api/godmode/user/:email", requireGodMode, (req, res) => {
 // FRONT PUBLIC TENANTISÉ (pas besoin d'être loggé)
 // ---------------------------------------------
 app.get("/t/:tenantId/front", (req, res) => {
-  const filePath = path.join(__dirname, "front.html");
-  res.sendFile(filePath);
+  res.sendFile(FRONT_FILE);
 });
 
 app.get("/t/:tenantId/images/:name", (req, res) => {

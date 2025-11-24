@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>ScenarWall – Inscription</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/css/front.css">
+</head>
+
+<body>
+
+<div class="form-container">
+  <h1>Créer un compte</h1>
+
+  <label>Email</label>
+  <input id="email" type="email" placeholder="email@exemple.com">
+
+  <label>Mot de passe</label>
+  <input id="password" type="password" placeholder="Mot de passe">
+
+  <button onclick="signup()">Créer mon compte</button>
+
+  <div id="msg" class="msg"></div>
+
+  <p style="text-align:center; margin-top:10px;">
+    <a href="/login.html">Déjà un compte ?</a>
+  </p>
+</div>
+
+<script src="/js/common/auth.js"></script>
+<script>
+async function signup() {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const msg = document.getElementById("msg");
+
+  msg.textContent = "";
+
+  if (!email || !password) {
+    msg.textContent = "Merci de remplir tous les champs.";
+    msg.className = "msg error";
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      msg.textContent = data.error || "Erreur inconnue.";
+      msg.className = "msg error";
+      return;
+    }
+
+    msg.textContent = "Compte créé ! Redirection…";
+    msg.className = "msg success";
+
+    // IMPORTANT : enregistrer tenant et rediriger proprement
+    setTenant(data.tenantId);
+
+    setTimeout(() => {
+      window.location.href = "/admin/";
+    }, 1000);
+
+  } catch (err) {
+    console.error(err);
+    msg.textContent = "Erreur réseau.";
+    msg.className = "msg error";
+  }
+}
+</script>
+
+</body>
+</html>
