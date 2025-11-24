@@ -313,12 +313,21 @@ body.front {
 .tension-bar {
   width: 120px;
   height: 100vh;
-  display: flex;
+  /*display: flex;*/
   flex-direction: column;
 }
 
 .tension-bar.disabled {
   display: none;
+}
+/* Caché par défaut → anti-flash */
+.tension-bar {
+  display: none;
+}
+
+/* Si activée → le JS ajoute .enabled */
+.tension-bar.enabled {
+  display: flex;
 }
 
 .tension-item {

@@ -98,11 +98,15 @@ function clearTension() {
 }
 
 function applyTensionState(enabled) {
-  tensionEnabled = enabled !== false;
-  if (tensionBar) tensionBar.classList.toggle("disabled", !tensionEnabled);
-  if (tensionEnabled) {
+  const bar = document.querySelector(".tension-bar");
+
+  if (!bar) return;
+
+  if (enabled) {
+    bar.classList.add("enabled");
     setDefaultTension();
   } else {
+    bar.classList.remove("enabled");
     clearTension();
   }
 }
