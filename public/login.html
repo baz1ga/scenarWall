@@ -6,26 +6,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/css/front.css">
   <script src="/js/common/auth.js"></script>
+  <script src="/js/common/legal-footer.js" defer></script>
 </head>
 
 <body>
 
-<div class="form-container">
-  <h1>Connexion</h1>
+<div class="auth-page">
+  <div class="form-container">
+    <h1>Connexion</h1>
 
-  <label>Email</label>
-  <input id="email" type="email" placeholder="email@exemple.com">
+    <label>Email</label>
+    <input id="email" type="email" placeholder="email@exemple.com">
 
-  <label>Mot de passe</label>
-  <input id="password" type="password" placeholder="Votre mot de passe">
+    <label>Mot de passe</label>
+    <input id="password" type="password" placeholder="Votre mot de passe">
 
-  <button onclick="login()">Connexion</button>
+    <button onclick="login()">Connexion</button>
 
-  <div id="error" class="msg error"></div>
+    <div id="error" class="msg error"></div>
 
-  <p style="text-align:center; margin-top:10px;">
-    <a href="/signup.html">Créer un compte</a>
-  </p>
+    <p style="text-align:center; margin-top:10px;">
+      <a href="/signup.html">Créer un compte</a>
+    </p>
+  </div>
+
+  <div data-include="legal-footer" data-variant="auth"></div>
 </div>
 
 <script>
