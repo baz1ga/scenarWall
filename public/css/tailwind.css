@@ -695,6 +695,10 @@ video {
   height: 1.5rem;
 }
 
+.h-auto {
+  height: auto;
+}
+
 .h-full {
   height: 100%;
 }
@@ -741,6 +745,10 @@ video {
 
 .w-64 {
   width: 16rem;
+}
+
+.w-auto {
+  width: auto;
 }
 
 .w-full {
