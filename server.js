@@ -15,7 +15,7 @@ const DATA_DIR = path.join(__dirname, "data");
 const TENANTS_DIR = path.join(__dirname, "tenants");
 const FRONT_FILE = path.join(PUBLIC_DIR, "front", "index.html");
 const GLOBAL_FILE = path.join(DATA_DIR, "global.json");
-const DEFAULT_GLOBAL = { defaultQuotaMB: 100 };
+const DEFAULT_GLOBAL = { defaultQuotaMB: 100, apiBase: null };
 const DEFAULT_CONFIG = {
   tensionEnabled: true,
   tensionColors: ["green", "yellow", "orange", "red", "black"],
@@ -23,15 +23,18 @@ const DEFAULT_CONFIG = {
 };
 
 app.use(express.json());
-app.use(express.static(PUBLIC_DIR)); // serve login, signup, front, admin, godmode UIs
+app.use(express.static(PUBLIC_DIR)); // serve login, signup, front, admin UIs
 
 // Legacy filenames → new structured paths
 app.get("/", (req, res) => res.redirect("/login.html"));
 app.get("/admin.html", (req, res) => res.redirect("/admin/"));
 app.get("/admin", (req, res) => res.redirect("/admin/"));
-app.get("/godmode.html", (req, res) => res.redirect("/godmode/"));
-app.get("/godmode", (req, res) => res.redirect("/godmode/"));
+app.get("/godmode.html", (req, res) => res.redirect("/admin/"));
+app.get("/godmode", (req, res) => res.redirect("/admin/"));
 app.get("/front.html", (req, res) => res.redirect("/front/"));
+app.get("/api/global-config", (req, res) => {
+  res.json(getGlobalConfig());
+});
 
 //------------------------------------------------------------
 //  FILES & DIRECTORIES

@@ -2,83 +2,113 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ScenarWall – Inscription</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="/css/front.css">
-  <script src="/js/common/legal-footer.js" defer></script>
+  <link rel="stylesheet" href="/css/tailwind.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script>
+    (()=>{
+      const saved = localStorage.getItem('sw_theme');
+      const prefers = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      const mode = saved || prefers;
+      document.documentElement.classList.toggle('dark', mode === 'dark');
+    })();
+  </script>
+  <script src="/js/common/auth.js"></script>
+  <script src="/js/common/fragments-loader.js" defer></script>
+  <style>[x-cloak]{display:none!important}</style>
 </head>
-
-<body>
-
-<div class="auth-page">
-  <div class="form-container">
-    <h1>Créer un compte</h1>
-
-    <label>Email</label>
-    <input id="email" type="email" placeholder="email@exemple.com">
-
-    <label>Mot de passe</label>
-    <input id="password" type="password" placeholder="Mot de passe">
-
-    <button onclick="signup()">Créer mon compte</button>
-
-    <div id="msg" class="msg"></div>
-
-    <p style="text-align:center; margin-top:10px;">
-      <a href="/login.html">Déjà un compte ?</a>
-    </p>
+<body class="min-h-screen flex items-center justify-center bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
+  <div class="absolute top-4 right-4">
+    <button id="themeToggle" class="inline-flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700">
+      <i class="fa-solid fa-moon" id="themeIcon"></i><span id="themeLabel">Mode sombre</span>
+    </button>
   </div>
 
-  <div data-include="legal-footer" data-variant="auth"></div>
-</div>
+  <div class="w-full max-w-md mx-auto px-4">
+    <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-xl p-8 space-y-6">
+      <div class="text-center space-y-1">
+        <h1 class="text-2xl font-bold">Créer un compte</h1>
+        <p class="text-sm text-slate-600 dark:text-slate-400">Accédez à votre espace ScenarWall</p>
+      </div>
 
-<script src="/js/common/auth.js"></script>
+      <div class="space-y-4">
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Email
+          <input id="email" type="email" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100" placeholder="email@exemple.com" autocomplete="email">
+        </label>
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Mot de passe
+          <input id="password" type="password" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100" placeholder="Mot de passe" autocomplete="new-password">
+        </label>
+        <button onclick="signup()" class="w-full rounded-lg bg-emerald-500 text-slate-900 font-semibold py-2 hover:bg-emerald-400">Créer mon compte</button>
+        <div id="msg" class="text-sm"></div>
+      </div>
+
+      <div class="text-center text-sm text-slate-600 dark:text-slate-400">
+        Déjà un compte ? <a href="/login.html" class="text-emerald-500 hover:text-emerald-400">Connexion</a>
+      </div>
+    </div>
+    <div class="mt-4" data-include="legal-footer" data-variant="auth"></div>
+  </div>
+
 <script>
-async function signup() {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value.trim();
-  const msg = document.getElementById("msg");
-
-  msg.textContent = "";
-
-  if (!email || !password) {
-    msg.textContent = "Merci de remplir tous les champs.";
-    msg.className = "msg error";
-    return;
-  }
-
-  try {
-    const res = await fetch("/api/signup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password })
+  const themeState = {
+    load() {
+      const saved = localStorage.getItem('sw_theme');
+      const prefers = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      return saved || prefers;
+    },
+    apply(mode){
+      document.documentElement.classList.toggle('dark', mode === 'dark');
+      localStorage.setItem('sw_theme', mode);
+      const icon = document.getElementById('themeIcon');
+      const label = document.getElementById('themeLabel');
+      if (mode === 'dark') { icon.className = 'fa-regular fa-sun'; label.textContent = 'Mode clair'; }
+      else { icon.className = 'fa-solid fa-moon'; label.textContent = 'Mode sombre'; }
+    }
+  };
+  (()=>{
+    const mode = themeState.load();
+    themeState.apply(mode);
+    document.getElementById('themeToggle').addEventListener('click', ()=>{
+      const next = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+      themeState.apply(next);
     });
+  })();
 
-    const data = await res.json();
+  async function signup() {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const msg = document.getElementById("msg");
+    msg.textContent = "";
+    msg.className = "text-sm";
 
-    if (!res.ok) {
-      msg.textContent = data.error || "Erreur inconnue.";
-      msg.className = "msg error";
+    if (!email || !password) {
+      msg.textContent = "Merci de remplir tous les champs.";
+      msg.classList.add('text-rose-500');
       return;
     }
 
-    msg.textContent = "Compte créé ! Redirection…";
-    msg.className = "msg success";
-
-    // IMPORTANT : enregistrer tenant et rediriger proprement
-    setTenant(data.tenantId);
-
-    setTimeout(() => {
-      window.location.href = "/admin/";
-    }, 1000);
-
-  } catch (err) {
-    console.error(err);
-    msg.textContent = "Erreur réseau.";
-    msg.className = "msg error";
+    try {
+      const res = await fetch("/api/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        msg.textContent = data.error || "Erreur inconnue.";
+        msg.classList.add('text-rose-500');
+        return;
+      }
+      msg.textContent = "Compte créé ! Redirection…";
+      msg.classList.add('text-emerald-500');
+      setTenant(data.tenantId);
+      setTimeout(() => { window.location.href = "/admin/"; }, 1000);
+    } catch (err) {
+      msg.textContent = "Erreur réseau.";
+      msg.classList.add('text-rose-500');
+    }
   }
-}
 </script>
-
 </body>
 </html>

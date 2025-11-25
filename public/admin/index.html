@@ -1,150 +1,737 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" x-data="dashboard()" x-init="init()" x-bind:class="theme === 'dark' ? 'dark' : ''" class="min-h-screen">
 <head>
-<meta charset="UTF-8">
-<title>ScenarWall – Administration</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="/css/back.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<script src="/js/common/legal-footer.js" defer></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScenarWall – Administration</title>
+  <link rel="stylesheet" href="/css/tailwind.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script>
+    (()=>{
+      const saved = localStorage.getItem('sw_theme');
+      const prefers = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      const mode = saved || prefers;
+      document.documentElement.classList.toggle('dark', mode === 'dark');
+    })();
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="/js/common/config.js"></script>
+  <script src="/js/common/auth.js"></script>
+  <script src="/js/common/fragments-loader.js" defer></script>
+  <style>[x-cloak]{display:none!important}</style>
 </head>
-<body>
-
-<!-- ---------------- SIDEBAR ---------------- -->
-<div class="sidebar">
-  <div class="menu-title">Administration</div>
-
-  <div class="menu-item active" onclick="showSection('visible', this)">
-    📁 Images visibles
-  </div>
-
-  <div class="menu-item" onclick="showSection('hidden', this)">
-    🗂️ Images cachées
-  </div>
-  <div class="menu-item" onclick="showSection('tension', this)">
-    ⚡ Barre de tension
-  </div>
-  <div class="menu-item" onclick="showSection('quota', this)">
-    📊 Quota
-  </div>
-  <div class="menu-item front-link" onclick="openFront()">
-    🎬 Voir le Front
-  </div>
-  <div class="menu-item" onclick="showSection('password', this)">
-    🔑 Changer mon mot de passe
-  </div>
-  <div class="menu-item logout" onclick="logout()">
-    🚪 Déconnexion
-  </div>
-
-  <div class="sidebar-donation" data-include="donation-box"></div>
-  <div class="sidebar-footer" data-include="legal-footer" data-variant="back"></div>
-</div>
-
-<!-- ---------------- MAIN CONTENT ---------------- -->
-<div class="content">
-
-  <!-- UPLOAD -->
-  <div id="uploadBox" class="upload-box" onclick="fileInput.click()">
-    📤 Cliquez ici pour uploader une image
-    <input id="fileInput" type="file" accept="image/*">
-  </div>
-  <div id="uploadMessage" class="msg"></div>
-
-  <!-- SECTION : VISIBLES -->
-  <div id="section-visible" class="section active">
-    <div class="section-title">Images visibles</div>
-    <div id="list-visible"></div>
-  </div>
-
-  <!-- SECTION : CACHÉES -->
-  <div id="section-hidden" class="section">
-    <div class="section-title">Images cachées</div>
-    <div id="list-hidden"></div>
-  </div>
-
-  <!-- SECTION : TENSION BAR -->
-  <div id="section-tension" class="section">
-    <div class="section-title">Barre de tension</div>
-    <div class="settings-card">
-      <div class="toggle-row">
-        <div>
-          <label for="tensionToggle">Afficher la barre de tension</label>
-          <p class="help-text">Permet d'activer ou masquer la colonne de sélection de tension sur le front.</p>
-        </div>
-        <label class="switch">
-          <input type="checkbox" id="tensionToggle">
-          <span class="slider round"></span>
-        </label>
-      </div>
-      <div id="tensionMessage" class="msg"></div>
+<body class="min-h-screen flex bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
+  <!-- Sidebar -->
+  <aside class="w-64 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col">
+    <div class="px-6 py-5 text-lg font-semibold text-slate-800 dark:text-slate-100">ScenarWall</div>
+    <nav class="flex-1 px-3 space-y-1">
+      <button @click="section = 'galerie'" :class="section === 'galerie' ? 'bg-slate-800 text-emerald-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-left" x-show="tenantId">
+        <i class="fa-regular fa-image text-base"></i>
+        <span>Galerie</span>
+      </button>
+      <button @click="section = 'tension'" :class="section === 'tension' ? 'bg-slate-800 text-amber-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-left" x-show="tenantId">
+        <i class="fa-solid fa-bolt text-base"></i>
+        <span>Tension</span>
+      </button>
+      <button @click="section = 'users'" :class="section === 'users' ? 'bg-slate-800 text-sky-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-left" x-show="isSuperAdmin">
+        <i class="fa-solid fa-users text-base"></i>
+        <span>Utilisateurs</span>
+      </button>
+      <button @click="section = 'quotas'" :class="section === 'quotas' ? 'bg-slate-800 text-fuchsia-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-left" x-show="isSuperAdmin">
+        <i class="fa-solid fa-chart-pie text-base"></i>
+        <span>Quotas</span>
+      </button>
+    </nav>
+    <div class="px-4 py-4 text-xs text-slate-500 space-y-3">
+      <div data-include="donation-box"></div>
+      <div data-include="legal-footer" data-variant="auth"></div>
     </div>
-  </div>
+  </aside>
 
-  <!-- SECTION : PASSWORD -->
-  <div id="section-password" class="section">
-    <div class="section-title">Changer mon mot de passe</div>
-    <div class="settings-card">
-      <label>Mot de passe actuel</label>
-      <input type="password" id="currentPassword" placeholder="Votre mot de passe actuel">
-
-      <label>Nouveau mot de passe</label>
-      <input type="password" id="newPassword" placeholder="Au moins 8 caractères">
-
-      <label>Confirmation</label>
-      <input type="password" id="confirmPassword" placeholder="Confirmez le nouveau mot de passe">
-
-      <button class="btn primary" onclick="changePassword()">Mettre à jour</button>
-      <div id="pwdMessage" class="msg"></div>
-    </div>
-  </div>
-
-  <!-- SECTION : QUOTA -->
-  <div id="section-quota" class="section">
-    <div class="section-title">Quota</div>
-    <div class="settings-card">
-      <div class="quota-row">
-        <div>
-          <div class="quota-label">Quota effectif</div>
-          <div id="quotaValue" class="quota-value">—</div>
-        </div>
-        <div>
-          <div class="quota-label">Consommation</div>
-          <div id="quotaUsage" class="quota-value">—</div>
-        </div>
-        <div>
-          <div class="quota-label">% utilisé</div>
-          <div class="progress">
-            <div id="quotaProgress" class="progress-bar" style="width:0%"></div>
+  <!-- Main -->
+  <div class="flex-1 flex flex-col min-h-screen bg-slate-50 dark:bg-slate-900">
+    <!-- Top bar -->
+    <header class="flex items-center px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900 backdrop-blur">
+      <div class="flex-1"></div>
+      <div class="flex items-center gap-3 justify-center" x-show="tenantId">
+        <div class="hidden md:flex items-center gap-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-1.5 text-xs">
+          <div class="w-28">
+            <div class="text-[11px] text-slate-500 dark:text-slate-400" x-text="quotaDisplay">—</div>
+            <div class="mt-1 h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
+              <div class="h-full bg-emerald-500 transition-all" :style="`width:${quotaPercent}%`"></div>
+            </div>
           </div>
         </div>
+        <button class="hidden md:inline-flex items-center gap-3 rounded-lg border border-emerald-500 bg-emerald-500 text-slate-900 font-semibold px-5 py-2.5 text-sm hover:bg-emerald-400 dark:bg-slate-950 dark:border-slate-800 dark:text-emerald-200 dark:hover:bg-slate-800" @click="openFront">
+          <i class="fa-solid fa-film"></i> Présenter
+        </button>
       </div>
+      <div class="flex-1 flex justify-end">
+      <div class="relative" @click.outside="userMenu=false">
+        <button class="h-10 w-10 rounded-full bg-emerald-500 text-slate-900 font-semibold flex items-center justify-center hover:bg-emerald-400"
+                @click.stop="userMenu = !userMenu"><i class="fa-solid fa-user"></i></button>
+        <div class="absolute right-0 mt-2 w-48 bg-white text-slate-800 dark:bg-slate-800 dark:text-slate-100 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg" x-show="userMenu" x-transition x-cloak>
+          <button class="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 inline-flex items-center gap-2" @click="section = 'password'; userMenu=false">
+            <i class="fa-solid fa-key"></i> <span>Mot de passe</span>
+          </button>
+          <button class="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 inline-flex items-center gap-2" @click="toggleTheme(); userMenu=false">
+            <i :class="theme === 'dark' ? 'fa-regular fa-sun' : 'fa-solid fa-moon'"></i>
+            <span x-text="theme === 'dark' ? 'Mode clair' : 'Mode sombre'"></span>
+          </button>
+          <button class="w-full text-left px-4 py-2 text-sm text-rose-600 dark:text-rose-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-b-xl inline-flex items-center gap-2" @click="logout()">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i> <span>Déconnexion</span>
+          </button>
+        </div>
+      </div>
+      </div>
+    </header>
 
-      <p class="help-text">Le quota est défini par le super admin (GodMode). Contactez-le pour toute modification.</p>
-      <div id="quotaMessage" class="msg"></div>
+    <!-- Content -->
+    <main class="flex-1 p-6 bg-slate-50 dark:bg-slate-900 space-y-6">
+      <!-- Galerie -->
+      <section x-show="section === 'galerie'" x-cloak class="space-y-6">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-semibold">Images visibles</h2>
+          <label class="cursor-pointer inline-flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-300" x-show="tenantId">
+            <input type="file" class="hidden" @change="uploadFile($event)">
+            <span class="inline-flex items-center gap-2 rounded-lg border border-emerald-500 px-3 py-1.5 text-emerald-800 dark:text-emerald-100 bg-white dark:bg-transparent hover:bg-emerald-500/10"><i class="fa-solid fa-upload"></i> Upload</span>
+          </label>
+        </div>
+        <div class="space-y-2">
+          <template x-if="galleryLoading">
+            <div class="text-sm text-slate-400">Chargement...</div>
+          </template>
+          <template x-if="!galleryLoading && visible.length === 0">
+            <div class="text-sm text-slate-600 dark:text-slate-400 border border-dashed border-slate-300 dark:border-slate-800 rounded-lg p-4">Aucune image visible.</div>
+          </template>
+          <template x-for="(img, index) in visible" :key="img.name">
+            <div class="flex items-center gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3">
+              <img :src="img.url" class="h-16 w-16 object-cover rounded-lg border border-slate-800" @click="zoom(img.url)">
+              <div class="flex-1">
+                <div class="text-sm font-semibold truncate" x-text="img.name"></div>
+              </div>
+                <div class="flex items-center gap-2 text-sm">
+                  <button class="px-2 py-1 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700" @click="move(index, -1)"><i class="fa-solid fa-arrow-up"></i></button>
+                  <button class="px-2 py-1 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700" @click="move(index, 1)"><i class="fa-solid fa-arrow-down"></i></button>
+                  <button class="px-2 py-1 rounded bg-amber-500 text-slate-900 font-semibold hover:bg-amber-400" @click="hideImage(img.name)"><i class="fa-regular fa-eye-slash mr-1"></i>Cacher</button>
+                </div>
+            </div>
+          </template>
+        </div>
+
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg font-semibold">Images cachées</h2>
+          </div>
+          <div class="space-y-2">
+            <template x-if="galleryLoading">
+              <div class="text-sm text-slate-400">Chargement...</div>
+            </template>
+            <template x-if="!galleryLoading && hidden.length === 0">
+              <div class="text-sm text-slate-600 dark:text-slate-400 border border-dashed border-slate-300 dark:border-slate-800 rounded-lg p-4">Aucune image cachée.</div>
+            </template>
+            <template x-for="img in hidden" :key="img.name">
+            <div class="flex items-center gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3">
+                <img :src="img.url" class="h-14 w-14 object-cover rounded-lg border border-slate-800" @click="zoom(img.url)">
+                <div class="flex-1">
+                  <div class="text-sm font-semibold truncate" x-text="img.name"></div>
+                </div>
+                <div class="flex items-center gap-2 text-sm">
+                  <button class="px-2 py-1 rounded bg-emerald-500 text-slate-900 font-semibold hover:bg-emerald-400" @click="showImage(img.name)"><i class="fa-regular fa-eye mr-1"></i>Afficher</button>
+                  <button class="px-2 py-1 rounded bg-rose-600 text-white font-semibold hover:bg-rose-500" @click="deleteImage(img.name)"><i class="fa-solid fa-trash mr-1"></i>Supprimer</button>
+                </div>
+              </div>
+            </template>
+          </div>
+          <div class="text-sm" :class="uploadStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-300'" x-text="uploadMessage"></div>
+        </div>
+      </section>
+
+      <!-- Tension -->
+      <section x-show="section === 'tension'" x-cloak class="max-w-xl space-y-6">
+        <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-6 shadow-sm">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-slate-400 mb-1">Etat actuel</p>
+              <h2 class="text-lg font-semibold" x-text="tensionEnabled ? 'Barre de tension activée' : 'Barre de tension désactivée'"></h2>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" class="sr-only peer" x-model="tensionEnabled" @change="toggleTension">
+              <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:bg-emerald-500 transition"></div>
+              <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition peer-checked:translate-x-5"></div>
+            </label>
+          </div>
+          <div class="mt-4 text-sm" :class="tensionStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-300'" x-text="tensionMessage"></div>
+        </div>
+      </section>
+
+      <!-- Utilisateurs (GodMode) -->
+      <section x-show="section === 'users' && isSuperAdmin" x-cloak class="space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-semibold">Utilisateurs</h2>
+          <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" x-model="hideInactiveUsers"> <span>Masquer les inactifs</span></label>
+        </div>
+        <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm">
+          <table class="min-w-full text-sm">
+            <thead class="bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200">
+              <tr>
+                <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('email')">
+                  <div class="inline-flex items-center gap-2">Email <i :class="sortIcon('email','users')" class="text-xs"></i></div>
+                </th>
+                <th class="px-4 py-2 text-left">Tenant</th>
+                <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('lastLogin')">
+                  <div class="inline-flex items-center gap-2">Dernière connexion <i :class="sortIcon('lastLogin','users')" class="text-xs"></i></div>
+                </th>
+                <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('active')">
+                  <div class="inline-flex items-center gap-2">Statut <i :class="sortIcon('active','users')" class="text-xs"></i></div>
+                </th>
+                <th class="px-4 py-2 text-left">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template x-if="usersLoading">
+                <tr><td colspan="7" class="px-4 py-3 text-center text-slate-400">Chargement...</td></tr>
+              </template>
+              <template x-if="!usersLoading && filteredUsers('users').length === 0">
+                <tr><td colspan="7" class="px-4 py-3 text-center text-slate-500">Aucun utilisateur</td></tr>
+              </template>
+              <template x-for="u in filteredUsers('users')" :key="u.email">
+                <tr class="border-t border-slate-200 dark:border-slate-800">
+                  <td class="px-4 py-2"><div class="flex items-center gap-2"><template x-if="u.admin"><i class="fa-solid fa-crown text-amber-400"></i></template><span x-text="u.email"></span></div></td>
+                  <td class="px-4 py-2" x-text="u.tenantId || '—'"></td>
+                  <td class="px-4 py-2" x-text="u.lastLogin ? new Date(u.lastLogin).toLocaleString('fr-FR') : '—'"></td>
+                  <td class="px-4 py-2" x-text="u.disabled ? 'Désactivé' : 'Actif'"></td>
+                  <td class="px-4 py-2">
+                    <template x-if="!u.admin">
+                      <div class="flex items-center gap-2">
+                        <button class="px-2 py-1 inline-flex items-center gap-1 rounded border border-emerald-500 bg-emerald-500 text-slate-900 font-semibold hover:bg-emerald-400 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-700" @click="toggleUser(u.email)">
+                          <i :class="u.disabled ? 'fa-solid fa-toggle-on' : 'fa-solid fa-toggle-off'"></i>
+                          <span x-text="u.disabled ? 'Activer' : 'Désactiver'"></span>
+                        </button>
+                        <button class="px-2 py-1 rounded bg-rose-600 text-white hover:bg-rose-500 inline-flex items-center gap-1" @click="deleteUser(u.email)">
+                          <i class="fa-solid fa-trash"></i><span>Supprimer</span>
+                        </button>
+                      </div>
+                    </template>
+                    <template x-if="u.admin">
+                      <span class="text-slate-500">—</span>
+                    </template>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Quotas (GodMode) -->
+      <section x-show="section === 'quotas' && isSuperAdmin" x-cloak class="space-y-6">
+        <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 space-y-3 shadow-sm">
+          <div class="font-semibold">Quota global par défaut (Mo)</div>
+          <div class="flex items-center gap-3">
+            <input type="number" min="1" step="1" class="w-40 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100" x-model.number="globalQuotaValue">
+            <button class="rounded-lg border border-emerald-500 bg-emerald-500 text-slate-900 font-semibold px-3 py-2 text-sm hover:bg-emerald-400 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800" @click="saveGlobalQuota">Mettre à jour</button>
+          </div>
+          <div class="text-sm" :class="globalQuotaStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-300'" x-text="globalQuotaMessage"></div>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-semibold">Quotas par utilisateur</h2>
+          <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" x-model="hideInactiveQuota"> <span>Masquer les inactifs</span></label>
+        </div>
+        <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm">
+          <table class="min-w-full text-sm">
+            <thead class="bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200">
+              <tr>
+                <th class="px-4 py-2 text-left cursor-pointer" @click="setQuotaSort('email')">
+                  <div class="inline-flex items-center gap-2">Email <i :class="sortIcon('email','quota')" class="text-xs"></i></div>
+                </th>
+                <th class="px-4 py-2 text-left">Images</th>
+                <th class="px-4 py-2 text-left cursor-pointer" @click="setQuotaSort('usage')">
+                  <div class="inline-flex items-center gap-2">Usage <i :class="sortIcon('usage','quota')" class="text-xs"></i></div>
+                </th>
+                <th class="px-4 py-2 text-left cursor-pointer" @click="setQuotaSort('active')">
+                  <div class="inline-flex items-center gap-2">Statut <i :class="sortIcon('active','quota')" class="text-xs"></i></div>
+                </th>
+                <th class="px-4 py-2 text-left">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template x-if="usersLoading">
+                <tr><td colspan="4" class="px-4 py-3 text-center text-slate-400">Chargement...</td></tr>
+              </template>
+              <template x-if="!usersLoading && filteredUsers('quota').length === 0">
+                <tr><td colspan="4" class="px-4 py-3 text-center text-slate-500">Aucun utilisateur</td></tr>
+              </template>
+              <template x-for="u in filteredUsers('quota')" :key="u.email">
+                <tr class="border-t border-slate-800">
+                  <td class="px-4 py-2">
+                    <div class="flex items-center gap-2">
+                      <template x-if="u.admin"><i class="fa-solid fa-crown text-amber-400"></i></template>
+                      <span x-text="u.email"></span>
+                    </div>
+                  </td>
+                  <td class="px-4 py-2" x-text="u.imageCount"></td>
+                  <td class="px-4 py-2">
+                    <div class="w-44 h-2 rounded-full bg-slate-800 overflow-hidden" :title="usageTitle(u)">
+                      <div class="h-full bg-emerald-500" :style="`width:${usageData(u).percent}%`"></div>
+                    </div>
+                    <div class="text-xs text-slate-400" x-text="usageData(u).text"></div>
+                  </td>
+                  <td class="px-4 py-2" x-text="u.disabled ? 'Désactivé' : 'Actif'"></td>
+                  <td class="px-4 py-2">
+                    <button class="px-3 py-1 rounded border border-emerald-500 bg-emerald-500 text-slate-900 font-semibold hover:bg-emerald-400 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-700 inline-flex items-center gap-1" @click="editTenantQuota(u)">
+                      <i class="fa-solid fa-pen"></i><span>Modifier quota</span>
+                    </button>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Mot de passe -->
+      <section x-show="section === 'password'" x-cloak class="max-w-xl space-y-4">
+        <div class="text-lg font-semibold">Changer mon mot de passe</div>
+        <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-5 space-y-3 shadow-sm">
+          <div>
+            <label class="block text-sm text-slate-700 dark:text-slate-300">Mot de passe actuel</label>
+            <input type="password" x-model="pwd.current" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100" placeholder="Votre mot de passe actuel">
+          </div>
+          <div>
+            <label class="block text-sm text-slate-700 dark:text-slate-300">Nouveau mot de passe</label>
+            <input type="password" x-model="pwd.new" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100" placeholder="Au moins 8 caractères">
+          </div>
+          <div>
+            <label class="block text-sm text-slate-700 dark:text-slate-300">Confirmation</label>
+            <input type="password" x-model="pwd.confirm" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100" placeholder="Confirmez le nouveau mot de passe">
+          </div>
+          <button class="w-full rounded-lg border border-emerald-500 bg-emerald-500 text-slate-900 font-semibold py-2 mt-2 transition hover:bg-emerald-400 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800" @click="changePassword">Mettre à jour</button>
+          <div class="text-sm" :class="pwd.status === 'error' ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-300'" x-text="pwd.message"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Zoom overlay -->
+  <div class="fixed inset-0 bg-black/80 flex items-center justify-center z-50" x-show="zoomUrl" x-transition x-cloak>
+    <div class="relative max-w-4xl w-full px-6">
+      <button class="absolute -top-10 right-0 text-slate-200 text-xl" @click="zoomUrl = ''">✕</button>
+      <img :src="zoomUrl" class="w-full rounded-xl border border-slate-700 shadow-2xl">
     </div>
   </div>
 
-</div>
+  <script>
+    function dashboard() {
+      return {
+        API: getApiBase(),
+        token: getToken(),
+        tenantId: getTenant(),
+        isSuperAdmin: isAdmin(),
+        section: 'galerie',
+        breadcrumb: 'Administration',
+        title: 'ScenarWall',
+        theme: 'dark',
+        userMenu: false,
+        avatarInitial: 'A',
+        // gallery
+        visible: [],
+        hidden: [],
+        order: [],
+        galleryLoading: true,
+        uploadMessage: '',
+        uploadStatus: 'ok',
+        quotaDisplay: '—',
+        quotaPercent: 0,
+        zoomUrl: '',
+        // tension
+        tensionEnabled: true,
+        tensionMessage: '',
+        tensionStatus: 'ok',
+        // godmode users
+        users: [],
+        usersLoading: false,
+        hideInactiveUsers: false,
+        hideInactiveQuota: false,
+        userSort: { key: 'email', dir: 'asc' },
+        quotaSort: { key: 'email', dir: 'asc' },
+        // global quota
+        globalQuotaValue: '',
+        globalQuotaMessage: '',
+        globalQuotaStatus: 'ok',
+        // password
+        pwd: { current: '', new: '', confirm: '', message: '', status: 'ok' },
 
-<script src="/js/common/config.js"></script>
-<script src="/js/common/auth.js"></script>
-<script src="/js/admin.js"></script>
+        init() {
+          if (!this.token) {
+            window.location.href = '/login.html';
+            return;
+          }
+          try {
+            const payload = JSON.parse(atob(this.token.split('.')[1] || ''));
+            if (payload.email) this.avatarInitial = payload.email.charAt(0).toUpperCase();
+          } catch (e) {}
 
-<script>
-  function showSection(name, el) {
-    document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
-    document.querySelectorAll(".menu-item").forEach(m => m.classList.remove("active"));
+          if (!this.tenantId) {
+            this.section = this.isSuperAdmin ? 'users' : 'password';
+          }
 
-    document.getElementById(`section-${name}`).classList.add("active");
-    el.classList.add("active");
+          const storedTheme = localStorage.getItem('sw_theme');
+          this.theme = storedTheme === 'light' ? 'light' : 'dark';
 
-    const uploadBox = document.getElementById("uploadBox");
-    if (uploadBox) {
-      uploadBox.style.display = (name === "visible" || name === "hidden") ? "block" : "none";
+          this.refreshGallery();
+          this.loadTension();
+          this.fetchQuota();
+          if (this.isSuperAdmin) {
+            this.loadUsers();
+            this.loadGlobalQuota();
+          }
+        },
+
+        headersAuth() {
+          return { 'Authorization': 'Bearer ' + this.token };
+        },
+        headersGod() {
+          return { 'x-auth-token': this.token };
+        },
+
+        toggleTheme() {
+          this.theme = this.theme === 'dark' ? 'light' : 'dark';
+          localStorage.setItem('sw_theme', this.theme);
+        },
+
+        setBreadcrumb() {
+          const map = {
+            galerie: 'Galerie', tension: 'Tension', users: 'Utilisateurs', quotas: 'Quotas', password: 'Mot de passe'
+          };
+          this.breadcrumb = 'Administration / ' + (map[this.section] || '');
+          this.title = map[this.section] || 'Administration';
+        },
+
+        // Gallery
+        async refreshGallery() {
+          if (!this.tenantId) return;
+          this.galleryLoading = true;
+          try {
+            const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/images`, { headers: this.headersAuth() });
+            if (!res.ok) throw new Error('Images');
+            const data = await res.json();
+            this.visible = data.filter(i => !i.hidden);
+            this.hidden = data.filter(i => i.hidden);
+            this.order = this.visible.map(i => i.name);
+          } catch (e) {
+            this.visible = [];
+            this.hidden = [];
+          }
+          this.galleryLoading = false;
+        },
+        async uploadFile(event) {
+          const file = event.target.files[0];
+          event.target.value = '';
+          if (!file || !this.tenantId) return;
+          const form = new FormData();
+          form.append('image', file);
+          try {
+            const res = await fetch(`${this.API}/api/${this.tenantId}/images/upload`, {
+              method: 'POST',
+              headers: this.headersAuth(),
+              body: form
+            });
+            if (!res.ok) {
+              const data = await res.json().catch(() => ({}));
+              if (res.status === 400 && data.error === 'Quota exceeded') {
+                this.setUpload('Quota dépassé : impossible d\'ajouter cette image.', 'error');
+              } else {
+                this.setUpload(data.error || "Échec de l'upload.", 'error');
+              }
+              await this.fetchQuota();
+              return;
+            }
+            this.setUpload('Image uploadée avec succès.', 'ok');
+            await this.refreshGallery();
+            await this.fetchQuota();
+          } catch (err) {
+            this.setUpload('Upload impossible (réseau).', 'error');
+          }
+        },
+        setUpload(msg, status = 'ok') {
+          this.uploadMessage = msg;
+          this.uploadStatus = status;
+        },
+        async saveOrder() {
+          await fetch(`${this.API}/api/${this.tenantId}/images/order`, {
+            method: 'PUT',
+            headers: { ...this.headersAuth(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ order: this.order })
+          });
+        },
+        async move(index, dir) {
+          const newIndex = index + dir;
+          if (newIndex < 0 || newIndex >= this.order.length) return;
+          [this.order[index], this.order[newIndex]] = [this.order[newIndex], this.order[index]];
+          await this.saveOrder();
+          await this.refreshGallery();
+        },
+        async hideImage(name) {
+          await fetch(`${this.API}/api/${this.tenantId}/images/hide/${name}`, { method: 'PUT', headers: this.headersAuth() });
+          await this.refreshGallery();
+          await this.fetchQuota();
+        },
+        async showImage(name) {
+          await fetch(`${this.API}/api/${this.tenantId}/images/show/${name}`, { method: 'PUT', headers: this.headersAuth() });
+          await this.refreshGallery();
+          await this.fetchQuota();
+        },
+        async deleteImage(name) {
+          if (!confirm('Supprimer définitivement cette image ?')) return;
+          await fetch(`${this.API}/api/${this.tenantId}/images/${name}`, { method: 'DELETE', headers: this.headersAuth() });
+          await this.refreshGallery();
+          await this.fetchQuota();
+        },
+        zoom(url) { this.zoomUrl = url; },
+        openFront() {
+          if (!this.tenantId) return;
+          window.open(`/t/${this.tenantId}/front`, '_blank');
+        },
+
+        // Quota
+        async fetchQuota() {
+          if (!this.tenantId) return;
+          try {
+            const res = await fetch(`${this.API}/api/${this.tenantId}/quota`, { headers: this.headersAuth() });
+            if (!res.ok) throw new Error('Quota');
+            const data = await res.json();
+            const valueText = `${data.quotaMB} Mo${data.override ? ' (perso)' : ''}`;
+            const usageText = `${data.usage} Mo`;
+            this.quotaDisplay = `${usageText} / ${valueText}`;
+            this.quotaPercent = data.quotaMB > 0 ? Math.min(100, (data.usage / data.quotaMB) * 100) : 0;
+          } catch (e) {
+            this.quotaDisplay = '—';
+            this.quotaPercent = 0;
+          }
+        },
+
+        // Tension
+        async loadTension() {
+          if (!this.tenantId) return;
+          try {
+            const res = await fetch(`${this.API}/api/${this.tenantId}/config`, { headers: this.headersAuth() });
+            if (!res.ok) throw new Error('Config');
+            const data = await res.json();
+            this.tensionEnabled = data.tensionEnabled !== false;
+            this.tensionMessage = 'Configuration chargée.';
+            this.tensionStatus = 'ok';
+          } catch (err) {
+            this.tensionMessage = 'Impossible de charger la configuration.';
+            this.tensionStatus = 'error';
+          }
+        },
+        async toggleTension() {
+          if (!this.tenantId) return;
+          try {
+            const res = await fetch(`${this.API}/api/${this.tenantId}/config/tension`, {
+              method: 'PUT',
+              headers: { ...this.headersAuth(), 'Content-Type': 'application/json' },
+              body: JSON.stringify({ tensionEnabled: this.tensionEnabled })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Erreur');
+            this.tensionEnabled = data.config?.tensionEnabled !== false;
+            this.tensionMessage = this.tensionEnabled ? 'Barre de tension activée.' : 'Barre de tension désactivée.';
+            this.tensionStatus = 'ok';
+          } catch (err) {
+            this.tensionMessage = err.message || 'Erreur réseau.';
+            this.tensionStatus = 'error';
+          }
+        },
+
+        // GodMode users
+        usageData(u) {
+          const usageMB = u.quotaUsedBytes ? (u.quotaUsedBytes / 1024 / 1024) : 0;
+          const quotaMB = u.quotaMB || 0;
+          const percent = quotaMB > 0 ? Math.min(100, (usageMB / quotaMB) * 100) : 0;
+          const text = quotaMB ? `${usageMB.toFixed(2)} / ${quotaMB} Mo${u.quotaOverride ? ' (perso)' : ''}` : `${usageMB.toFixed(2)} Mo (quota non défini)`;
+          return { usageMB, quotaMB, percent, text };
+        },
+        usageTitle(u) {
+          const { usageMB, quotaMB, percent } = this.usageData(u);
+          return quotaMB ? `${usageMB.toFixed(2)} / ${quotaMB} Mo (${percent.toFixed(1)}%)` : `${usageMB.toFixed(2)} Mo (quota non défini)`;
+        },
+        sortValue(u, key) {
+          const { usageMB } = this.usageData(u);
+          switch (key) {
+            case 'email': return (u.email || '').toLowerCase();
+            case 'images': return u.imageCount || 0;
+            case 'usage': return usageMB;
+            case 'lastLogin': return u.lastLogin ? new Date(u.lastLogin).getTime() : 0;
+            case 'active': return u.disabled ? 0 : 1;
+            default: return 0;
+          }
+        },
+        sortList(list, conf) {
+          const f = conf.dir === 'asc' ? 1 : -1;
+          return [...list].sort((a, b) => {
+            const va = this.sortValue(a, conf.key);
+            const vb = this.sortValue(b, conf.key);
+            if (va < vb) return -1 * f;
+            if (va > vb) return 1 * f;
+            return 0;
+          });
+        },
+        filteredUsers(mode) {
+              let list = mode === 'quota' ? this.users : this.users;
+          if (mode === 'users' && this.hideInactiveUsers) list = list.filter(u => !u.disabled);
+          if (mode === 'quota' && this.hideInactiveQuota) list = list.filter(u => !u.disabled);
+          const sortConf = mode === 'users' ? this.userSort : this.quotaSort;
+          return this.sortList(list, sortConf);
+        },
+        setUserSort(key) {
+          if (this.userSort.key === key) {
+            this.userSort.dir = this.userSort.dir === 'asc' ? 'desc' : 'asc';
+          } else {
+            this.userSort = { key, dir: 'asc' };
+          }
+        },
+        setQuotaSort(key) {
+          if (this.quotaSort.key === key) {
+            this.quotaSort.dir = this.quotaSort.dir === 'asc' ? 'desc' : 'asc';
+          } else {
+            this.quotaSort = { key, dir: 'asc' };
+          }
+        },
+        sortIcon(key, mode) {
+          const conf = mode === 'users' ? this.userSort : this.quotaSort;
+          if (conf.key !== key) return 'fa-solid fa-sort text-slate-400';
+          return conf.dir === 'asc' ? 'fa-solid fa-sort-up text-emerald-500' : 'fa-solid fa-sort-down text-emerald-500';
+        },
+        async loadUsers() {
+          this.usersLoading = true;
+          try {
+            const res = await fetch(`${this.API}/api/godmode/users`, { headers: this.headersGod() });
+            if (!res.ok) throw new Error('Users');
+            this.users = await res.json();
+          } catch (e) {
+            this.users = [];
+          }
+          this.usersLoading = false;
+        },
+        async toggleUser(email) {
+          await fetch(`${this.API}/api/godmode/toggle`, {
+            method: 'PUT',
+            headers: { ...this.headersGod(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+          });
+          this.loadUsers();
+        },
+        async deleteUser(email) {
+          if (!confirm('Supprimer définitivement ce compte ?')) return;
+          await fetch(`${this.API}/api/godmode/user/${email}`, {
+            method: 'DELETE',
+            headers: { ...this.headersGod(), 'Content-Type': 'application/json' }
+          });
+          this.loadUsers();
+        },
+        async loadGlobalQuota() {
+          try {
+            const res = await fetch(`${this.API}/api/godmode/global-quota`, { headers: this.headersGod() });
+            if (!res.ok) throw new Error('Global');
+            const data = await res.json();
+            this.globalQuotaValue = data.defaultQuotaMB || '';
+            this.globalQuotaMessage = '';
+          } catch (e) {
+            this.globalQuotaMessage = 'Impossible de charger le quota global.';
+            this.globalQuotaStatus = 'error';
+          }
+        },
+        async saveGlobalQuota() {
+          const value = parseFloat(this.globalQuotaValue);
+          if (Number.isNaN(value) || value <= 0) {
+            this.globalQuotaMessage = 'Entrez une valeur valide (>0).';
+            this.globalQuotaStatus = 'error';
+            return;
+          }
+          try {
+            const res = await fetch(`${this.API}/api/godmode/global-quota`, {
+              method: 'PUT',
+              headers: { ...this.headersGod(), 'Content-Type': 'application/json' },
+              body: JSON.stringify({ defaultQuotaMB: value })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Erreur');
+            this.globalQuotaMessage = 'Quota global mis à jour.';
+            this.globalQuotaStatus = 'ok';
+            this.loadUsers();
+          } catch (err) {
+            this.globalQuotaMessage = err.message || 'Échec de la mise à jour.';
+            this.globalQuotaStatus = 'error';
+          }
+        },
+        async editTenantQuota(u) {
+          const defaultVal = u.quotaOverride ? u.quotaMB : '';
+          const input = prompt('Quota en Mo (laisser vide pour quota global)', defaultVal);
+          if (input === null) return;
+          const trimmed = input.trim();
+          let payloadValue = null;
+          if (trimmed !== '') {
+            const num = parseFloat(trimmed);
+            if (Number.isNaN(num) || num <= 0) {
+              alert('Veuillez saisir un nombre positif ou laisser vide.');
+              return;
+            }
+            payloadValue = num;
+          }
+          try {
+            const res = await fetch(`${this.API}/api/godmode/tenant-quota`, {
+              method: 'PUT',
+              headers: { ...this.headersGod(), 'Content-Type': 'application/json' },
+              body: JSON.stringify({ tenantId: u.tenantId || '', quotaMB: payloadValue })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Erreur');
+            this.loadUsers();
+          } catch (err) {
+            alert(err.message || 'Impossible de mettre à jour le quota.');
+          }
+        },
+
+        // Password
+        async changePassword() {
+          this.pwd.message = '';
+          const { current, new: newPwd, confirm } = this.pwd;
+          if (!current || !newPwd || !confirm) {
+            this.pwd.message = 'Merci de remplir tous les champs.';
+            this.pwd.status = 'error';
+            return;
+          }
+          if (newPwd.length < 8) {
+            this.pwd.message = 'Le nouveau mot de passe doit contenir au moins 8 caractères.';
+            this.pwd.status = 'error';
+            return;
+          }
+          if (newPwd !== confirm) {
+            this.pwd.message = 'Les mots de passe ne correspondent pas.';
+            this.pwd.status = 'error';
+            return;
+          }
+          try {
+            const res = await fetch(`${this.API}/api/change-password`, {
+              method: 'POST',
+              headers: { ...this.headersAuth(), 'Content-Type': 'application/json' },
+              body: JSON.stringify({ currentPassword: current, newPassword: newPwd })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Échec du changement de mot de passe.');
+            this.pwd.message = 'Mot de passe mis à jour.';
+            this.pwd.status = 'ok';
+            this.pwd.current = this.pwd.new = this.pwd.confirm = '';
+          } catch (err) {
+            this.pwd.message = err.message || 'Erreur réseau.';
+            this.pwd.status = 'error';
+          }
+        }
+      };
     }
-  }
-</script>
-
+  </script>
 </body>
 </html>
