@@ -96,7 +96,7 @@
         <div class="flex items-center justify-between">
           <h2 class="text-lg font-semibold">Images visibles</h2>
           <label class="cursor-pointer inline-flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-300" x-show="tenantId">
-            <input type="file" class="hidden" @change="uploadFile($event)">
+            <input type="file" class="hidden" multiple @change="uploadFile($event)">
             <span class="inline-flex items-center gap-2 rounded-lg border border-emerald-500 px-3 py-1.5 text-emerald-800 dark:text-emerald-100 bg-white dark:bg-transparent hover:bg-emerald-500/10"><i class="fa-solid fa-upload"></i> Upload</span>
           </label>
         </div>
@@ -534,32 +534,52 @@
           this.galleryLoading = false;
         },
         async uploadFile(event) {
-          const file = event.target.files[0];
+          const files = Array.from(event.target.files || []);
           event.target.value = '';
-          if (!file || !this.tenantId) return;
-          const form = new FormData();
-          form.append('image', file);
-          try {
-            const res = await fetch(`${this.API}/api/${this.tenantId}/images/upload`, {
-              method: 'POST',
-              headers: this.headersAuth(),
-              body: form
-            });
-            if (!res.ok) {
-              const data = await res.json().catch(() => ({}));
-              if (res.status === 400 && data.error === 'Quota exceeded') {
-                this.setUpload('Quota dépassé : impossible d\'ajouter cette image.', 'error');
+          if (!files.length || !this.tenantId) return;
+
+          let success = 0;
+          let errors = [];
+
+          for (const file of files) {
+            const form = new FormData();
+            form.append('image', file);
+            try {
+              const res = await fetch(`${this.API}/api/${this.tenantId}/images/upload`, {
+                method: 'POST',
+                headers: this.headersAuth(),
+                body: form
+              });
+              if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                if (res.status === 400 && data.error === 'Quota exceeded') {
+                  errors.push(`Quota dépassé pour ${file.name}`);
+                  break;
+                }
+                errors.push(data.error || `Échec pour ${file.name}`);
               } else {
-                this.setUpload(data.error || "Échec de l'upload.", 'error');
+                success++;
               }
-              await this.fetchQuota();
-              return;
+            } catch (err) {
+              errors.push(`Réseau: ${file.name}`);
             }
-            this.setUpload('Image uploadée avec succès.', 'ok');
+          }
+
+          if (success > 0) {
             await this.refreshGallery();
             await this.fetchQuota();
-          } catch (err) {
-            this.setUpload('Upload impossible (réseau).', 'error');
+          } else {
+            await this.fetchQuota();
+          }
+
+          if (errors.length === 0) {
+            this.setUpload(`${success} image${success > 1 ? 's' : ''} uploadée${success > 1 ? 's' : ''} avec succès.`, 'ok');
+          } else {
+            const msg = [
+              success > 0 ? `${success} image${success > 1 ? 's' : ''} ok.` : 'Aucune image envoyée.',
+              errors.join(' | ')
+            ].join(' ');
+            this.setUpload(msg, 'error');
           }
         },
         setUpload(msg, status = 'ok') {
