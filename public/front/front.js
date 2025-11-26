@@ -85,6 +85,49 @@ const zone1 = document.getElementById("zone1");
 const tensionBar = document.querySelector(".tension-bar");
 let tensionEnabled = true;
 let tensionFont = "Audiowide";
+const defaultTensionColors = {
+  level1: "#37aa32",
+  level2: "#f8d718",
+  level3: "#f39100",
+  level4: "#e63027",
+  level5: "#3a3a39"
+};
+
+function readableTextColor(bgColor) {
+  const match = (bgColor || "").match(/(\d+)\D+(\d+)\D+(\d+)/);
+  const r = match ? parseInt(match[1], 10) : 0;
+  const g = match ? parseInt(match[2], 10) : 0;
+  const b = match ? parseInt(match[3], 10) : 0;
+  const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+  return yiq >= 140 ? "#000" : "#fff";
+}
+
+function updateTensionTextContrast() {
+  if (!items || !items.length) return;
+  items.forEach((item) => {
+    const bg = getComputedStyle(item).backgroundColor;
+    item.style.color = readableTextColor(bg);
+  });
+}
+
+function updateZoneBorderFromSelection() {
+  if (!zone1 || !items.length) return;
+  const selected = Array.from(items).find((i) => i.classList.contains("selected"));
+  const color = (selected || items[0]).dataset.color;
+  if (color) zone1.style.borderColor = color;
+}
+
+function applyTensionColors(colors) {
+  const palette = { ...defaultTensionColors, ...(colors || {}) };
+  const values = [palette.level1, palette.level2, palette.level3, palette.level4, palette.level5];
+  items.forEach((item, idx) => {
+    const color = values[idx] || defaultTensionColors[`level${idx + 1}`];
+    item.style.backgroundColor = color;
+    item.dataset.color = color;
+  });
+  updateTensionTextContrast();
+  updateZoneBorderFromSelection();
+}
 
 function setDefaultTension() {
   if (!items.length) return;
@@ -134,10 +177,12 @@ async function loadTensionConfig() {
     const data = await res.json();
     applyTensionState(data.tensionEnabled);
     applyTensionFont(data.tensionFont);
+    applyTensionColors(data.tensionColors);
   } catch (err) {
     console.warn("Using default tension config", err);
     applyTensionState(true);
     applyTensionFont("Audiowide");
+    applyTensionColors(defaultTensionColors);
   }
 }
 

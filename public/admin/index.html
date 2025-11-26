@@ -159,7 +159,7 @@
                 <h2 class="text-lg font-semibold" x-text="tensionEnabled ? 'Barre de tension activée' : 'Barre de tension désactivée'"></h2>
               </div>
               <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" class="sr-only peer" x-model="tensionEnabled" @change="toggleTension">
+                <input type="checkbox" class="sr-only peer" x-model="tensionEnabled" @change="saveTensionConfig">
                 <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:bg-emerald-500 transition"></div>
                 <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition peer-checked:translate-x-5"></div>
               </label>
@@ -169,31 +169,71 @@
             <p class="text-sm text-slate-400">Police de la barre de tension</p>
           <div class="grid gap-3 sm:grid-cols-2">
             <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
-              <input type="radio" class="text-emerald-500" name="tensionFont" value="Audiowide" x-model="tensionFont" @change="toggleTension">
+              <input type="radio" class="text-emerald-500" name="tensionFont" value="Audiowide" x-model="tensionFont" @change="saveTensionConfig">
               <span style="font-family: 'Audiowide', sans-serif;" class="text-lg">Futuriste (Audiowide)</span>
             </label>
             <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
-              <input type="radio" class="text-emerald-500" name="tensionFont" value="Metal Mania" x-model="tensionFont" @change="toggleTension">
+              <input type="radio" class="text-emerald-500" name="tensionFont" value="Metal Mania" x-model="tensionFont" @change="saveTensionConfig">
               <span style="font-family: 'Metal Mania', cursive;" class="text-lg">Horrifique (Metal Mania)</span>
             </label>
             <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
-              <input type="radio" class="text-emerald-500" name="tensionFont" value="Rye" x-model="tensionFont" @change="toggleTension">
+              <input type="radio" class="text-emerald-500" name="tensionFont" value="Rye" x-model="tensionFont" @change="saveTensionConfig">
               <span style="font-family: 'Rye', cursive;" class="text-lg">Saloon (Rye)</span>
             </label>
             <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
-              <input type="radio" class="text-emerald-500" name="tensionFont" value="Share Tech Mono" x-model="tensionFont" @change="toggleTension">
+              <input type="radio" class="text-emerald-500" name="tensionFont" value="Share Tech Mono" x-model="tensionFont" @change="saveTensionConfig">
               <span style="font-family: 'Share Tech Mono', monospace;" class="text-lg">Techno (Share Tech Mono)</span>
             </label>
             <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
-              <input type="radio" class="text-emerald-500" name="tensionFont" value="Bangers" x-model="tensionFont" @change="toggleTension">
+              <input type="radio" class="text-emerald-500" name="tensionFont" value="Bangers" x-model="tensionFont" @change="saveTensionConfig">
               <span style="font-family: 'Bangers', cursive;" class="text-lg">Cartoon (Bangers)</span>
             </label>
             <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
-              <input type="radio" class="text-emerald-500" name="tensionFont" value="Great Vibes" x-model="tensionFont" @change="toggleTension">
+              <input type="radio" class="text-emerald-500" name="tensionFont" value="Great Vibes" x-model="tensionFont" @change="saveTensionConfig">
               <span style="font-family: 'Great Vibes', cursive;" class="text-lg">Manuscrit (Great Vibes)</span>
             </label>
           </div>
         </div>
+          <div class="w-full md:max-w-3xl mx-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-6 shadow-sm space-y-4">
+            <div class="flex items-center justify-between">
+              <p class="text-sm text-slate-400">Personaliser les niveaux</p>
+              <button class="rounded-lg border border-emerald-500 bg-emerald-500 text-slate-900 font-semibold px-3 py-2 text-sm hover:bg-emerald-400 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800" @click="saveTensionConfig">
+                Enregistrer
+              </button>
+            </div>
+            <div class="grid gap-3">
+              <label class="flex items-center justify-between gap-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100">
+                <span class="font-semibold">Niveau 1</span>
+                <div class="flex items-center gap-2">
+                  <input type="color" class="h-9 w-12 rounded border border-slate-300 dark:border-slate-700 bg-transparent cursor-pointer" x-model="tensionColors.level1" @change="saveTensionConfig">
+                </div>
+              </label>
+              <label class="flex items-center justify-between gap-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100">
+                <span class="font-semibold">Niveau 2</span>
+                <div class="flex items-center gap-2">
+                  <input type="color" class="h-9 w-12 rounded border border-slate-300 dark-border-slate-700 bg-transparent cursor-pointer" x-model="tensionColors.level2" @change="saveTensionConfig">
+                </div>
+              </label>
+              <label class="flex items-center justify-between gap-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100">
+                <span class="font-semibold">Niveau 3</span>
+                <div class="flex items-center gap-2">
+                  <input type="color" class="h-9 w-12 rounded border border-slate-300 dark-border-slate-700 bg-transparent cursor-pointer" x-model="tensionColors.level3" @change="saveTensionConfig">
+                </div>
+              </label>
+              <label class="flex items-center justify-between gap-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100">
+                <span class="font-semibold">Niveau 4</span>
+                <div class="flex items-center gap-2">
+                  <input type="color" class="h-9 w-12 rounded border border-slate-300 dark-border-slate-700 bg-transparent cursor-pointer" x-model="tensionColors.level4" @change="saveTensionConfig">
+                </div>
+              </label>
+              <label class="flex items-center justify-between gap-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100">
+                <span class="font-semibold">Niveau 5</span>
+                <div class="flex items-center gap-2">
+                  <input type="color" class="h-9 w-12 rounded border border-slate-300 dark-border-slate-700 bg-transparent cursor-pointer" x-model="tensionColors.level5" @change="saveTensionConfig">
+                </div>
+              </label>
+            </div>
+          </div>
         </div>
         <div class="text-sm" :class="tensionStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-300'" x-text="tensionMessage"></div>
       </section>
@@ -383,6 +423,20 @@
         // tension
         tensionEnabled: true,
         tensionFont: 'Audiowide',
+        defaultTensionColors: {
+          level1: '#37aa32',
+          level2: '#f8d718',
+          level3: '#f39100',
+          level4: '#e63027',
+          level5: '#3a3a39'
+        },
+        tensionColors: {
+          level1: '#37aa32',
+          level2: '#f8d718',
+          level3: '#f39100',
+          level4: '#e63027',
+          level5: '#3a3a39'
+        },
         tensionMessage: '',
         tensionStatus: 'ok',
         // godmode users
@@ -549,6 +603,19 @@
         },
 
         // Tension
+        normalizeLocalColors(colors) {
+          const sanitize = (c, fallback) => {
+            const val = this.sanitizeColor(c);
+            return val ? val : fallback;
+          };
+          return {
+            level1: sanitize(colors?.level1, this.defaultTensionColors.level1),
+            level2: sanitize(colors?.level2, this.defaultTensionColors.level2),
+            level3: sanitize(colors?.level3, this.defaultTensionColors.level3),
+            level4: sanitize(colors?.level4, this.defaultTensionColors.level4),
+            level5: sanitize(colors?.level5, this.defaultTensionColors.level5)
+          };
+        },
         async loadTension() {
           if (!this.tenantId) return;
           try {
@@ -557,25 +624,47 @@
             const data = await res.json();
             this.tensionEnabled = data.tensionEnabled !== false;
             this.tensionFont = data.tensionFont ?? 'Audiowide';
+            this.tensionColors = this.normalizeLocalColors(data.tensionColors);
             this.tensionMessage = 'Configuration chargée.';
             this.tensionStatus = 'ok';
           } catch (err) {
+            this.tensionColors = { ...this.defaultTensionColors };
             this.tensionMessage = 'Impossible de charger la configuration.';
             this.tensionStatus = 'error';
           }
         },
+        sanitizeColor(hex) {
+          const h = (hex || '').toString().trim().toLowerCase();
+          const normalized = h.startsWith('#') ? h : `#${h}`;
+          const short = normalized.match(/^#([0-9a-fA-F]{3})$/);
+          if (short) {
+            const c = short[1];
+            return `#${c[0]}${c[0]}${c[1]}${c[1]}${c[2]}${c[2]}`.toLowerCase();
+          }
+          return /^#([0-9a-fA-F]{6})$/.test(normalized) ? normalized : null;
+        },
         async toggleTension() {
+          // legacy alias kept to avoid breaking bindings
+          return this.saveTensionConfig();
+        },
+        async saveTensionConfig() {
           if (!this.tenantId) return;
           try {
+            const colors = this.normalizeLocalColors(this.tensionColors);
             const res = await fetch(`${this.API}/api/${this.tenantId}/config/tension`, {
               method: 'PUT',
               headers: { ...this.headersAuth(), 'Content-Type': 'application/json' },
-              body: JSON.stringify({ tensionEnabled: this.tensionEnabled, tensionFont: this.tensionFont })
+              body: JSON.stringify({
+                tensionEnabled: this.tensionEnabled,
+                tensionFont: this.tensionFont,
+                tensionColors: colors
+              })
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Erreur');
             this.tensionEnabled = data.config?.tensionEnabled !== false;
             this.tensionFont = data.config?.tensionFont || null;
+            this.tensionColors = data.config?.tensionColors || colors;
             this.tensionMessage = this.tensionEnabled ? 'Barre de tension activée.' : 'Barre de tension désactivée.';
             this.tensionStatus = 'ok';
           } catch (err) {

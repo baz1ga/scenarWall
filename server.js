@@ -16,9 +16,16 @@ const TENANTS_DIR = path.join(__dirname, "tenants");
 const FRONT_FILE = path.join(PUBLIC_DIR, "front", "index.html");
 const GLOBAL_FILE = path.join(DATA_DIR, "global.json");
 const DEFAULT_GLOBAL = { defaultQuotaMB: 100, apiBase: null };
+const DEFAULT_TENSION_COLORS = {
+  level1: "#37aa32",
+  level2: "#f8d718",
+  level3: "#f39100",
+  level4: "#e63027",
+  level5: "#3a3a39"
+};
 const DEFAULT_CONFIG = {
   tensionEnabled: true,
-  tensionColors: ["green", "yellow", "orange", "red", "black"],
+  tensionColors: { ...DEFAULT_TENSION_COLORS },
   tensionFont: null,
   quotaMB: null
 };
@@ -49,6 +56,37 @@ if (!fs.existsSync(SESSIONS_FILE)) fs.writeFileSync(SESSIONS_FILE, "{}");
 if (!fs.existsSync(GLOBAL_FILE)) fs.writeFileSync(GLOBAL_FILE, JSON.stringify(DEFAULT_GLOBAL, null, 2));
 if (!fs.existsSync(TENANTS_DIR)) fs.mkdirSync(TENANTS_DIR);
 
+function normalizeTensionColors(source) {
+  const hexRegex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
+  const expand = (hex) => {
+    if (!hexRegex.test(hex || "")) return null;
+    const h = hex.startsWith("#") ? hex.slice(1) : hex;
+    if (h.length === 3) {
+      return `#${h[0]}${h[0]}${h[1]}${h[1]}${h[2]}${h[2]}`.toLowerCase();
+    }
+    return `#${h.toLowerCase()}`;
+  };
+
+  if (Array.isArray(source) && source.length === 5) {
+    return {
+      level1: expand(source[0]) || DEFAULT_TENSION_COLORS.level1,
+      level2: expand(source[1]) || DEFAULT_TENSION_COLORS.level2,
+      level3: expand(source[2]) || DEFAULT_TENSION_COLORS.level3,
+      level4: expand(source[3]) || DEFAULT_TENSION_COLORS.level4,
+      level5: expand(source[4]) || DEFAULT_TENSION_COLORS.level5
+    };
+  }
+
+  const input = typeof source === "object" && source ? source : {};
+  return {
+    level1: expand(input.level1) || DEFAULT_TENSION_COLORS.level1,
+    level2: expand(input.level2) || DEFAULT_TENSION_COLORS.level2,
+    level3: expand(input.level3) || DEFAULT_TENSION_COLORS.level3,
+    level4: expand(input.level4) || DEFAULT_TENSION_COLORS.level4,
+    level5: expand(input.level5) || DEFAULT_TENSION_COLORS.level5
+  };
+}
+
 function loadConfig(tenantId) {
   const file = path.join(TENANTS_DIR, tenantId, "config.json");
 
@@ -59,7 +97,11 @@ function loadConfig(tenantId) {
 
   try {
     const data = JSON.parse(fs.readFileSync(file, "utf8"));
-    return { ...DEFAULT_CONFIG, ...data };
+    return {
+      ...DEFAULT_CONFIG,
+      ...data,
+      tensionColors: normalizeTensionColors(data.tensionColors)
+    };
   } catch (err) {
     console.error("Failed to read config, using defaults", err);
     return { ...DEFAULT_CONFIG };
@@ -109,7 +151,12 @@ function getTenantUsageBytes(tenantId) {
 
 function saveConfig(tenantId, config) {
   const file = path.join(TENANTS_DIR, tenantId, "config.json");
-  fs.writeFileSync(file, JSON.stringify({ ...DEFAULT_CONFIG, ...config }, null, 2));
+  const merged = {
+    ...DEFAULT_CONFIG,
+    ...config,
+    tensionColors: normalizeTensionColors(config.tensionColors)
+  };
+  fs.writeFileSync(file, JSON.stringify(merged, null, 2));
 }
 
 //------------------------------------------------------------
@@ -442,7 +489,7 @@ app.put("/api/:tenantId/quota", requireLogin, (req, res) => {
 
 app.put("/api/:tenantId/config/tension", requireLogin, (req, res) => {
   const tenantId = req.params.tenantId;
-  const { tensionEnabled, tensionFont } = req.body;
+  const { tensionEnabled, tensionFont, tensionColors } = req.body;
 
   if (tenantId !== req.session.tenantId)
     return res.status(403).json({ error: "Forbidden tenant" });
@@ -455,9 +502,20 @@ app.put("/api/:tenantId/config/tension", requireLogin, (req, res) => {
     return res.status(400).json({ error: "tensionFont must be a string or null" });
   }
 
+  if (tensionColors !== undefined && tensionColors !== null && typeof tensionColors !== "object") {
+    return res.status(400).json({ error: "tensionColors must be an object" });
+  }
+
   const config = loadConfig(tenantId);
   config.tensionEnabled = tensionEnabled;
   config.tensionFont = tensionFont || null;
+  if (tensionColors) {
+    config.tensionColors = normalizeTensionColors({
+      ...config.tensionColors,
+      ...tensionColors
+    });
+  }
+
   saveConfig(tenantId, config);
 
   res.json({ success: true, config });
