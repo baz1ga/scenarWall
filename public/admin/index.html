@@ -151,25 +151,55 @@
       </section>
 
       <!-- Tension -->
-      <section x-show="section === 'tension'" x-cloak class="max-w-xl space-y-6">
-        <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-6 shadow-sm">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm text-slate-400 mb-1">Etat actuel</p>
-              <h2 class="text-lg font-semibold" x-text="tensionEnabled ? 'Barre de tension activée' : 'Barre de tension désactivée'"></h2>
+      <section x-show="section === 'tension'" x-cloak class="max-w-4xl mx-auto space-y-4">
+        <div class="flex flex-col items-center gap-4 md:flex-row md:flex-wrap md:justify-center md:items-start">
+          <div class="w-full md:max-w-3xl mx-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-6 shadow-sm space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="text-lg font-semibold" x-text="tensionEnabled ? 'Barre de tension activée' : 'Barre de tension désactivée'"></h2>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" class="sr-only peer" x-model="tensionEnabled" @change="toggleTension">
+                <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:bg-emerald-500 transition"></div>
+                <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition peer-checked:translate-x-5"></div>
+              </label>
             </div>
-            <label class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" class="sr-only peer" x-model="tensionEnabled" @change="toggleTension">
-              <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:bg-emerald-500 transition"></div>
-              <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition peer-checked:translate-x-5"></div>
+          </div>
+          <div class="w-full md:max-w-3xl mx-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-6 shadow-sm space-y-3">
+            <p class="text-sm text-slate-400">Police de la barre de tension</p>
+          <div class="grid gap-3 sm:grid-cols-2">
+            <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
+              <input type="radio" class="text-emerald-500" name="tensionFont" value="Audiowide" x-model="tensionFont" @change="toggleTension">
+              <span style="font-family: 'Audiowide', sans-serif;" class="text-lg">Futuriste (Audiowide)</span>
+            </label>
+            <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
+              <input type="radio" class="text-emerald-500" name="tensionFont" value="Metal Mania" x-model="tensionFont" @change="toggleTension">
+              <span style="font-family: 'Metal Mania', cursive;" class="text-lg">Horrifique (Metal Mania)</span>
+            </label>
+            <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
+              <input type="radio" class="text-emerald-500" name="tensionFont" value="Rye" x-model="tensionFont" @change="toggleTension">
+              <span style="font-family: 'Rye', cursive;" class="text-lg">Saloon (Rye)</span>
+            </label>
+            <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
+              <input type="radio" class="text-emerald-500" name="tensionFont" value="Share Tech Mono" x-model="tensionFont" @change="toggleTension">
+              <span style="font-family: 'Share Tech Mono', monospace;" class="text-lg">Techno (Share Tech Mono)</span>
+            </label>
+            <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
+              <input type="radio" class="text-emerald-500" name="tensionFont" value="Bangers" x-model="tensionFont" @change="toggleTension">
+              <span style="font-family: 'Bangers', cursive;" class="text-lg">Cartoon (Bangers)</span>
+            </label>
+            <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
+              <input type="radio" class="text-emerald-500" name="tensionFont" value="Great Vibes" x-model="tensionFont" @change="toggleTension">
+              <span style="font-family: 'Great Vibes', cursive;" class="text-lg">Manuscrit (Great Vibes)</span>
             </label>
           </div>
-          <div class="mt-4 text-sm" :class="tensionStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-300'" x-text="tensionMessage"></div>
         </div>
+        </div>
+        <div class="text-sm" :class="tensionStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-300'" x-text="tensionMessage"></div>
       </section>
 
       <!-- Utilisateurs (GodMode) -->
-      <section x-show="section === 'users' && isSuperAdmin" x-cloak class="space-y-4">
+      <section x-show="section === 'users' && isSuperAdmin" x-cloak class="max-w-5xl mx-auto space-y-4">
         <div class="flex items-center justify-between">
           <h2 class="text-lg font-semibold">Utilisateurs</h2>
           <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" x-model="hideInactiveUsers"> <span>Masquer les inactifs</span></label>
@@ -228,12 +258,14 @@
       </section>
 
       <!-- Quotas (GodMode) -->
-      <section x-show="section === 'quotas' && isSuperAdmin" x-cloak class="space-y-6">
-        <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 space-y-3 shadow-sm">
-          <div class="font-semibold">Quota global par défaut (Mo)</div>
-          <div class="flex items-center gap-3">
-            <input type="number" min="1" step="1" class="w-40 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100" x-model.number="globalQuotaValue">
-            <button class="rounded-lg border border-emerald-500 bg-emerald-500 text-slate-900 font-semibold px-3 py-2 text-sm hover:bg-emerald-400 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800" @click="saveGlobalQuota">Mettre à jour</button>
+      <section x-show="section === 'quotas' && isSuperAdmin" x-cloak class="max-w-5xl mx-auto space-y-6">
+        <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 space-y-2 shadow-sm">
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="font-semibold whitespace-nowrap">Quota global par défaut (Mo)</div>
+            <div class="flex items-center gap-3 ml-auto">
+              <input type="number" min="1" step="1" class="w-32 sm:w-40 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100" x-model.number="globalQuotaValue">
+              <button class="rounded-lg border border-emerald-500 bg-emerald-500 text-slate-900 font-semibold px-3 py-2 text-sm hover:bg-emerald-400 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800" @click="saveGlobalQuota">Mettre à jour</button>
+            </div>
           </div>
           <div class="text-sm" :class="globalQuotaStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-300'" x-text="globalQuotaMessage"></div>
         </div>
@@ -295,7 +327,7 @@
       </section>
 
       <!-- Mot de passe -->
-      <section x-show="section === 'password'" x-cloak class="max-w-xl space-y-4">
+      <section x-show="section === 'password'" x-cloak class="max-w-xl mx-auto space-y-4">
         <div class="text-lg font-semibold">Changer mon mot de passe</div>
         <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-5 space-y-3 shadow-sm">
           <div>
@@ -350,6 +382,7 @@
         zoomUrl: '',
         // tension
         tensionEnabled: true,
+        tensionFont: 'Audiowide',
         tensionMessage: '',
         tensionStatus: 'ok',
         // godmode users
@@ -523,6 +556,7 @@
             if (!res.ok) throw new Error('Config');
             const data = await res.json();
             this.tensionEnabled = data.tensionEnabled !== false;
+            this.tensionFont = data.tensionFont ?? 'Audiowide';
             this.tensionMessage = 'Configuration chargée.';
             this.tensionStatus = 'ok';
           } catch (err) {
@@ -536,11 +570,12 @@
             const res = await fetch(`${this.API}/api/${this.tenantId}/config/tension`, {
               method: 'PUT',
               headers: { ...this.headersAuth(), 'Content-Type': 'application/json' },
-              body: JSON.stringify({ tensionEnabled: this.tensionEnabled })
+              body: JSON.stringify({ tensionEnabled: this.tensionEnabled, tensionFont: this.tensionFont })
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Erreur');
             this.tensionEnabled = data.config?.tensionEnabled !== false;
+            this.tensionFont = data.config?.tensionFont || null;
             this.tensionMessage = this.tensionEnabled ? 'Barre de tension activée.' : 'Barre de tension désactivée.';
             this.tensionStatus = 'ok';
           } catch (err) {

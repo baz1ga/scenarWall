@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Audiowide&family=Metal+Mania&family=Rye&family=Space+Grotesk:wght@400;600&family=Share+Tech+Mono&family=Bangers&family=Great+Vibes&display=swap');
+
 /* ================================================
    FRONT.CSS
    ================================================ */
@@ -7,7 +9,6 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: "Audiowide", sans-serif;
 }
 
 body {

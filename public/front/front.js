@@ -84,6 +84,7 @@ const items = document.querySelectorAll(".tension-item");
 const zone1 = document.getElementById("zone1");
 const tensionBar = document.querySelector(".tension-bar");
 let tensionEnabled = true;
+let tensionFont = "Audiowide";
 
 function setDefaultTension() {
   if (!items.length) return;
@@ -111,6 +112,12 @@ function applyTensionState(enabled) {
   }
 }
 
+function applyTensionFont(fontName) {
+  tensionFont = fontName || "Audiowide";
+  if (!tensionBar) return;
+  tensionBar.style.fontFamily = `"${tensionFont}", sans-serif`;
+}
+
 items.forEach(item => {
   item.addEventListener("click", () => {
     if (!tensionEnabled) return;
@@ -126,9 +133,11 @@ async function loadTensionConfig() {
     if (!res.ok) throw new Error("Config fetch failed");
     const data = await res.json();
     applyTensionState(data.tensionEnabled);
+    applyTensionFont(data.tensionFont);
   } catch (err) {
     console.warn("Using default tension config", err);
     applyTensionState(true);
+    applyTensionFont("Audiowide");
   }
 }
 

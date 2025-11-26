@@ -19,6 +19,7 @@ const DEFAULT_GLOBAL = { defaultQuotaMB: 100, apiBase: null };
 const DEFAULT_CONFIG = {
   tensionEnabled: true,
   tensionColors: ["green", "yellow", "orange", "red", "black"],
+  tensionFont: null,
   quotaMB: null
 };
 
@@ -441,7 +442,7 @@ app.put("/api/:tenantId/quota", requireLogin, (req, res) => {
 
 app.put("/api/:tenantId/config/tension", requireLogin, (req, res) => {
   const tenantId = req.params.tenantId;
-  const { tensionEnabled } = req.body;
+  const { tensionEnabled, tensionFont } = req.body;
 
   if (tenantId !== req.session.tenantId)
     return res.status(403).json({ error: "Forbidden tenant" });
@@ -450,8 +451,13 @@ app.put("/api/:tenantId/config/tension", requireLogin, (req, res) => {
     return res.status(400).json({ error: "tensionEnabled must be a boolean" });
   }
 
+  if (tensionFont !== undefined && tensionFont !== null && typeof tensionFont !== "string") {
+    return res.status(400).json({ error: "tensionFont must be a string or null" });
+  }
+
   const config = loadConfig(tenantId);
   config.tensionEnabled = tensionEnabled;
+  config.tensionFont = tensionFont || null;
   saveConfig(tenantId, config);
 
   res.json({ success: true, config });
