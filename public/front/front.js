@@ -85,6 +85,7 @@ const zone1 = document.getElementById("zone1");
 const tensionBar = document.querySelector(".tension-bar");
 let tensionEnabled = true;
 let tensionFont = "Audiowide";
+const defaultZoneBorder = { top: "13px", right: "30px", bottom: "13px", left: "30px" };
 const defaultTensionColors = {
   level1: "#37aa32",
   level2: "#f8d718",
@@ -118,7 +119,7 @@ function updateTensionTextContrast() {
 }
 
 function updateZoneBorderFromSelection() {
-  if (!zone1 || !items.length) return;
+  if (!zone1 || !items.length || !tensionEnabled) return;
   const selected = Array.from(items).find((i) => i.classList.contains("selected"));
   const color = (selected || items[0]).dataset.color;
   if (color) zone1.style.borderColor = color;
@@ -156,6 +157,21 @@ function clearTension() {
   zone1.style.borderColor = "transparent";
 }
 
+function setZoneBorder(enabled) {
+  if (!zone1) return;
+  if (enabled) {
+    zone1.style.borderTopWidth = defaultZoneBorder.top;
+    zone1.style.borderRightWidth = defaultZoneBorder.right;
+    zone1.style.borderBottomWidth = defaultZoneBorder.bottom;
+    zone1.style.borderLeftWidth = defaultZoneBorder.left;
+  } else {
+    zone1.style.borderTopWidth = "0";
+    zone1.style.borderRightWidth = "0";
+    zone1.style.borderBottomWidth = "0";
+    zone1.style.borderLeftWidth = "0";
+  }
+}
+
 function applyTensionState(enabled) {
   const bar = document.querySelector(".tension-bar");
 
@@ -163,10 +179,12 @@ function applyTensionState(enabled) {
 
   if (enabled) {
     bar.classList.add("enabled");
+    setZoneBorder(true);
     setDefaultTension();
   } else {
     bar.classList.remove("enabled");
     clearTension();
+    setZoneBorder(false);
   }
 }
 
