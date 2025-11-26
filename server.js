@@ -23,9 +23,17 @@ const DEFAULT_TENSION_COLORS = {
   level4: "#e63027",
   level5: "#3a3a39"
 };
+const DEFAULT_TENSION_LABELS = {
+  level1: "0",
+  level2: "-5",
+  level3: "+5",
+  level4: "+10",
+  level5: "+15"
+};
 const DEFAULT_CONFIG = {
   tensionEnabled: true,
   tensionColors: { ...DEFAULT_TENSION_COLORS },
+  tensionLabels: { ...DEFAULT_TENSION_LABELS },
   tensionFont: null,
   quotaMB: null
 };
@@ -87,6 +95,22 @@ function normalizeTensionColors(source) {
   };
 }
 
+function normalizeTensionLabels(source) {
+  const trimLimit = (val, fallback) => {
+    if (typeof val !== "string") return fallback;
+    const v = val.trim().slice(0, 4);
+    return v.length ? v : fallback;
+  };
+  const input = typeof source === "object" && source ? source : {};
+  return {
+    level1: trimLimit(input.level1, DEFAULT_TENSION_LABELS.level1),
+    level2: trimLimit(input.level2, DEFAULT_TENSION_LABELS.level2),
+    level3: trimLimit(input.level3, DEFAULT_TENSION_LABELS.level3),
+    level4: trimLimit(input.level4, DEFAULT_TENSION_LABELS.level4),
+    level5: trimLimit(input.level5, DEFAULT_TENSION_LABELS.level5)
+  };
+}
+
 function loadConfig(tenantId) {
   const file = path.join(TENANTS_DIR, tenantId, "config.json");
 
@@ -100,7 +124,8 @@ function loadConfig(tenantId) {
     return {
       ...DEFAULT_CONFIG,
       ...data,
-      tensionColors: normalizeTensionColors(data.tensionColors)
+      tensionColors: normalizeTensionColors(data.tensionColors),
+      tensionLabels: normalizeTensionLabels(data.tensionLabels)
     };
   } catch (err) {
     console.error("Failed to read config, using defaults", err);
@@ -154,7 +179,8 @@ function saveConfig(tenantId, config) {
   const merged = {
     ...DEFAULT_CONFIG,
     ...config,
-    tensionColors: normalizeTensionColors(config.tensionColors)
+    tensionColors: normalizeTensionColors(config.tensionColors),
+    tensionLabels: normalizeTensionLabels(config.tensionLabels)
   };
   fs.writeFileSync(file, JSON.stringify(merged, null, 2));
 }
@@ -489,7 +515,7 @@ app.put("/api/:tenantId/quota", requireLogin, (req, res) => {
 
 app.put("/api/:tenantId/config/tension", requireLogin, (req, res) => {
   const tenantId = req.params.tenantId;
-  const { tensionEnabled, tensionFont, tensionColors } = req.body;
+  const { tensionEnabled, tensionFont, tensionColors, tensionLabels } = req.body;
 
   if (tenantId !== req.session.tenantId)
     return res.status(403).json({ error: "Forbidden tenant" });
@@ -506,6 +532,10 @@ app.put("/api/:tenantId/config/tension", requireLogin, (req, res) => {
     return res.status(400).json({ error: "tensionColors must be an object" });
   }
 
+  if (tensionLabels !== undefined && tensionLabels !== null && typeof tensionLabels !== "object") {
+    return res.status(400).json({ error: "tensionLabels must be an object" });
+  }
+
   const config = loadConfig(tenantId);
   config.tensionEnabled = tensionEnabled;
   config.tensionFont = tensionFont || null;
@@ -513,6 +543,12 @@ app.put("/api/:tenantId/config/tension", requireLogin, (req, res) => {
     config.tensionColors = normalizeTensionColors({
       ...config.tensionColors,
       ...tensionColors
+    });
+  }
+  if (tensionLabels) {
+    config.tensionLabels = normalizeTensionLabels({
+      ...config.tensionLabels,
+      ...tensionLabels
     });
   }
 

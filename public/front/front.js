@@ -92,6 +92,13 @@ const defaultTensionColors = {
   level4: "#e63027",
   level5: "#3a3a39"
 };
+const defaultTensionLabels = {
+  level1: "0",
+  level2: "-5",
+  level3: "+5",
+  level4: "+10",
+  level5: "+15"
+};
 
 function readableTextColor(bgColor) {
   const match = (bgColor || "").match(/(\d+)\D+(\d+)\D+(\d+)/);
@@ -127,6 +134,14 @@ function applyTensionColors(colors) {
   });
   updateTensionTextContrast();
   updateZoneBorderFromSelection();
+}
+
+function applyTensionLabels(labels) {
+  const values = { ...defaultTensionLabels, ...(labels || {}) };
+  items.forEach((item, idx) => {
+    const label = values[`level${idx + 1}`] || defaultTensionLabels[`level${idx + 1}`];
+    item.textContent = label;
+  });
 }
 
 function setDefaultTension() {
@@ -178,11 +193,13 @@ async function loadTensionConfig() {
     applyTensionState(data.tensionEnabled);
     applyTensionFont(data.tensionFont);
     applyTensionColors(data.tensionColors);
+    applyTensionLabels(data.tensionLabels);
   } catch (err) {
     console.warn("Using default tension config", err);
     applyTensionState(true);
     applyTensionFont("Audiowide");
     applyTensionColors(defaultTensionColors);
+    applyTensionLabels(defaultTensionLabels);
   }
 }
 

@@ -196,7 +196,7 @@
         </div>
           <div class="w-full md:max-w-3xl mx-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-6 shadow-sm space-y-4">
             <div class="flex items-center justify-between">
-              <p class="text-sm text-slate-400">Personaliser les niveaux</p>
+              <p class="text-sm text-slate-400">Personnaliser les niveaux</p>
               <button class="rounded-lg border border-emerald-500 bg-emerald-500 text-slate-900 font-semibold px-3 py-2 text-sm hover:bg-emerald-400 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800" @click="saveTensionConfig">
                 Enregistrer
               </button>
@@ -205,37 +205,40 @@
               <label class="flex items-center justify-between gap-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100">
                 <span class="font-semibold">Niveau 1</span>
                 <div class="flex items-center gap-2">
+                  <input type="text" maxlength="4" class="w-20 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1 text-sm text-slate-900 dark:text-slate-100" x-model="tensionLabels.level1" @change="saveTensionConfig">
                   <input type="color" class="h-9 w-12 rounded border border-slate-300 dark:border-slate-700 bg-transparent cursor-pointer" x-model="tensionColors.level1" @change="saveTensionConfig">
                 </div>
               </label>
               <label class="flex items-center justify-between gap-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100">
                 <span class="font-semibold">Niveau 2</span>
                 <div class="flex items-center gap-2">
-                  <input type="color" class="h-9 w-12 rounded border border-slate-300 dark-border-slate-700 bg-transparent cursor-pointer" x-model="tensionColors.level2" @change="saveTensionConfig">
+                  <input type="text" maxlength="4" class="w-20 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1 text-sm text-slate-900 dark:text-slate-100" x-model="tensionLabels.level2" @change="saveTensionConfig">
+                  <input type="color" class="h-9 w-12 rounded border border-slate-300 dark:border-slate-700 bg-transparent cursor-pointer" x-model="tensionColors.level2" @change="saveTensionConfig">
                 </div>
               </label>
               <label class="flex items-center justify-between gap-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100">
                 <span class="font-semibold">Niveau 3</span>
                 <div class="flex items-center gap-2">
-                  <input type="color" class="h-9 w-12 rounded border border-slate-300 dark-border-slate-700 bg-transparent cursor-pointer" x-model="tensionColors.level3" @change="saveTensionConfig">
+                  <input type="text" maxlength="4" class="w-20 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1 text-sm text-slate-900 dark:text-slate-100" x-model="tensionLabels.level3" @change="saveTensionConfig">
+                  <input type="color" class="h-9 w-12 rounded border border-slate-300 dark:border-slate-700 bg-transparent cursor-pointer" x-model="tensionColors.level3" @change="saveTensionConfig">
                 </div>
               </label>
               <label class="flex items-center justify-between gap-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100">
                 <span class="font-semibold">Niveau 4</span>
                 <div class="flex items-center gap-2">
-                  <input type="color" class="h-9 w-12 rounded border border-slate-300 dark-border-slate-700 bg-transparent cursor-pointer" x-model="tensionColors.level4" @change="saveTensionConfig">
+                  <input type="text" maxlength="4" class="w-20 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1 text-sm text-slate-900 dark:text-slate-100" x-model="tensionLabels.level4" @change="saveTensionConfig">
+                  <input type="color" class="h-9 w-12 rounded border border-slate-300 dark:border-slate-700 bg-transparent cursor-pointer" x-model="tensionColors.level4" @change="saveTensionConfig">
                 </div>
               </label>
-              <label class="flex items-center justify-between gap-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100">
+              <label class="flex items-center justify-between gap-3 rounded-lg border border-slate-300 dark-border-slate-700 bg-white dark-bg-slate-900 px-3 py-2 text-sm text-slate-900 dark-text-slate-100">
                 <span class="font-semibold">Niveau 5</span>
                 <div class="flex items-center gap-2">
+                  <input type="text" maxlength="4" class="w-20 rounded border border-slate-300 dark-border-slate-700 bg-white dark-bg-slate-900 px-2 py-1 text-sm text-slate-900 dark-text-slate-100" x-model="tensionLabels.level5" @change="saveTensionConfig">
                   <input type="color" class="h-9 w-12 rounded border border-slate-300 dark-border-slate-700 bg-transparent cursor-pointer" x-model="tensionColors.level5" @change="saveTensionConfig">
                 </div>
               </label>
             </div>
-          </div>
-        </div>
-        <div class="text-sm" :class="tensionStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-300'" x-text="tensionMessage"></div>
+          </div>        <div class="text-sm" :class="tensionStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-300'" x-text="tensionMessage"></div>
       </section>
 
       <!-- Utilisateurs (GodMode) -->
@@ -430,12 +433,26 @@
           level4: '#e63027',
           level5: '#3a3a39'
         },
+        defaultTensionLabels: {
+          level1: '0',
+          level2: '-5',
+          level3: '+5',
+          level4: '+10',
+          level5: '+15'
+        },
         tensionColors: {
           level1: '#37aa32',
           level2: '#f8d718',
           level3: '#f39100',
           level4: '#e63027',
           level5: '#3a3a39'
+        },
+        tensionLabels: {
+          level1: '0',
+          level2: '-5',
+          level3: '+5',
+          level4: '+10',
+          level5: '+15'
         },
         tensionMessage: '',
         tensionStatus: 'ok',
@@ -625,10 +642,12 @@
             this.tensionEnabled = data.tensionEnabled !== false;
             this.tensionFont = data.tensionFont ?? 'Audiowide';
             this.tensionColors = this.normalizeLocalColors(data.tensionColors);
+            this.tensionLabels = this.normalizeLocalLabels(data.tensionLabels);
             this.tensionMessage = 'Configuration chargée.';
             this.tensionStatus = 'ok';
           } catch (err) {
             this.tensionColors = { ...this.defaultTensionColors };
+            this.tensionLabels = { ...this.defaultTensionLabels };
             this.tensionMessage = 'Impossible de charger la configuration.';
             this.tensionStatus = 'error';
           }
@@ -643,6 +662,21 @@
           }
           return /^#([0-9a-fA-F]{6})$/.test(normalized) ? normalized : null;
         },
+        normalizeLocalLabels(labels) {
+          const clamp = (v, fb) => {
+            if (typeof v !== 'string') return fb;
+            const s = v.trim().slice(0, 4);
+            return s.length ? s : fb;
+          };
+          const src = labels || {};
+          return {
+            level1: clamp(src.level1, this.defaultTensionLabels.level1),
+            level2: clamp(src.level2, this.defaultTensionLabels.level2),
+            level3: clamp(src.level3, this.defaultTensionLabels.level3),
+            level4: clamp(src.level4, this.defaultTensionLabels.level4),
+            level5: clamp(src.level5, this.defaultTensionLabels.level5),
+          };
+        },
         async toggleTension() {
           // legacy alias kept to avoid breaking bindings
           return this.saveTensionConfig();
@@ -651,13 +685,15 @@
           if (!this.tenantId) return;
           try {
             const colors = this.normalizeLocalColors(this.tensionColors);
+            const labels = this.normalizeLocalLabels(this.tensionLabels);
             const res = await fetch(`${this.API}/api/${this.tenantId}/config/tension`, {
               method: 'PUT',
               headers: { ...this.headersAuth(), 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 tensionEnabled: this.tensionEnabled,
                 tensionFont: this.tensionFont,
-                tensionColors: colors
+                tensionColors: colors,
+                tensionLabels: labels
               })
             });
             const data = await res.json();
@@ -665,6 +701,7 @@
             this.tensionEnabled = data.config?.tensionEnabled !== false;
             this.tensionFont = data.config?.tensionFont || null;
             this.tensionColors = data.config?.tensionColors || colors;
+            this.tensionLabels = data.config?.tensionLabels || labels;
             this.tensionMessage = this.tensionEnabled ? 'Barre de tension activée.' : 'Barre de tension désactivée.';
             this.tensionStatus = 'ok';
           } catch (err) {
