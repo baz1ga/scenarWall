@@ -58,7 +58,7 @@ body.front {
 .photo-number {
   position: absolute;
   top: 20px;
-  right: 150px;
+  right: 16px;
   background: rgba(0,0,0,0.6);
   color: white;
   padding: 6px 12px;
@@ -94,7 +94,7 @@ body.front {
 }
 
 .carousel-arrow.left { left: 16px; }
-.carousel-arrow.right { right: 130px; }
+.carousel-arrow.right { right: 16px; }
 
 /* ================================================
    ⚡ TENSION BAR
