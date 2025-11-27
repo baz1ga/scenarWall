@@ -6,12 +6,12 @@ Petit guide pour naviguer dans le projet et lancer le serveur.
 - Installer les dépendances : `npm install`
 - Générer le CSS Tailwind (v3) : `npm run tailwind:build` (ou `npm run tailwind:watch` en dev)
 - Démarrer le serveur : `npm start` (port 3100)
-- Ouvrir `http://localhost:3100/login.html`
+- Ouvrir `http://localhost:3100/index.html`
 
 ## Lancer en production (exemple simple)
 - Générer le CSS : `npm run tailwind:build`
 - Démarrer le serveur Node : `npm start` (ou via un process manager type pm2)
-- Servir `http://<host>:3100/login.html`
+- Servir `http://<host>:3100/index.html`
 Pour un setup plus robuste : mettre un reverse proxy (Nginx) devant, gérer l’environnement (`NODE_ENV=production`, éventuelles vars d’API), et s’assurer que le dossier `data/` et `tenants/` restent en lecture/écriture côté serveur.
 
 ### Changer le port / l’URL
@@ -23,7 +23,7 @@ Pour un setup plus robuste : mettre un reverse proxy (Nginx) devant, gérer l’
 - `public/` : tout le front (HTML/CSS/JS).
   - `public/admin/` : interface admin unifiée (galerie + tension + quotas + utilisateurs + mot de passe).
   - `public/front/` : affichage public tenantisé (front + CSS/JS dédiés).
-  - `public/login.html`, `public/signup.html` : pages d’auth.
+  - `public/index.html`, `public/signup.html` : pages d’auth.
   - `public/fragments/` : fragments HTML (donation, legal footer) injectés par `public/js/common/fragments-loader.js`.
   - `public/css/tailwind.css` : build Tailwind généré depuis `src/tailwind.css`.
   - `public/js/common/` : `auth.js`, `config.js`, `fragments-loader.js`.

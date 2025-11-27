@@ -100,7 +100,7 @@ app.use(session({
 app.use(express.static(PUBLIC_DIR)); // serve login, signup, front, admin UIs
 
 // Legacy filenames → new structured paths
-app.get("/", (req, res) => res.redirect("/login.html"));
+app.get("/", (req, res) => res.redirect("/index.html"));
 app.get("/admin.html", (req, res) => res.redirect("/admin/"));
 app.get("/admin", (req, res) => res.redirect("/admin/"));
 app.get("/godmode.html", (req, res) => res.redirect("/admin/"));
@@ -117,12 +117,12 @@ app.get("/session-debug", (req, res) => {
 });
 app.get("/login", (req, res) => {
   if (req.session && req.session.user) return res.redirect("/admin");
-  return res.sendFile(path.join(PUBLIC_DIR, "login.html"));
+  return res.sendFile(path.join(PUBLIC_DIR, "index.html"));
 });
 app.get("/logout", (req, res) => {
   const clear = () => {
     res.clearCookie("connect.sid");
-    return res.redirect("/login.html");
+    return res.redirect("/index.html");
   };
   if (req.session) {
     req.session.user = null;
