@@ -83,16 +83,18 @@ class FileStore extends session.Store {
 }
 
 app.use(express.json());
+app.set("trust proxy", 1);
+
 app.use(session({
   secret: process.env.SESSION_SECRET || "change-me",
   resave: false,
   saveUninitialized: false,
   store: new FileStore(SESSIONS_FILE),
   cookie: {
-    secure: false,
-    sameSite: "lax",
+    secure: true,       // cookie envoyé seulement en HTTPS
+    sameSite: "none",   // nécessaire pour OAuth Discord (cross-site)
     httpOnly: true,
-    maxAge: 30 * 24 * 60 * 60 * 1000 // 30 jours
+    maxAge: 30 * 24 * 60 * 60 * 1000
   }
 }));
 app.use(express.static(PUBLIC_DIR)); // serve login, signup, front, admin UIs
@@ -336,8 +338,6 @@ app.get("/api/auth/discord/login", (req, res) => {
   url.searchParams.set("response_type", "code");
   url.searchParams.set("scope", scope);
   url.searchParams.set("state", state);
-  console.log("🔍 URL Discord OAuth générée :", url.toString());
-  console.log("🔍 redirect_uri attendu :", expectedRedirect);
   res.redirect(url.toString());
 });
 
