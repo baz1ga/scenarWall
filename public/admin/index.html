@@ -80,12 +80,16 @@
       </div>
       <div class="flex-1 flex justify-end">
       <div class="relative" @click.outside="userMenu=false">
-        <button class="h-10 w-10 rounded-full bg-emerald-500 text-slate-900 font-semibold flex items-center justify-center hover:bg-emerald-400"
-                @click.stop="userMenu = !userMenu"><i class="fa-solid fa-user"></i></button>
+        <button class="h-10 w-10 rounded-full bg-emerald-500 text-slate-900 font-semibold flex items-center justify-center hover:bg-emerald-400 overflow-hidden"
+                @click.stop="userMenu = !userMenu">
+          <template x-if="avatarUrl">
+            <img :src="avatarUrl" alt="Avatar" class="h-full w-full object-cover">
+          </template>
+          <template x-if="!avatarUrl">
+            <span class="text-sm font-semibold" x-text="avatarInitial"></span>
+          </template>
+        </button>
         <div class="absolute right-0 mt-2 w-48 bg-white text-slate-800 dark:bg-slate-800 dark:text-slate-100 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg" x-show="userMenu" x-transition x-cloak>
-          <button class="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 inline-flex items-center gap-2" @click="section = 'password'; userMenu=false">
-            <i class="fa-solid fa-key"></i> <span>Mot de passe</span>
-          </button>
           <button class="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 inline-flex items-center gap-2" @click="toggleTheme(); userMenu=false">
             <i :class="theme === 'dark' ? 'fa-regular fa-sun' : 'fa-solid fa-moon'"></i>
             <span x-text="theme === 'dark' ? 'Mode clair' : 'Mode sombre'"></span>
@@ -378,26 +382,6 @@
         </div>
       </section>
 
-      <!-- Mot de passe -->
-      <section x-show="section === 'password'" x-cloak class="max-w-xl mx-auto space-y-4">
-        <div class="text-lg font-semibold">Changer mon mot de passe</div>
-        <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-5 space-y-3 shadow-sm">
-          <div>
-            <label class="block text-sm text-slate-700 dark:text-slate-300">Mot de passe actuel</label>
-            <input type="password" x-model="pwd.current" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100" placeholder="Votre mot de passe actuel">
-          </div>
-          <div>
-            <label class="block text-sm text-slate-700 dark:text-slate-300">Nouveau mot de passe</label>
-            <input type="password" x-model="pwd.new" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100" placeholder="Au moins 8 caractères">
-          </div>
-          <div>
-            <label class="block text-sm text-slate-700 dark:text-slate-300">Confirmation</label>
-            <input type="password" x-model="pwd.confirm" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100" placeholder="Confirmez le nouveau mot de passe">
-          </div>
-          <button class="w-full rounded-lg border border-emerald-500 bg-emerald-500 text-slate-900 font-semibold py-2 mt-2 transition hover:bg-emerald-400 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800" @click="changePassword">Mettre à jour</button>
-          <div class="text-sm" :class="pwd.status === 'error' ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-300'" x-text="pwd.message"></div>
-        </div>
-      </section>
     </main>
   </div>
 
@@ -421,6 +405,7 @@
         title: 'ScenarWall',
         theme: 'dark',
         userMenu: false,
+        avatarUrl: getAvatar() || '',
         avatarInitial: 'A',
         // gallery
         visible: [],
@@ -476,8 +461,6 @@
         globalQuotaValue: '',
         globalQuotaMessage: '',
         globalQuotaStatus: 'ok',
-        // password
-        pwd: { current: '', new: '', confirm: '', message: '', status: 'ok' },
 
         init() {
           if (!this.token) {
@@ -487,10 +470,14 @@
           try {
             const payload = JSON.parse(atob(this.token.split('.')[1] || ''));
             if (payload.email) this.avatarInitial = payload.email.charAt(0).toUpperCase();
+            if (payload.avatarUrl) {
+              this.avatarUrl = payload.avatarUrl;
+              setAvatar(payload.avatarUrl);
+            }
           } catch (e) {}
 
           if (!this.tenantId) {
-            this.section = this.isSuperAdmin ? 'users' : 'password';
+            this.section = this.isSuperAdmin ? 'users' : 'galerie';
           }
 
           const storedTheme = localStorage.getItem('sw_theme');
@@ -519,7 +506,7 @@
 
         setBreadcrumb() {
           const map = {
-            galerie: 'Galerie', tension: 'Tension', users: 'Utilisateurs', quotas: 'Quotas', password: 'Mot de passe'
+            galerie: 'Galerie', tension: 'Tension', users: 'Utilisateurs', quotas: 'Quotas'
           };
           this.breadcrumb = 'Administration / ' + (map[this.section] || '');
           this.title = map[this.section] || 'Administration';
@@ -888,41 +875,6 @@
           }
         },
 
-        // Password
-        async changePassword() {
-          this.pwd.message = '';
-          const { current, new: newPwd, confirm } = this.pwd;
-          if (!current || !newPwd || !confirm) {
-            this.pwd.message = 'Merci de remplir tous les champs.';
-            this.pwd.status = 'error';
-            return;
-          }
-          if (newPwd.length < 8) {
-            this.pwd.message = 'Le nouveau mot de passe doit contenir au moins 8 caractères.';
-            this.pwd.status = 'error';
-            return;
-          }
-          if (newPwd !== confirm) {
-            this.pwd.message = 'Les mots de passe ne correspondent pas.';
-            this.pwd.status = 'error';
-            return;
-          }
-          try {
-            const res = await fetch(`${this.API}/api/change-password`, {
-              method: 'POST',
-              headers: { ...this.headersAuth(), 'Content-Type': 'application/json' },
-              body: JSON.stringify({ currentPassword: current, newPassword: newPwd })
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Échec du changement de mot de passe.');
-            this.pwd.message = 'Mot de passe mis à jour.';
-            this.pwd.status = 'ok';
-            this.pwd.current = this.pwd.new = this.pwd.confirm = '';
-          } catch (err) {
-            this.pwd.message = err.message || 'Erreur réseau.';
-            this.pwd.status = 'error';
-          }
-        }
       };
     }
   </script>
