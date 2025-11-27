@@ -894,6 +894,7 @@ app.get("/api/godmode/users", requireGodMode, (req, res) => {
   const enriched = users.map(u => {
     const tenantDir = path.join(TENANTS_DIR, u.tenantId);
     const imagesDir = path.join(tenantDir, "images");
+    const audioDir = path.join(tenantDir, "audio");
 
     let quota = 0;
     let count = 0;
@@ -911,6 +912,17 @@ app.get("/api/godmode/users", requireGodMode, (req, res) => {
       });
     }
 
+    let audioCount = 0;
+    if (fs.existsSync(audioDir)) {
+      const audioFiles = fs.readdirSync(audioDir).filter(f => AUDIO_EXT.test(f));
+      audioCount = audioFiles.length;
+      audioFiles.forEach(f => {
+        try {
+          quota += fs.statSync(path.join(audioDir, f)).size;
+        } catch {}
+      });
+    }
+
     if (u.tenantId) {
       const tq = getTenantQuota(u.tenantId);
       effectiveQuotaMB = tq.quotaMB;
@@ -920,6 +932,7 @@ app.get("/api/godmode/users", requireGodMode, (req, res) => {
     return {
       ...u,
       imageCount: count,
+      audioCount,
       quotaUsedBytes: quota,
       quotaMB: effectiveQuotaMB,
       quotaOverride: override

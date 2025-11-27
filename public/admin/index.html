@@ -332,6 +332,9 @@
                 <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('images')">
                   <div class="inline-flex items-center gap-2">Images <i :class="sortIcon('images','users')" class="text-xs"></i></div>
                 </th>
+                <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('audios')">
+                  <div class="inline-flex items-center gap-2">Audio <i :class="sortIcon('audios','users')" class="text-xs"></i></div>
+                </th>
                 <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('usage')">
                   <div class="inline-flex items-center gap-2">Usage <i :class="sortIcon('usage','users')" class="text-xs"></i></div>
                 </th>
@@ -343,16 +346,17 @@
             </thead>
             <tbody>
               <template x-if="usersLoading">
-                <tr><td colspan="6" class="px-4 py-3 text-center text-slate-400">Chargement...</td></tr>
+                <tr><td colspan="7" class="px-4 py-3 text-center text-slate-400">Chargement...</td></tr>
               </template>
               <template x-if="!usersLoading && filteredUsers('users').length === 0">
-                <tr><td colspan="6" class="px-4 py-3 text-center text-slate-500">Aucun utilisateur</td></tr>
+                <tr><td colspan="7" class="px-4 py-3 text-center text-slate-500">Aucun utilisateur</td></tr>
               </template>
               <template x-for="u in filteredUsers('users')" :key="u.email">
                 <tr class="border-t border-slate-200 dark:border-slate-800">
                   <td class="px-4 py-2"><div class="flex items-center gap-2"><template x-if="u.admin"><i class="fa-solid fa-crown text-amber-400"></i></template><span x-text="u.displayName || u.email"></span></div></td>
                   <td class="px-4 py-2" x-text="u.tenantId || '—'"></td>
                   <td class="px-4 py-2" x-text="u.imageCount || 0"></td>
+                  <td class="px-4 py-2" x-text="u.audioCount || 0"></td>
                   <td class="px-4 py-2">
                     <div class="w-36 sm:w-44 h-2 rounded-full bg-slate-800 overflow-hidden" :title="usageTitle(u)">
                       <div class="h-full bg-emerald-500" :style="`width:${usageData(u).percent}%`"></div>
@@ -857,6 +861,7 @@
             case 'name': return (u.displayName || u.email || '').toLowerCase();
             case 'email': return (u.email || '').toLowerCase();
             case 'images': return u.imageCount || 0;
+            case 'audios': return u.audioCount || 0;
             case 'usage': return usageMB;
             case 'lastLogin': return u.lastLogin ? new Date(u.lastLogin).getTime() : 0;
             default: return 0;
