@@ -23,7 +23,11 @@ const DEFAULT_GLOBAL = {
   discordClientSecret: null,
   discordRedirectUri: null,
   discordScopes: ["identify", "email"],
-  allowedGuildId: null
+  allowedGuildId: null,
+  sessionCookie: {
+    secure: true,
+    sameSite: "none"
+  }
 };
 const DEFAULT_TENSION_COLORS = {
   level1: "#37aa32",
@@ -84,6 +88,7 @@ class FileStore extends session.Store {
 
 app.use(express.json());
 app.set("trust proxy", 1);
+const globalConfig = getGlobalConfig();
 
 app.use(session({
   secret: process.env.SESSION_SECRET || "change-me",
@@ -91,8 +96,8 @@ app.use(session({
   saveUninitialized: false,
   store: new FileStore(SESSIONS_FILE),
   cookie: {
-    secure: true,       // cookie envoyé seulement en HTTPS
-    sameSite: "none",   // nécessaire pour OAuth Discord (cross-site)
+    secure: globalConfig.sessionCookie?.secure ?? false,
+    sameSite: globalConfig.sessionCookie?.sameSite || "lax",
     httpOnly: true,
     maxAge: 30 * 24 * 60 * 60 * 1000
   }
