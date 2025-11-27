@@ -48,6 +48,13 @@ const DEFAULT_CONFIG = {
   tensionColors: { ...DEFAULT_TENSION_COLORS },
   tensionLabels: { ...DEFAULT_TENSION_LABELS },
   tensionFont: null,
+  tensionAudio: {
+    level1: null,
+    level2: null,
+    level3: null,
+    level4: null,
+    level5: null
+  },
   quotaMB: null
 };
 
@@ -288,6 +295,21 @@ function getTenantUsageBytes(tenantId) {
   const imagesSize = dirSize(path.join(base, "images"));
   const audioSize = dirSize(path.join(base, "audio"));
   return imagesSize + audioSize;
+}
+
+function normalizeTensionAudio(input) {
+  const levels = ["level1", "level2", "level3", "level4", "level5"];
+  const out = {};
+  const src = typeof input === "object" && input ? input : {};
+  levels.forEach(l => {
+    const name = src[l];
+    if (typeof name === "string" && isSafeName(name) && AUDIO_EXT.test(name)) {
+      out[l] = name;
+    } else {
+      out[l] = null;
+    }
+  });
+  return out;
 }
 
 function saveConfig(tenantId, config) {
@@ -684,7 +706,7 @@ app.put("/api/:tenantId/quota", requireLogin, (req, res) => {
 
 app.put("/api/:tenantId/config/tension", requireLogin, (req, res) => {
   const tenantId = req.params.tenantId;
-  const { tensionEnabled, tensionFont, tensionColors, tensionLabels } = req.body;
+  const { tensionEnabled, tensionFont, tensionColors, tensionLabels, tensionAudio } = req.body;
 
   if (tenantId !== req.session.user.tenantId)
     return res.status(403).json({ error: "Forbidden tenant" });
@@ -718,6 +740,12 @@ app.put("/api/:tenantId/config/tension", requireLogin, (req, res) => {
     config.tensionLabels = normalizeTensionLabels({
       ...config.tensionLabels,
       ...tensionLabels
+    });
+  }
+  if (tensionAudio) {
+    config.tensionAudio = normalizeTensionAudio({
+      ...config.tensionAudio,
+      ...tensionAudio
     });
   }
 
