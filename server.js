@@ -389,7 +389,6 @@ app.get("/api/auth/discord/callback", async (req, res) => {
         avatarUrl,
         tenantId,
         admin: false,
-        disabled: false,
         createdAt: new Date().toISOString(),
         lastLogin: null
       };
@@ -736,22 +735,6 @@ app.get("/api/godmode/users", requireGodMode, (req, res) => {
   });
 
   res.json(enriched);
-});
-
-app.put("/api/godmode/toggle", requireGodMode, (req, res) => {
-  const { email } = req.body;
-
-  const users = getUsers();
-  const user = users.find(u => u.email === email);
-
-  if (!user) return res.status(404).json({ error: "Not found" });
-
-  if (user.admin) return res.status(403).json({ error: "Cannot disable superadmin" });
-
-  user.disabled = !user.disabled;
-  saveUsers(users);
-
-  res.json({ success: true });
 });
 
 app.get("/api/godmode/global-quota", requireGodMode, (req, res) => {

@@ -49,10 +49,6 @@
         <i class="fa-solid fa-users text-base"></i>
         <span>Utilisateurs</span>
       </button>
-      <button @click="section = 'quotas'" :class="section === 'quotas' ? 'bg-slate-800 text-fuchsia-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-left" x-show="isSuperAdmin">
-        <i class="fa-solid fa-chart-pie text-base"></i>
-        <span>Quotas</span>
-      </button>
     </nav>
     <div class="px-4 py-4 text-xs text-slate-500 space-y-3">
       <div data-include="donation-box"></div>
@@ -79,29 +75,33 @@
         </button>
       </div>
       <div class="flex-1 flex justify-end">
-      <div class="relative" @click.outside="userMenu=false">
-        <button class="h-10 w-10 rounded-full bg-emerald-500 text-slate-900 font-semibold flex items-center justify-center hover:bg-emerald-400 overflow-hidden"
-                @click.stop="userMenu = !userMenu">
-          <template x-if="avatarUrl">
-            <img :src="avatarUrl" alt="Avatar" class="h-full w-full object-cover">
-          </template>
-          <template x-if="!avatarUrl">
-            <span class="text-sm font-semibold" x-text="avatarInitial"></span>
-          </template>
-        </button>
-        <div class="absolute right-0 mt-2 w-56 bg-white text-slate-800 dark:bg-slate-800 dark:text-slate-100 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg" x-show="userMenu" x-transition x-cloak>
-          <div class="px-4 py-2 text-xs text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
-            Logged with <span class="font-semibold text-slate-800 dark:text-slate-100" x-text="displayName || '—'"></span>
-          </div>
-          <button class="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 inline-flex items-center gap-2" @click="toggleTheme(); userMenu=false">
+        <div class="flex items-center gap-3">
+          <button class="p-2 inline-flex items-center justify-center text-slate-700 dark:text-slate-100 hover:text-emerald-500 transition-colors"
+                  @click="toggleTheme()"
+                  :aria-label="theme === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre'"
+                  :title="theme === 'dark' ? 'Mode clair' : 'Mode sombre'">
             <i :class="theme === 'dark' ? 'fa-regular fa-sun' : 'fa-solid fa-moon'"></i>
-            <span x-text="theme === 'dark' ? 'Mode clair' : 'Mode sombre'"></span>
           </button>
-          <button class="w-full text-left px-4 py-2 text-sm text-rose-600 dark:text-rose-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-b-xl inline-flex items-center gap-2" @click="logout()">
-            <i class="fa-solid fa-arrow-right-from-bracket"></i> <span>Déconnexion</span>
-          </button>
+          <div class="relative" @click.outside="userMenu=false">
+            <button class="h-10 w-10 rounded-full bg-emerald-500 text-slate-900 font-semibold flex items-center justify-center hover:bg-emerald-400 overflow-hidden"
+                    @click.stop="userMenu = !userMenu">
+              <template x-if="avatarUrl">
+                <img :src="avatarUrl" alt="Avatar" class="h-full w-full object-cover">
+              </template>
+              <template x-if="!avatarUrl">
+                <span class="text-sm font-semibold" x-text="avatarInitial"></span>
+              </template>
+            </button>
+            <div class="absolute right-0 mt-2 w-56 bg-white text-slate-800 dark:bg-slate-800 dark:text-slate-100 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg" x-show="userMenu" x-transition x-cloak>
+              <div class="px-4 py-2 text-xs text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
+                Logged as <span class="font-semibold text-slate-800 dark:text-slate-100" x-text="displayName || '—'"></span>
+              </div>
+              <button class="w-full text-left px-4 py-2 text-sm text-rose-600 dark:text-rose-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-b-xl inline-flex items-center gap-2" @click="logout()">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> <span>Logout</span>
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
       </div>
     </header>
 
@@ -157,7 +157,9 @@
                 </div>
                 <div class="flex items-center gap-2 text-sm">
                   <button class="px-2 py-1 rounded bg-emerald-500 text-slate-900 font-semibold hover:bg-emerald-400" @click="showImage(img.name)"><i class="fa-regular fa-eye mr-1"></i>Afficher</button>
-                  <button class="px-2 py-1 rounded bg-rose-600 text-white font-semibold hover:bg-rose-500" @click="deleteImage(img.name)"><i class="fa-solid fa-trash mr-1"></i>Supprimer</button>
+                  <button class="px-2 py-1 rounded bg-rose-600 text-white font-semibold hover:bg-rose-500" @click="deleteImage(img.name)">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
                 </div>
               </div>
             </template>
@@ -259,9 +261,26 @@
 
       <!-- Utilisateurs (GodMode) -->
       <section x-show="section === 'users' && isSuperAdmin" x-cloak class="max-w-5xl mx-auto space-y-4">
-        <div class="flex items-center justify-between">
-          <h2 class="text-lg font-semibold">Utilisateurs</h2>
-          <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" x-model="hideInactiveUsers"> <span>Masquer les inactifs</span></label>
+        <div class="flex items-center justify-between"></div>
+        <div class="flex flex-col lg:flex-row gap-4">
+          <div class="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 space-y-2 shadow-sm">
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="flex items-center gap-2">
+              <div class="font-semibold whitespace-nowrap">Quota global par défaut (Mo)</div>
+              <div class="text-sm" :class="globalQuotaStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-300'" x-text="globalQuotaMessage"></div>
+            </div>
+            <div class="flex flex-wrap items-center gap-3 ml-auto">
+              <div class="flex items-center gap-3">
+                <input type="number" min="1" step="1" class="w-32 sm:w-40 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100" x-model.number="globalQuotaValue">
+                <button class="rounded-lg border border-emerald-500 bg-emerald-500 text-slate-900 font-semibold px-3 py-2 text-sm hover:bg-emerald-400 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800" @click="saveGlobalQuota">Mettre à jour</button>
+              </div>
+            </div>
+          </div>
+        </div>
+          <div class="lg:w-64 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 shadow-sm flex items-center justify-between">
+            <div class="font-semibold text-slate-900 dark:text-slate-100">Total usages</div>
+            <div class="text-sm text-slate-700 dark:text-slate-200" x-text="totalUsageText()"></div>
+          </div>
         </div>
         <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm">
           <table class="min-w-full text-sm">
@@ -271,43 +290,48 @@
                   <div class="inline-flex items-center gap-2">Nom <i :class="sortIcon('name','users')" class="text-xs"></i></div>
                 </th>
                 <th class="px-4 py-2 text-left">Tenant</th>
+                <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('images')">
+                  <div class="inline-flex items-center gap-2">Images <i :class="sortIcon('images','users')" class="text-xs"></i></div>
+                </th>
+                <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('usage')">
+                  <div class="inline-flex items-center gap-2">Usage <i :class="sortIcon('usage','users')" class="text-xs"></i></div>
+                </th>
                 <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('lastLogin')">
                   <div class="inline-flex items-center gap-2">Dernière connexion <i :class="sortIcon('lastLogin','users')" class="text-xs"></i></div>
-                </th>
-                <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('active')">
-                  <div class="inline-flex items-center gap-2">Statut <i :class="sortIcon('active','users')" class="text-xs"></i></div>
                 </th>
                 <th class="px-4 py-2 text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
               <template x-if="usersLoading">
-                <tr><td colspan="5" class="px-4 py-3 text-center text-slate-400">Chargement...</td></tr>
+                <tr><td colspan="6" class="px-4 py-3 text-center text-slate-400">Chargement...</td></tr>
               </template>
               <template x-if="!usersLoading && filteredUsers('users').length === 0">
-                <tr><td colspan="5" class="px-4 py-3 text-center text-slate-500">Aucun utilisateur</td></tr>
+                <tr><td colspan="6" class="px-4 py-3 text-center text-slate-500">Aucun utilisateur</td></tr>
               </template>
               <template x-for="u in filteredUsers('users')" :key="u.email">
                 <tr class="border-t border-slate-200 dark:border-slate-800">
                   <td class="px-4 py-2"><div class="flex items-center gap-2"><template x-if="u.admin"><i class="fa-solid fa-crown text-amber-400"></i></template><span x-text="u.displayName || u.email"></span></div></td>
                   <td class="px-4 py-2" x-text="u.tenantId || '—'"></td>
-                  <td class="px-4 py-2" x-text="u.lastLogin ? new Date(u.lastLogin).toLocaleString('fr-FR') : '—'"></td>
-                  <td class="px-4 py-2" x-text="u.disabled ? 'Désactivé' : 'Actif'"></td>
+                  <td class="px-4 py-2" x-text="u.imageCount || 0"></td>
                   <td class="px-4 py-2">
-                    <template x-if="!u.admin">
-                      <div class="flex items-center gap-2">
-                        <button class="px-2 py-1 inline-flex items-center gap-1 rounded border border-emerald-500 bg-emerald-500 text-slate-900 font-semibold hover:bg-emerald-400 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-700" @click="toggleUser(u.email)">
-                          <i :class="u.disabled ? 'fa-solid fa-toggle-on' : 'fa-solid fa-toggle-off'"></i>
-                          <span x-text="u.disabled ? 'Activer' : 'Désactiver'"></span>
-                        </button>
+                    <div class="w-36 sm:w-44 h-2 rounded-full bg-slate-800 overflow-hidden" :title="usageTitle(u)">
+                      <div class="h-full bg-emerald-500" :style="`width:${usageData(u).percent}%`"></div>
+                    </div>
+                    <div class="text-xs text-slate-400" x-text="usageData(u).text"></div>
+                  </td>
+                  <td class="px-4 py-2" x-text="u.lastLogin ? new Date(u.lastLogin).toLocaleString('fr-FR') : '—'"></td>
+                  <td class="px-4 py-2">
+                    <div class="flex items-center gap-2">
+                      <button class="px-2 py-1 inline-flex items-center rounded border border-emerald-500 bg-emerald-500 text-slate-900 font-semibold hover:bg-emerald-400 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-700" @click="editTenantQuota(u)">
+                        <i class="fa-solid fa-chart-pie"></i>
+                      </button>
+                      <template x-if="!u.admin">
                         <button class="px-2 py-1 rounded bg-rose-600 text-white hover:bg-rose-500 inline-flex items-center gap-1" @click="deleteUser(u.email)">
-                          <i class="fa-solid fa-trash"></i><span>Supprimer</span>
+                          <i class="fa-solid fa-trash"></i>
                         </button>
-                      </div>
-                    </template>
-                    <template x-if="u.admin">
-                      <span class="text-slate-500">—</span>
-                    </template>
+                      </template>
+                    </div>
                   </td>
                 </tr>
               </template>
@@ -317,74 +341,6 @@
       </section>
 
       <!-- Quotas (GodMode) -->
-      <section x-show="section === 'quotas' && isSuperAdmin" x-cloak class="max-w-5xl mx-auto space-y-6">
-        <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 space-y-2 shadow-sm">
-          <div class="flex flex-wrap items-center gap-3">
-            <div class="font-semibold whitespace-nowrap">Quota global par défaut (Mo)</div>
-            <div class="flex items-center gap-3 ml-auto">
-              <input type="number" min="1" step="1" class="w-32 sm:w-40 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100" x-model.number="globalQuotaValue">
-              <button class="rounded-lg border border-emerald-500 bg-emerald-500 text-slate-900 font-semibold px-3 py-2 text-sm hover:bg-emerald-400 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800" @click="saveGlobalQuota">Mettre à jour</button>
-            </div>
-          </div>
-          <div class="text-sm" :class="globalQuotaStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-300'" x-text="globalQuotaMessage"></div>
-        </div>
-
-        <div class="flex items-center justify-between">
-          <h2 class="text-lg font-semibold">Quotas par utilisateur</h2>
-          <label class="inline-flex items-center gap-2 text-sm"><input type="checkbox" x-model="hideInactiveQuota"> <span>Masquer les inactifs</span></label>
-        </div>
-        <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm">
-          <table class="min-w-full text-sm">
-            <thead class="bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200">
-              <tr>
-                <th class="px-4 py-2 text-left cursor-pointer" @click="setQuotaSort('name')">
-                  <div class="inline-flex items-center gap-2">Nom <i :class="sortIcon('name','quota')" class="text-xs"></i></div>
-                </th>
-                <th class="px-4 py-2 text-left">Images</th>
-                <th class="px-4 py-2 text-left cursor-pointer" @click="setQuotaSort('usage')">
-                  <div class="inline-flex items-center gap-2">Usage <i :class="sortIcon('usage','quota')" class="text-xs"></i></div>
-                </th>
-                <th class="px-4 py-2 text-left cursor-pointer" @click="setQuotaSort('active')">
-                  <div class="inline-flex items-center gap-2">Statut <i :class="sortIcon('active','quota')" class="text-xs"></i></div>
-                </th>
-                <th class="px-4 py-2 text-left">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <template x-if="usersLoading">
-                <tr><td colspan="5" class="px-4 py-3 text-center text-slate-400">Chargement...</td></tr>
-              </template>
-              <template x-if="!usersLoading && filteredUsers('quota').length === 0">
-                <tr><td colspan="5" class="px-4 py-3 text-center text-slate-500">Aucun utilisateur</td></tr>
-              </template>
-              <template x-for="u in filteredUsers('quota')" :key="u.email">
-                <tr class="border-t border-slate-800">
-                  <td class="px-4 py-2">
-                    <div class="flex items-center gap-2">
-                      <template x-if="u.admin"><i class="fa-solid fa-crown text-amber-400"></i></template>
-                      <span x-text="u.displayName || u.email"></span>
-                    </div>
-                  </td>
-                  <td class="px-4 py-2" x-text="u.imageCount"></td>
-                  <td class="px-4 py-2">
-                    <div class="w-44 h-2 rounded-full bg-slate-800 overflow-hidden" :title="usageTitle(u)">
-                      <div class="h-full bg-emerald-500" :style="`width:${usageData(u).percent}%`"></div>
-                    </div>
-                    <div class="text-xs text-slate-400" x-text="usageData(u).text"></div>
-                  </td>
-                  <td class="px-4 py-2" x-text="u.disabled ? 'Désactivé' : 'Actif'"></td>
-                  <td class="px-4 py-2">
-                    <button class="px-3 py-1 rounded border border-emerald-500 bg-emerald-500 text-slate-900 font-semibold hover:bg-emerald-400 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-700 inline-flex items-center gap-1" @click="editTenantQuota(u)">
-                      <i class="fa-solid fa-pen"></i><span>Modifier quota</span>
-                    </button>
-                  </td>
-                </tr>
-              </template>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
     </main>
   </div>
 
@@ -743,6 +699,10 @@
           const { usageMB, quotaMB, percent } = this.usageData(u);
           return quotaMB ? `${usageMB.toFixed(2)} / ${quotaMB} Mo (${percent.toFixed(1)}%)` : `${usageMB.toFixed(2)} Mo (quota non défini)`;
         },
+        totalUsageText() {
+          const total = (this.users || []).reduce((sum, u) => sum + this.usageData(u).usageMB, 0);
+          return `${total.toFixed(2)} Mo`;
+        },
         sortValue(u, key) {
           const { usageMB } = this.usageData(u);
           switch (key) {
@@ -751,7 +711,6 @@
             case 'images': return u.imageCount || 0;
             case 'usage': return usageMB;
             case 'lastLogin': return u.lastLogin ? new Date(u.lastLogin).getTime() : 0;
-            case 'active': return u.disabled ? 0 : 1;
             default: return 0;
           }
         },
@@ -767,8 +726,6 @@
         },
         filteredUsers(mode) {
               let list = mode === 'quota' ? this.users : this.users;
-          if (mode === 'users' && this.hideInactiveUsers) list = list.filter(u => !u.disabled);
-          if (mode === 'quota' && this.hideInactiveQuota) list = list.filter(u => !u.disabled);
           const sortConf = mode === 'users' ? this.userSort : this.quotaSort;
           return this.sortList(list, sortConf);
         },
@@ -801,14 +758,6 @@
             this.users = [];
           }
           this.usersLoading = false;
-        },
-        async toggleUser(email) {
-          await fetch(`${this.API}/api/godmode/toggle`, {
-            method: 'PUT',
-            headers: { ...this.headersGod(), 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email })
-          });
-          this.loadUsers();
         },
         async deleteUser(email) {
           if (!confirm('Supprimer définitivement ce compte ?')) return;
