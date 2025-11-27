@@ -35,23 +35,28 @@
     </button>
   </div>
 
-  <div class="w-full max-w-md mx-auto px-4">
-    <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-xl p-8 space-y-6">
-      <div class="text-center space-y-2">
-        <img src="/assets/logo-scenarwall.png" alt="ScenarWall" class="h-20 w-auto mx-auto">
-        <div class="text-5xl font-semibold text-emerald-500 font-pangolin text-center mx-auto">.ScenarWall.</div>
-        <h1 class="text-2xl font-bold">Connexion</h1>
-      </div>
+  <div class="w-full max-w-5xl mx-auto px-4 space-y-6">
+    <div class="grid md:grid-cols-[1.1fr_0.9fr] gap-6 items-stretch">
+      <div data-include="pitch"></div>
+      <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-xl p-8 space-y-6">
+        <div class="text-center space-y-2">
+          <img src="/assets/logo-scenarwall.png" alt="ScenarWall" class="h-20 w-auto mx-auto">
+          <div class="text-5xl font-semibold text-emerald-500 font-pangolin text-center mx-auto">.ScenarWall.</div>
+          <h1 class="text-2xl font-bold">Connexion</h1>
+        </div>
 
-      <div class="space-y-4">
-        <a href="/api/auth/discord/login" class="w-full inline-flex justify-center items-center gap-2 rounded-lg border border-indigo-500 bg-indigo-600 text-white font-semibold py-2 hover:bg-indigo-500">
-          <i class="fa-brands fa-discord"></i> Se connecter avec Discord
-        </a>
-        <div id="error" class="text-sm"></div>
-      </div>
+        <div class="space-y-4">
+          <a href="/api/auth/discord/login" class="w-full inline-flex justify-center items-center gap-2 rounded-lg border border-indigo-500 bg-indigo-600 text-white font-semibold py-2 hover:bg-indigo-500">
+            <i class="fa-brands fa-discord"></i> Se connecter avec Discord
+          </a>
+          <div id="error" class="text-sm"></div>
+        </div>
 
+      </div>
     </div>
-    <div class="mt-4" data-include="legal-footer" data-variant="auth"></div>
+    <div class="border-t border-slate-200 dark:border-slate-800 pt-4">
+      <div data-include="legal-footer" data-variant="auth"></div>
+    </div>
   </div>
 
 <script>
