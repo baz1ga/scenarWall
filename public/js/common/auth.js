@@ -79,5 +79,5 @@ function logout() {
   clearAdmin();
   clearDisplayName();
   clearAvatar();
-  window.location.href = "/login.html";
+  window.location.href = "/logout";
 }

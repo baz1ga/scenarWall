@@ -77,6 +77,13 @@
       const next = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
       themeState.apply(next);
     });
+    // Auto-redirect if session already active
+    fetch('/session-debug', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data && data.user) window.location.href = '/admin/';
+      })
+      .catch(() => {});
   })();
 
   async function login() {

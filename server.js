@@ -7,6 +7,7 @@ const path = require("path");
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const multer = require("multer");
+const session = require("express-session");
 
 const app = express();
 const PORT = 3100;
@@ -46,7 +47,54 @@ const DEFAULT_CONFIG = {
   quotaMB: null
 };
 
+// Session store (file-based)
+const SESSIONS_FILE = path.join(DATA_DIR, "sessions.json");
+class FileStore extends session.Store {
+  constructor(file) {
+    super();
+    this.file = file;
+  }
+  readAll() {
+    try {
+      return JSON.parse(fs.readFileSync(this.file, "utf8"));
+    } catch {
+      return {};
+    }
+  }
+  writeAll(data) {
+    fs.writeFileSync(this.file, JSON.stringify(data, null, 2));
+  }
+  get(sid, cb) {
+    const data = this.readAll();
+    cb(null, data[sid] || null);
+  }
+  set(sid, sessionData, cb) {
+    const data = this.readAll();
+    data[sid] = sessionData;
+    this.writeAll(data);
+    cb && cb(null);
+  }
+  destroy(sid, cb) {
+    const data = this.readAll();
+    delete data[sid];
+    this.writeAll(data);
+    cb && cb(null);
+  }
+}
+
 app.use(express.json());
+app.use(session({
+  secret: process.env.SESSION_SECRET || "change-me",
+  resave: false,
+  saveUninitialized: false,
+  store: new FileStore(SESSIONS_FILE),
+  cookie: {
+    secure: false,
+    sameSite: "lax",
+    httpOnly: true,
+    maxAge: 30 * 24 * 60 * 60 * 1000 // 30 jours
+  }
+}));
 app.use(express.static(PUBLIC_DIR)); // serve login, signup, front, admin UIs
 
 // Legacy filenames → new structured paths
@@ -59,17 +107,44 @@ app.get("/front.html", (req, res) => res.redirect("/front/"));
 app.get("/api/global-config", (req, res) => {
   res.json(getGlobalConfig());
 });
+app.get("/session-debug", (req, res) => {
+  res.json({
+    session: req.session || null,
+    user: (req.session && req.session.user) || null
+  });
+});
+app.get("/login", (req, res) => {
+  if (req.session && req.session.user) return res.redirect("/admin");
+  return res.sendFile(path.join(PUBLIC_DIR, "login.html"));
+});
+app.get("/logout", (req, res) => {
+  const clear = () => {
+    res.clearCookie("connect.sid");
+    return res.redirect("/login.html");
+  };
+  if (req.session) {
+    req.session.user = null;
+    req.session.destroy(err => {
+      if (err) {
+        console.error("Session destroy error", err);
+        return clear();
+      }
+      clear();
+    });
+  } else {
+    clear();
+  }
+});
 
 //------------------------------------------------------------
 //  FILES & DIRECTORIES
 //------------------------------------------------------------
 const USERS_FILE = path.join(DATA_DIR, "users.json");
-const SESSIONS_FILE = path.join(DATA_DIR, "sessions.json");
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
 if (!fs.existsSync(USERS_FILE)) fs.writeFileSync(USERS_FILE, "[]");
-if (!fs.existsSync(SESSIONS_FILE)) fs.writeFileSync(SESSIONS_FILE, "{}");
 if (!fs.existsSync(GLOBAL_FILE)) fs.writeFileSync(GLOBAL_FILE, JSON.stringify(DEFAULT_GLOBAL, null, 2));
+if (!fs.existsSync(SESSIONS_FILE)) fs.writeFileSync(SESSIONS_FILE, "{}");
 if (!fs.existsSync(TENANTS_DIR)) fs.mkdirSync(TENANTS_DIR);
 
 function normalizeTensionColors(source) {
@@ -196,14 +271,6 @@ function saveConfig(tenantId, config) {
 //------------------------------------------------------------
 //  AUTH HELPERS
 //------------------------------------------------------------
-function getSessions() {
-  return JSON.parse(fs.readFileSync(SESSIONS_FILE, "utf8"));
-}
-
-function saveSessions(data) {
-  fs.writeFileSync(SESSIONS_FILE, JSON.stringify(data, null, 2));
-}
-
 function getUsers() {
   return JSON.parse(fs.readFileSync(USERS_FILE, "utf8"));
 }
@@ -212,38 +279,14 @@ function saveUsers(users) {
   fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
 }
 
-// Discord state store (in-memory, 5 min TTL)
-const discordStates = new Map();
-function createDiscordState() {
-  const state = crypto.randomBytes(16).toString("hex");
-  discordStates.set(state, Date.now());
-  for (const [key, ts] of discordStates.entries()) {
-    if (Date.now() - ts > 5 * 60 * 1000) discordStates.delete(key);
-  }
-  return state;
-}
-function consumeDiscordState(state) {
-  const ts = discordStates.get(state);
-  if (!ts) return false;
-  discordStates.delete(state);
-  return Date.now() - ts < 5 * 60 * 1000;
-}
-
 //------------------------------------------------------------
 //  MIDDLEWARE: REQUIRE LOGIN
 //------------------------------------------------------------
 function requireLogin(req, res, next) {
-  const header = req.headers.authorization;
-  if (!header) return res.status(401).json({ error: "Missing Authorization header" });
-
-  const token = header.split(" ")[1];
-  const sessions = getSessions();
-  const session = sessions[token];
-
-  if (!session) return res.status(401).json({ error: "Invalid session" });
-
-  req.session = session;
-  req.token = token;
+  if (!req.session || !req.session.user) {
+    return res.status(401).json({ error: "Not authenticated" });
+  }
+  req.user = req.session.user;
   next();
 }
 
@@ -251,19 +294,9 @@ function requireLogin(req, res, next) {
 //  MIDDLEWARE: REQUIRE GODMODE (superadmin)
 //------------------------------------------------------------
 function requireGodMode(req, res, next) {
-  const header = req.headers["x-auth-token"];
-  if (!header) return res.status(401).json({ error: "Missing token" });
-
-  const sessions = getSessions();
-  const session = sessions[header];
-  if (!session) return res.status(401).json({ error: "Invalid session" });
-
-  const users = getUsers();
-  const user = users.find(u => u.email === session.email);
-
-  if (!user || user.admin !== true)
-    return res.status(403).json({ error: "GodMode only" });
-
+  const user = req.session && req.session.user;
+  if (!user) return res.status(401).json({ error: "Not authenticated" });
+  if (user.admin !== true) return res.status(403).json({ error: "GodMode only" });
   req.superadmin = user;
   next();
 }
@@ -286,19 +319,25 @@ app.post("/api/login", async (req, res) => {
 //  DISCORD OAUTH2 (login + callback)
 //------------------------------------------------------------
 app.get("/api/auth/discord/login", (req, res) => {
+  if (req.session && req.session.user) return res.redirect("/dashboard");
   const config = getGlobalConfig();
   const { discordClientId, discordRedirectUri, discordScopes } = config;
   if (!discordClientId || !discordRedirectUri) {
     return res.status(503).json({ error: "Discord OAuth non configuré" });
   }
-  const scope = Array.isArray(discordScopes) && discordScopes.length ? discordScopes.join(" ") : "identify email";
-  const state = createDiscordState();
+  const scope = Array.isArray(discordScopes) && discordScopes.length ? discordScopes.join(" ") : "identify";
+  const state = crypto.randomBytes(16).toString("hex");
+  if (!req.session) req.session = {};
+  req.session.oauthState = state;
+  const expectedRedirect = discordRedirectUri;
   const url = new URL("https://discord.com/api/oauth2/authorize");
   url.searchParams.set("client_id", discordClientId);
   url.searchParams.set("redirect_uri", discordRedirectUri);
   url.searchParams.set("response_type", "code");
   url.searchParams.set("scope", scope);
   url.searchParams.set("state", state);
+  console.log("🔍 URL Discord OAuth générée :", url.toString());
+  console.log("🔍 redirect_uri attendu :", expectedRedirect);
   res.redirect(url.toString());
 });
 
@@ -310,9 +349,10 @@ app.get("/api/auth/discord/callback", async (req, res) => {
   if (!discordClientId || !discordClientSecret || !discordRedirectUri) {
     return res.status(503).send("Discord OAuth non configuré");
   }
-  if (!code || !state || !consumeDiscordState(state)) {
+  if (!code || !state || !req.session || state !== req.session.oauthState) {
     return res.status(400).send("State ou code invalide");
   }
+  delete req.session.oauthState;
 
   try {
     // Exchange code
@@ -403,29 +443,21 @@ app.get("/api/auth/discord/callback", async (req, res) => {
     user.lastLogin = new Date().toISOString();
     saveUsers(users);
 
-    const token = crypto.randomBytes(20).toString("hex");
-    const sessions = getSessions();
-    sessions[token] = {
+    req.session.user = {
       email: user.email,
-      tenantId: user.tenantId,
-      createdAt: Date.now()
-    };
-    saveSessions(sessions);
-
-    // Small HTML to set localStorage then redirect to admin
-    const payload = {
-      token,
       tenantId: user.tenantId,
       admin: user.admin === true,
       displayName: user.displayName || displayName || user.email,
       avatarUrl: user.avatarUrl || avatarUrl || null
     };
+
+    // Small HTML to set client context then redirect to admin
     res.send(`<!DOCTYPE html><html><body><script>
-      localStorage.setItem('sc_token', ${JSON.stringify(payload.token)});
-      localStorage.setItem('sc_tenant', ${JSON.stringify(payload.tenantId)});
-      localStorage.setItem('sc_admin', ${payload.admin ? '"1"' : '"0"'});
-      localStorage.setItem('sc_displayName', ${JSON.stringify(payload.displayName)});
-      if (${JSON.stringify(payload.avatarUrl)} !== null) localStorage.setItem('sc_avatar', ${JSON.stringify(payload.avatarUrl)});
+      localStorage.setItem('sc_token', "session-cookie");
+      localStorage.setItem('sc_tenant', ${JSON.stringify(user.tenantId)});
+      localStorage.setItem('sc_admin', ${user.admin === true ? '"1"' : '"0"'});
+      localStorage.setItem('sc_displayName', ${JSON.stringify(req.session.user.displayName)});
+      if (${JSON.stringify(req.session.user.avatarUrl)} !== null) localStorage.setItem('sc_avatar', ${JSON.stringify(req.session.user.avatarUrl)});
       window.location.href = '/admin/';
     </script></body></html>`);
   } catch (err) {
@@ -458,7 +490,7 @@ app.get("/api/tenant/:tenant/images", requireLogin, (req, res) => {
   const tenantId = req.params.tenant;
 
   // Sécurité : le user ne peut lire que son tenant
-  if (tenantId !== req.session.tenantId) {
+  if (tenantId !== req.session.user.tenantId) {
     return res.status(403).json({ error: "Forbidden" });
   }
 
@@ -489,7 +521,7 @@ app.get("/api/tenant/:tenant/images", requireLogin, (req, res) => {
 // UPLOAD IMAGE
 app.post("/api/:tenantId/images/upload", requireLogin, upload.single("image"), (req, res) => {
   const tenantId = req.params.tenantId;
-  if (tenantId !== req.session.tenantId)
+  if (tenantId !== req.session.user.tenantId)
     return res.status(403).json({ error: "Forbidden tenant" });
 
   if (!req.file) {
@@ -521,7 +553,7 @@ app.post("/api/:tenantId/images/upload", requireLogin, upload.single("image"), (
 // ORDER
 app.put("/api/:tenantId/images/order", requireLogin, (req, res) => {
   const tenantId = req.params.tenantId;
-  if (tenantId !== req.session.tenantId)
+  if (tenantId !== req.session.user.tenantId)
     return res.status(403).json({ error: "Forbidden tenant" });
 
   fs.writeFileSync(
@@ -536,7 +568,7 @@ app.put("/api/:tenantId/images/order", requireLogin, (req, res) => {
 app.get("/api/:tenantId/config", requireLogin, (req, res) => {
   const tenantId = req.params.tenantId;
 
-  if (tenantId !== req.session.tenantId)
+  if (tenantId !== req.session.user.tenantId)
     return res.status(403).json({ error: "Forbidden tenant" });
 
   const config = loadConfig(tenantId);
@@ -546,7 +578,7 @@ app.get("/api/:tenantId/config", requireLogin, (req, res) => {
 app.get("/api/:tenantId/quota", requireLogin, (req, res) => {
   const tenantId = req.params.tenantId;
 
-  if (tenantId !== req.session.tenantId)
+  if (tenantId !== req.session.user.tenantId)
     return res.status(403).json({ error: "Forbidden tenant" });
 
   const { quotaMB, override } = getTenantQuota(tenantId);
@@ -560,7 +592,7 @@ app.put("/api/:tenantId/quota", requireLogin, (req, res) => {
   const tenantId = req.params.tenantId;
   const { quotaMB } = req.body;
 
-  if (tenantId !== req.session.tenantId)
+  if (tenantId !== req.session.user.tenantId)
     return res.status(403).json({ error: "Forbidden tenant" });
 
   const config = loadConfig(tenantId);
@@ -589,7 +621,7 @@ app.put("/api/:tenantId/config/tension", requireLogin, (req, res) => {
   const tenantId = req.params.tenantId;
   const { tensionEnabled, tensionFont, tensionColors, tensionLabels } = req.body;
 
-  if (tenantId !== req.session.tenantId)
+  if (tenantId !== req.session.user.tenantId)
     return res.status(403).json({ error: "Forbidden tenant" });
 
   if (typeof tensionEnabled !== "boolean") {
@@ -634,7 +666,7 @@ app.put("/api/:tenantId/images/hide/:name", requireLogin, (req, res) => {
   const tenantId = req.params.tenantId;
   const name = req.params.name;
 
-  if (tenantId !== req.session.tenantId)
+  if (tenantId !== req.session.user.tenantId)
     return res.status(403).json({ error: "Forbidden tenant" });
 
   const file = path.join(TENANTS_DIR, tenantId, "hidden.json");
@@ -651,7 +683,7 @@ app.put("/api/:tenantId/images/show/:name", requireLogin, (req, res) => {
   const tenantId = req.params.tenantId;
   const name = req.params.name;
 
-  if (tenantId !== req.session.tenantId)
+  if (tenantId !== req.session.user.tenantId)
     return res.status(403).json({ error: "Forbidden tenant" });
 
   const file = path.join(TENANTS_DIR, tenantId, "hidden.json");
@@ -668,7 +700,7 @@ app.delete("/api/:tenantId/images/:name", requireLogin, (req, res) => {
   const tenantId = req.params.tenantId;
   const name = req.params.name;
 
-  if (tenantId !== req.session.tenantId)
+  if (tenantId !== req.session.user.tenantId)
     return res.status(403).json({ error: "Forbidden tenant" });
 
   const base = path.join(TENANTS_DIR, tenantId);
