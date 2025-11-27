@@ -653,10 +653,6 @@ video {
   margin-top: 1.5rem;
 }
 
-.block{
-  display: block;
-}
-
 .flex{
   display: flex;
 }
@@ -695,6 +691,10 @@ video {
 
 .h-2{
   height: 0.5rem;
+}
+
+.h-20{
+  height: 5rem;
 }
 
 .h-4{
@@ -765,6 +765,10 @@ video {
   width: 16rem;
 }
 
+.w-auto{
+  width: auto;
+}
+
 .w-full{
   width: 100%;
 }
@@ -783,10 +787,6 @@ video {
 
 .max-w-md{
   max-width: 28rem;
-}
-
-.max-w-xl{
-  max-width: 36rem;
 }
 
 .flex-1{
@@ -935,6 +935,11 @@ video {
   border-color: rgb(16 185 129 / var(--tw-border-opacity, 1));
 }
 
+.border-indigo-500{
+  --tw-border-opacity: 1;
+  border-color: rgb(99 102 241 / var(--tw-border-opacity, 1));
+}
+
 .border-slate-200{
   --tw-border-opacity: 1;
   border-color: rgb(226 232 240 / var(--tw-border-opacity, 1));
@@ -967,6 +972,11 @@ video {
 .bg-emerald-500{
   --tw-bg-opacity: 1;
   background-color: rgb(16 185 129 / var(--tw-bg-opacity, 1));
+}
+
+.bg-indigo-600{
+  --tw-bg-opacity: 1;
+  background-color: rgb(79 70 229 / var(--tw-bg-opacity, 1));
 }
 
 .bg-rose-600{
@@ -1018,10 +1028,6 @@ video {
 
 .p-4{
   padding: 1rem;
-}
-
-.p-5{
-  padding: 1.25rem;
 }
 
 .p-6{
@@ -1319,6 +1325,11 @@ video {
 
 .hover\:bg-emerald-500\/10:hover{
   background-color: rgb(16 185 129 / 0.1);
+}
+
+.hover\:bg-indigo-500:hover{
+  --tw-bg-opacity: 1;
+  background-color: rgb(99 102 241 / var(--tw-bg-opacity, 1));
 }
 
 .hover\:bg-rose-500:hover{

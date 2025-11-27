@@ -38,24 +38,18 @@
   <div class="w-full max-w-md mx-auto px-4">
     <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-xl p-8 space-y-6">
       <div class="text-center space-y-2">
-        <div class="text-5xl font-semibold text-emerald-500 font-pangolin">.ScenarWall.</div>
+        <img src="/assets/logo-scenarwall.png" alt="ScenarWall" class="h-20 w-auto mx-auto">
+        <div class="text-5xl font-semibold text-emerald-500 font-pangolin text-center mx-auto">.ScenarWall.</div>
         <h1 class="text-2xl font-bold">Connexion</h1>
       </div>
 
       <div class="space-y-4">
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Email
-          <input id="email" type="email" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100" placeholder="email@exemple.com" autocomplete="email">
-        </label>
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Mot de passe
-          <input id="password" type="password" class="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100" placeholder="Votre mot de passe" autocomplete="current-password">
-        </label>
-        <button onclick="login()" class="w-full rounded-lg bg-emerald-500 text-slate-900 font-semibold py-2 hover:bg-emerald-400">Connexion</button>
+        <a href="/api/auth/discord/login" class="w-full inline-flex justify-center items-center gap-2 rounded-lg border border-indigo-500 bg-indigo-600 text-white font-semibold py-2 hover:bg-indigo-500">
+          <i class="fa-brands fa-discord"></i> Se connecter avec Discord
+        </a>
         <div id="error" class="text-sm"></div>
       </div>
 
-      <div class="text-center text-sm text-slate-600 dark:text-slate-400">
-        Pas de compte ? <a href="/signup.html" class="text-emerald-500 hover:text-emerald-400">Créer un compte</a>
-      </div>
     </div>
     <div class="mt-4" data-include="legal-footer" data-variant="auth"></div>
   </div>
@@ -113,6 +107,7 @@
       setToken(data.token);
       setTenant(data.tenantId);
       setAdmin(data.admin);
+      if (data.avatarUrl) setAvatar(data.avatarUrl);
       window.location.href = "/admin/";
     } catch (e) {
       err.textContent = "Erreur réseau";

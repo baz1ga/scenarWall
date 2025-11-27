@@ -15,7 +15,15 @@ const DATA_DIR = path.join(__dirname, "data");
 const TENANTS_DIR = path.join(__dirname, "tenants");
 const FRONT_FILE = path.join(PUBLIC_DIR, "front", "index.html");
 const GLOBAL_FILE = path.join(DATA_DIR, "global.json");
-const DEFAULT_GLOBAL = { defaultQuotaMB: 100, apiBase: null };
+const DEFAULT_GLOBAL = {
+  defaultQuotaMB: 100,
+  apiBase: null,
+  discordClientId: null,
+  discordClientSecret: null,
+  discordRedirectUri: null,
+  discordScopes: ["identify", "email"],
+  allowedGuildId: null
+};
 const DEFAULT_TENSION_COLORS = {
   level1: "#37aa32",
   level2: "#f8d718",
@@ -204,6 +212,23 @@ function saveUsers(users) {
   fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
 }
 
+// Discord state store (in-memory, 5 min TTL)
+const discordStates = new Map();
+function createDiscordState() {
+  const state = crypto.randomBytes(16).toString("hex");
+  discordStates.set(state, Date.now());
+  for (const [key, ts] of discordStates.entries()) {
+    if (Date.now() - ts > 5 * 60 * 1000) discordStates.delete(key);
+  }
+  return state;
+}
+function consumeDiscordState(state) {
+  const ts = discordStates.get(state);
+  if (!ts) return false;
+  discordStates.delete(state);
+  return Date.now() - ts < 5 * 60 * 1000;
+}
+
 //------------------------------------------------------------
 //  MIDDLEWARE: REQUIRE LOGIN
 //------------------------------------------------------------
@@ -247,119 +272,167 @@ function requireGodMode(req, res, next) {
 //  SIGNUP
 //------------------------------------------------------------
 app.post("/api/signup", async (req, res) => {
-  const { email, password } = req.body;
-
-  if (!email || !password)
-    return res.status(400).json({ error: "Missing fields" });
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email))
-    return res.status(400).json({ error: "Email format invalid" });
-
-  const users = getUsers();
-  if (users.find(u => u.email === email))
-    return res.status(400).json({ error: "Email already exists" });
-
-  const tenantId = "T" + crypto.randomBytes(4).toString("hex");
-
-  // tenant directory
-  const dir = path.join(TENANTS_DIR, tenantId);
-  fs.mkdirSync(dir);
-  fs.mkdirSync(path.join(dir, "images"));
-  fs.writeFileSync(path.join(dir, "order.json"), "[]");
-  fs.writeFileSync(path.join(dir, "hidden.json"), "[]");
-  fs.writeFileSync(path.join(dir, "config.json"), JSON.stringify(DEFAULT_CONFIG, null, 2));
-
-  const hash = await bcrypt.hash(password, 10);
-
-  users.push({
-    email,
-    password: hash,
-    tenantId,
-    admin: false,
-    disabled: false,
-    createdAt: new Date().toISOString(),
-    lastLogin: null
-  });
-
-  saveUsers(users);
-
-  res.json({ success: true, tenantId });
+  return res.status(403).json({ error: "La création de compte se fait uniquement via Discord." });
 });
 
 //------------------------------------------------------------
 //  LOGIN
 //------------------------------------------------------------
 app.post("/api/login", async (req, res) => {
-  const { email, password } = req.body;
-
-  const users = getUsers();
-  const user = users.find(u => u.email === email);
-
-  if (!user) return res.status(400).json({ error: "Unknown email" });
-  if (user.disabled) return res.status(403).json({ error: "Account disabled" });
-
-  const ok = await bcrypt.compare(password, user.password);
-  if (!ok) return res.status(400).json({ error: "Invalid password" });
-
-  const token = crypto.randomBytes(20).toString("hex");
-
-  const sessions = getSessions();
-  sessions[token] = {
-    email: user.email,
-    tenantId: user.tenantId,
-    createdAt: Date.now()
-  };
-  saveSessions(sessions);
-
-  user.lastLogin = new Date().toISOString();
-  saveUsers(users);
-
-  res.json({
-    success: true,
-    token,
-    tenantId: user.tenantId,
-    admin: user.admin === true
-  });
+  return res.status(403).json({ error: "Authentification par email/mot de passe désactivée. Utilisez Discord." });
 });
 
 //------------------------------------------------------------
-//  CHANGE PASSWORD (connected user)
+//  DISCORD OAUTH2 (login + callback)
 //------------------------------------------------------------
-app.post("/api/change-password", requireLogin, async (req, res) => {
-  const { currentPassword, newPassword } = req.body;
+app.get("/api/auth/discord/login", (req, res) => {
+  const config = getGlobalConfig();
+  const { discordClientId, discordRedirectUri, discordScopes } = config;
+  if (!discordClientId || !discordRedirectUri) {
+    return res.status(503).json({ error: "Discord OAuth non configuré" });
+  }
+  const scope = Array.isArray(discordScopes) && discordScopes.length ? discordScopes.join(" ") : "identify email";
+  const state = createDiscordState();
+  const url = new URL("https://discord.com/api/oauth2/authorize");
+  url.searchParams.set("client_id", discordClientId);
+  url.searchParams.set("redirect_uri", discordRedirectUri);
+  url.searchParams.set("response_type", "code");
+  url.searchParams.set("scope", scope);
+  url.searchParams.set("state", state);
+  res.redirect(url.toString());
+});
 
-  if (!currentPassword || !newPassword) {
-    return res.status(400).json({ error: "Champs requis manquants" });
+app.get("/api/auth/discord/callback", async (req, res) => {
+  const config = getGlobalConfig();
+  const { discordClientId, discordClientSecret, discordRedirectUri, allowedGuildId } = config;
+  const { code, state } = req.query;
+
+  if (!discordClientId || !discordClientSecret || !discordRedirectUri) {
+    return res.status(503).send("Discord OAuth non configuré");
+  }
+  if (!code || !state || !consumeDiscordState(state)) {
+    return res.status(400).send("State ou code invalide");
   }
 
-  if (newPassword.length < 8) {
-    return res.status(400).json({ error: "Le nouveau mot de passe doit contenir au moins 8 caractères" });
-  }
-
-  const users = getUsers();
-  const user = users.find(u => u.email === req.session.email);
-
-  if (!user) return res.status(404).json({ error: "Utilisateur introuvable" });
-  if (user.disabled) return res.status(403).json({ error: "Compte désactivé" });
-
-  const isValid = await bcrypt.compare(currentPassword, user.password);
-  if (!isValid) return res.status(400).json({ error: "Ancien mot de passe invalide" });
-
-  const hash = await bcrypt.hash(newPassword, 10);
-  user.password = hash;
-  saveUsers(users);
-
-  // Invalide les autres sessions actives de cet utilisateur
-  const sessions = getSessions();
-  Object.keys(sessions).forEach(tok => {
-    if (sessions[tok].email === user.email && tok !== req.token) {
-      delete sessions[tok];
+  try {
+    // Exchange code
+    const params = new URLSearchParams({
+      client_id: discordClientId,
+      client_secret: discordClientSecret,
+      grant_type: "authorization_code",
+      code,
+      redirect_uri: discordRedirectUri
+    });
+    const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: params
+    });
+    const tokenData = await tokenRes.json();
+    if (!tokenRes.ok || !tokenData.access_token) {
+      console.error("Discord token error", tokenData);
+      return res.status(400).send("Echec OAuth Discord");
     }
-  });
-  saveSessions(sessions);
 
-  res.json({ success: true });
+    // Get user info
+    const userRes = await fetch("https://discord.com/api/users/@me", {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` }
+    });
+    const userData = await userRes.json();
+    if (!userRes.ok || !userData.id) {
+      console.error("Discord user error", userData);
+      return res.status(400).send("Impossible de récupérer le compte Discord");
+    }
+
+    const discordId = userData.id;
+    const displayName = userData.global_name || userData.username || null;
+    const discNum = Number(userData.discriminator || "0");
+    const avatarUrl = userData.avatar
+      ? `https://cdn.discordapp.com/avatars/${discordId}/${userData.avatar}.png?size=128`
+      : `https://cdn.discordapp.com/embed/avatars/${discNum % 5}.png`;
+
+    // Optional guild check
+    if (allowedGuildId) {
+      const guildRes = await fetch("https://discord.com/api/users/@me/guilds", {
+        headers: { Authorization: `Bearer ${tokenData.access_token}` }
+      });
+      if (guildRes.ok) {
+        const guilds = await guildRes.json();
+        const inGuild = Array.isArray(guilds) && guilds.some(g => g.id === allowedGuildId);
+        if (!inGuild) {
+          return res.status(403).send("Accès réservé (guilde requise)");
+        }
+      } else {
+        console.error("Discord guilds error", await guildRes.text());
+      }
+    }
+
+    const email = userData.email || null;
+    const users = getUsers();
+    let user = users.find(u => u.discordId === discordId) || (email ? users.find(u => u.email === email) : null);
+
+    // Create tenant/user if needed
+    if (!user) {
+      const tenantId = "T" + crypto.randomBytes(4).toString("hex");
+      const dir = path.join(TENANTS_DIR, tenantId);
+      fs.mkdirSync(dir);
+      fs.mkdirSync(path.join(dir, "images"));
+      fs.writeFileSync(path.join(dir, "order.json"), "[]");
+      fs.writeFileSync(path.join(dir, "hidden.json"), "[]");
+      fs.writeFileSync(path.join(dir, "config.json"), JSON.stringify(DEFAULT_CONFIG, null, 2));
+
+      user = {
+        email: email || `discord_${discordId}@placeholder.local`,
+        password: null,
+        discordId,
+        displayName,
+        avatarUrl,
+        tenantId,
+        admin: false,
+        disabled: false,
+        createdAt: new Date().toISOString(),
+        lastLogin: null
+      };
+      users.push(user);
+    } else {
+      user.discordId = discordId;
+      user.displayName = displayName || user.displayName || user.email;
+      user.avatarUrl = avatarUrl;
+      if (email) user.email = email;
+    }
+
+    user.lastLogin = new Date().toISOString();
+    saveUsers(users);
+
+    const token = crypto.randomBytes(20).toString("hex");
+    const sessions = getSessions();
+    sessions[token] = {
+      email: user.email,
+      tenantId: user.tenantId,
+      createdAt: Date.now()
+    };
+    saveSessions(sessions);
+
+    // Small HTML to set localStorage then redirect to admin
+    const payload = {
+      token,
+      tenantId: user.tenantId,
+      admin: user.admin === true,
+      displayName: user.displayName || displayName || user.email,
+      avatarUrl: user.avatarUrl || avatarUrl || null
+    };
+    res.send(`<!DOCTYPE html><html><body><script>
+      localStorage.setItem('sc_token', ${JSON.stringify(payload.token)});
+      localStorage.setItem('sc_tenant', ${JSON.stringify(payload.tenantId)});
+      localStorage.setItem('sc_admin', ${payload.admin ? '"1"' : '"0"'});
+      localStorage.setItem('sc_displayName', ${JSON.stringify(payload.displayName)});
+      if (${JSON.stringify(payload.avatarUrl)} !== null) localStorage.setItem('sc_avatar', ${JSON.stringify(payload.avatarUrl)});
+      window.location.href = '/admin/';
+    </script></body></html>`);
+  } catch (err) {
+    console.error("Discord OAuth error", err);
+    res.status(500).send("Erreur OAuth Discord");
+  }
 });
 
 //------------------------------------------------------------

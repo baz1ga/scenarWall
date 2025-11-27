@@ -89,7 +89,10 @@
             <span class="text-sm font-semibold" x-text="avatarInitial"></span>
           </template>
         </button>
-        <div class="absolute right-0 mt-2 w-48 bg-white text-slate-800 dark:bg-slate-800 dark:text-slate-100 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg" x-show="userMenu" x-transition x-cloak>
+        <div class="absolute right-0 mt-2 w-56 bg-white text-slate-800 dark:bg-slate-800 dark:text-slate-100 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg" x-show="userMenu" x-transition x-cloak>
+          <div class="px-4 py-2 text-xs text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
+            Logged with <span class="font-semibold text-slate-800 dark:text-slate-100" x-text="displayName || '—'"></span>
+          </div>
           <button class="w-full text-left px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700 inline-flex items-center gap-2" @click="toggleTheme(); userMenu=false">
             <i :class="theme === 'dark' ? 'fa-regular fa-sun' : 'fa-solid fa-moon'"></i>
             <span x-text="theme === 'dark' ? 'Mode clair' : 'Mode sombre'"></span>
@@ -264,8 +267,8 @@
           <table class="min-w-full text-sm">
             <thead class="bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200">
               <tr>
-                <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('email')">
-                  <div class="inline-flex items-center gap-2">Email <i :class="sortIcon('email','users')" class="text-xs"></i></div>
+                <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('name')">
+                  <div class="inline-flex items-center gap-2">Nom <i :class="sortIcon('name','users')" class="text-xs"></i></div>
                 </th>
                 <th class="px-4 py-2 text-left">Tenant</th>
                 <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('lastLogin')">
@@ -279,14 +282,14 @@
             </thead>
             <tbody>
               <template x-if="usersLoading">
-                <tr><td colspan="7" class="px-4 py-3 text-center text-slate-400">Chargement...</td></tr>
+                <tr><td colspan="5" class="px-4 py-3 text-center text-slate-400">Chargement...</td></tr>
               </template>
               <template x-if="!usersLoading && filteredUsers('users').length === 0">
-                <tr><td colspan="7" class="px-4 py-3 text-center text-slate-500">Aucun utilisateur</td></tr>
+                <tr><td colspan="5" class="px-4 py-3 text-center text-slate-500">Aucun utilisateur</td></tr>
               </template>
               <template x-for="u in filteredUsers('users')" :key="u.email">
                 <tr class="border-t border-slate-200 dark:border-slate-800">
-                  <td class="px-4 py-2"><div class="flex items-center gap-2"><template x-if="u.admin"><i class="fa-solid fa-crown text-amber-400"></i></template><span x-text="u.email"></span></div></td>
+                  <td class="px-4 py-2"><div class="flex items-center gap-2"><template x-if="u.admin"><i class="fa-solid fa-crown text-amber-400"></i></template><span x-text="u.displayName || u.email"></span></div></td>
                   <td class="px-4 py-2" x-text="u.tenantId || '—'"></td>
                   <td class="px-4 py-2" x-text="u.lastLogin ? new Date(u.lastLogin).toLocaleString('fr-FR') : '—'"></td>
                   <td class="px-4 py-2" x-text="u.disabled ? 'Désactivé' : 'Actif'"></td>
@@ -334,8 +337,8 @@
           <table class="min-w-full text-sm">
             <thead class="bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200">
               <tr>
-                <th class="px-4 py-2 text-left cursor-pointer" @click="setQuotaSort('email')">
-                  <div class="inline-flex items-center gap-2">Email <i :class="sortIcon('email','quota')" class="text-xs"></i></div>
+                <th class="px-4 py-2 text-left cursor-pointer" @click="setQuotaSort('name')">
+                  <div class="inline-flex items-center gap-2">Nom <i :class="sortIcon('name','quota')" class="text-xs"></i></div>
                 </th>
                 <th class="px-4 py-2 text-left">Images</th>
                 <th class="px-4 py-2 text-left cursor-pointer" @click="setQuotaSort('usage')">
@@ -349,17 +352,17 @@
             </thead>
             <tbody>
               <template x-if="usersLoading">
-                <tr><td colspan="4" class="px-4 py-3 text-center text-slate-400">Chargement...</td></tr>
+                <tr><td colspan="5" class="px-4 py-3 text-center text-slate-400">Chargement...</td></tr>
               </template>
               <template x-if="!usersLoading && filteredUsers('quota').length === 0">
-                <tr><td colspan="4" class="px-4 py-3 text-center text-slate-500">Aucun utilisateur</td></tr>
+                <tr><td colspan="5" class="px-4 py-3 text-center text-slate-500">Aucun utilisateur</td></tr>
               </template>
               <template x-for="u in filteredUsers('quota')" :key="u.email">
                 <tr class="border-t border-slate-800">
                   <td class="px-4 py-2">
                     <div class="flex items-center gap-2">
                       <template x-if="u.admin"><i class="fa-solid fa-crown text-amber-400"></i></template>
-                      <span x-text="u.email"></span>
+                      <span x-text="u.displayName || u.email"></span>
                     </div>
                   </td>
                   <td class="px-4 py-2" x-text="u.imageCount"></td>
@@ -407,6 +410,7 @@
         userMenu: false,
         avatarUrl: getAvatar() || '',
         avatarInitial: 'A',
+        displayName: getDisplayName() || '',
         // gallery
         visible: [],
         hidden: [],
@@ -455,8 +459,8 @@
         usersLoading: false,
         hideInactiveUsers: false,
         hideInactiveQuota: false,
-        userSort: { key: 'email', dir: 'asc' },
-        quotaSort: { key: 'email', dir: 'asc' },
+        userSort: { key: 'name', dir: 'asc' },
+        quotaSort: { key: 'name', dir: 'asc' },
         // global quota
         globalQuotaValue: '',
         globalQuotaMessage: '',
@@ -470,6 +474,7 @@
           try {
             const payload = JSON.parse(atob(this.token.split('.')[1] || ''));
             if (payload.email) this.avatarInitial = payload.email.charAt(0).toUpperCase();
+            this.displayName = payload.displayName || payload.email || '';
             if (payload.avatarUrl) {
               this.avatarUrl = payload.avatarUrl;
               setAvatar(payload.avatarUrl);
@@ -741,6 +746,7 @@
         sortValue(u, key) {
           const { usageMB } = this.usageData(u);
           switch (key) {
+            case 'name': return (u.displayName || u.email || '').toLowerCase();
             case 'email': return (u.email || '').toLowerCase();
             case 'images': return u.imageCount || 0;
             case 'usage': return usageMB;
