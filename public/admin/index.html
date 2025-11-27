@@ -18,14 +18,23 @@
   <script src="/js/common/config.js"></script>
   <script src="/js/common/auth.js"></script>
   <script src="/js/common/fragments-loader.js" defer></script>
-  <style>[x-cloak]{display:none!important}</style>
+  <style>
+    @font-face {
+      font-family: 'Pangolin';
+      src: url('/assets/font/Pangolin-Regular.ttf') format('truetype');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    .font-pangolin { font-family: 'Pangolin', 'Comic Sans MS', cursive; }
+    [x-cloak]{display:none!important}
+  </style>
 </head>
 <body class="min-h-screen flex bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
   <!-- Sidebar -->
   <aside class="w-64 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col">
-    <div class="px-6 py-5 flex items-center gap-3">
-      <img src="/assets/logo-scenarwall.png" alt="ScenarWall" class="h-10 w-auto">
-      <div class="text-lg font-semibold text-slate-800 dark:text-slate-100">ScenarWall</div>
+    <div class="px-6 py-5 flex items-center justify-center">
+        <div class="text-3xl font-semibold text-emerald-500 font-pangolin text-center">.ScenarWall.</div>
     </div>
     <nav class="flex-1 px-3 space-y-1">
       <button @click="section = 'galerie'" :class="section === 'galerie' ? 'bg-slate-800 text-emerald-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-left" x-show="tenantId">
