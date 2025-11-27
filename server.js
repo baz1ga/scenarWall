@@ -51,6 +51,26 @@ const DEFAULT_CONFIG = {
   quotaMB: null
 };
 
+const DEFAULT_SESSION_COOKIE = {
+  secure: false,
+  sameSite: "lax"
+};
+
+function sanitizeFilename(name = "", fallback = "file") {
+  const base = name.toString().replace(/[^a-zA-Z0-9._-]/g, "_").replace(/_+/g, "_").replace(/^[_\.-]+|[_\.-]+$/g, "");
+  return base || fallback;
+}
+
+function uniqueFilename(dir, baseName, ext) {
+  let candidate = `${baseName}${ext}`;
+  let counter = 1;
+  while (fs.existsSync(path.join(dir, candidate))) {
+    candidate = `${baseName}-${counter}${ext}`;
+    counter += 1;
+  }
+  return candidate;
+}
+
 // Session store (file-based)
 const SESSIONS_FILE = path.join(DATA_DIR, "sessions.json");
 class FileStore extends session.Store {
@@ -96,8 +116,8 @@ app.use(session({
   saveUninitialized: false,
   store: new FileStore(SESSIONS_FILE),
   cookie: {
-    secure: globalConfig.sessionCookie?.secure ?? false,
-    sameSite: globalConfig.sessionCookie?.sameSite || "lax",
+    secure: globalConfig.sessionCookie?.secure ?? DEFAULT_SESSION_COOKIE.secure,
+    sameSite: globalConfig.sessionCookie?.sameSite || DEFAULT_SESSION_COOKIE.sameSite,
     httpOnly: true,
     maxAge: 30 * 24 * 60 * 60 * 1000
   }
@@ -251,17 +271,23 @@ function getTenantQuota(tenantId) {
   return { quotaMB, override: hasOverride };
 }
 
-function getTenantUsageBytes(tenantId) {
-  const dir = path.join(TENANTS_DIR, tenantId, "images");
+function dirSize(dir, filter) {
   if (!fs.existsSync(dir)) return 0;
-
   return fs.readdirSync(dir).reduce((acc, file) => {
+    if (filter && !filter(file)) return acc;
     try {
       return acc + fs.statSync(path.join(dir, file)).size;
     } catch {
       return acc;
     }
   }, 0);
+}
+
+function getTenantUsageBytes(tenantId) {
+  const base = path.join(TENANTS_DIR, tenantId);
+  const imagesSize = dirSize(path.join(base, "images"));
+  const audioSize = dirSize(path.join(base, "audio"));
+  return imagesSize + audioSize;
 }
 
 function saveConfig(tenantId, config) {
@@ -422,6 +448,7 @@ app.get("/api/auth/discord/callback", async (req, res) => {
       const dir = path.join(TENANTS_DIR, tenantId);
       fs.mkdirSync(dir);
       fs.mkdirSync(path.join(dir, "images"));
+      fs.mkdirSync(path.join(dir, "audio"));
       fs.writeFileSync(path.join(dir, "order.json"), "[]");
       fs.writeFileSync(path.join(dir, "hidden.json"), "[]");
       fs.writeFileSync(path.join(dir, "config.json"), JSON.stringify(DEFAULT_CONFIG, null, 2));
@@ -477,14 +504,47 @@ app.get("/api/auth/discord/callback", async (req, res) => {
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const dir = path.join(TENANTS_DIR, req.params.tenantId, "images");
+    fs.mkdirSync(dir, { recursive: true });
     cb(null, dir);
   },
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, Date.now() + ext);
+    const ext = (path.extname(file.originalname) || "").toLowerCase();
+    const base = sanitizeFilename(path.parse(file.originalname).name, "img");
+    const finalName = uniqueFilename(path.join(TENANTS_DIR, req.params.tenantId, "images"), base, ext);
+    cb(null, finalName);
   }
 });
 const upload = multer({ storage });
+const AUDIO_EXT = /\.(mp3|wav|ogg|m4a|aac)$/i;
+const audioStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = path.join(TENANTS_DIR, req.params.tenantId, "audio");
+    fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const ext = (path.extname(file.originalname) || '').toLowerCase();
+    const base = sanitizeFilename(path.parse(file.originalname).name, "audio");
+    const finalName = uniqueFilename(path.join(TENANTS_DIR, req.params.tenantId, "audio"), base, ext);
+    cb(null, finalName);
+  }
+});
+const audioUpload = multer({
+  storage: audioStorage,
+  limits: { fileSize: 1 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const okMime = (file.mimetype || '').startsWith("audio/");
+    const okExt = AUDIO_EXT.test(file.originalname || "");
+    if (okMime || okExt) return cb(null, true);
+    const err = new Error("INVALID_AUDIO");
+    err.code = "INVALID_AUDIO";
+    return cb(err);
+  }
+});
+
+function isSafeName(name = "") {
+  return !name.includes("..") && !name.includes("/") && !name.includes("\\");
+}
 
 //------------------------------------------------------------
 //  IMAGES API (tenant-based URL)
@@ -731,6 +791,101 @@ app.delete("/api/:tenantId/images/:name", requireLogin, (req, res) => {
 });
 
 //------------------------------------------------------------
+//  AUDIO API
+//------------------------------------------------------------
+app.get("/api/tenant/:tenant/audio", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  if (tenantId !== req.session.user.tenantId)
+    return res.status(403).json({ error: "Forbidden tenant" });
+
+  const dir = path.join(TENANTS_DIR, tenantId, "audio");
+  if (!fs.existsSync(dir)) {
+    return res.json([]);
+  }
+
+  const files = fs.readdirSync(dir).filter(f => AUDIO_EXT.test(f));
+  const list = files.map(name => {
+    const filePath = path.join(dir, name);
+    let size = 0;
+    try {
+      size = fs.statSync(filePath).size;
+    } catch {}
+    return {
+      name,
+      url: `/t/${tenantId}/audio/${name}`,
+      size
+    };
+  });
+
+  res.json(list);
+});
+
+app.post("/api/:tenantId/audio/upload", requireLogin, (req, res) => {
+  const tenantId = req.params.tenantId;
+  if (tenantId !== req.session.user.tenantId)
+    return res.status(403).json({ error: "Forbidden tenant" });
+
+  audioUpload.single("audio")(req, res, err => {
+    if (err) {
+      if (err.code === "LIMIT_FILE_SIZE") return res.status(400).json({ error: "Fichier trop volumineux (1 Mo max)" });
+      if (err.code === "INVALID_AUDIO") return res.status(400).json({ error: "Format audio non supporté" });
+      return res.status(400).json({ error: "Échec de l'upload audio" });
+    }
+    if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+
+    const { quotaMB } = getTenantQuota(tenantId);
+    const quotaBytes = quotaMB * 1024 * 1024;
+    const usageBytes = getTenantUsageBytes(tenantId);
+    const fileSize = req.file.size || 0;
+
+    if (usageBytes + fileSize > quotaBytes) {
+      try { if (req.file.path) fs.unlinkSync(req.file.path); } catch {}
+      return res.status(400).json({ error: "Quota exceeded" });
+    }
+
+    res.json({ success: true, name: req.file.filename, size: fileSize });
+  });
+});
+
+app.delete("/api/:tenantId/audio/:name", requireLogin, (req, res) => {
+  const { tenantId, name } = req.params;
+  if (tenantId !== req.session.user.tenantId)
+    return res.status(403).json({ error: "Forbidden tenant" });
+  if (!isSafeName(name)) return res.status(400).json({ error: "Invalid name" });
+
+  const filePath = path.join(TENANTS_DIR, tenantId, "audio", name);
+  if (fs.existsSync(filePath)) {
+    try { fs.unlinkSync(filePath); } catch {}
+  }
+  return res.json({ success: true });
+});
+
+app.put("/api/:tenantId/audio/:name", requireLogin, (req, res) => {
+  const { tenantId, name } = req.params;
+  const { newName } = req.body || {};
+  if (tenantId !== req.session.user.tenantId)
+    return res.status(403).json({ error: "Forbidden tenant" });
+  if (!isSafeName(name) || !isSafeName(newName)) return res.status(400).json({ error: "Invalid name" });
+  if (!newName || !AUDIO_EXT.test(newName)) return res.status(400).json({ error: "Invalid audio name" });
+
+  const dir = path.join(TENANTS_DIR, tenantId, "audio");
+  if (!fs.existsSync(dir)) return res.status(404).json({ error: "Not found" });
+
+  const src = path.join(dir, name);
+  const dest = path.join(dir, newName);
+
+  if (!fs.existsSync(src)) return res.status(404).json({ error: "Not found" });
+  if (fs.existsSync(dest)) return res.status(400).json({ error: "Le nom existe déjà" });
+
+  try {
+    fs.renameSync(src, dest);
+    return res.json({ success: true, name: newName });
+  } catch (err) {
+    return res.status(500).json({ error: "Rename failed" });
+  }
+});
+
+//------------------------------------------------------------
 //  GODMODE MODULE
 //------------------------------------------------------------
 app.get("/api/godmode/users", requireGodMode, (req, res) => {
@@ -853,6 +1008,16 @@ app.get("/t/:tenantId/images/:name", (req, res) => {
     return res.status(404).send("Image not found");
   }
 
+  res.sendFile(file);
+});
+
+app.get("/t/:tenantId/audio/:name", (req, res) => {
+  const { tenantId, name } = req.params;
+  if (!isSafeName(name)) return res.status(400).send("Invalid name");
+  const file = path.join(TENANTS_DIR, tenantId, "audio", name);
+  if (!fs.existsSync(file)) {
+    return res.status(404).send("Audio not found");
+  }
   res.sendFile(file);
 });
 

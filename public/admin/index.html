@@ -41,6 +41,10 @@
         <i class="fa-regular fa-image text-base"></i>
         <span>Galerie</span>
       </button>
+      <button @click="section = 'audio'; loadAudio()" :class="section === 'audio' ? 'bg-slate-800 text-indigo-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-left" x-show="tenantId">
+        <i class="fa-solid fa-music text-base"></i>
+        <span>Audio</span>
+      </button>
       <button @click="section = 'tension'" :class="section === 'tension' ? 'bg-slate-800 text-amber-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-left" x-show="tenantId">
         <i class="fa-solid fa-bolt text-base"></i>
         <span>Tension</span>
@@ -166,6 +170,41 @@
           </div>
           <div class="text-sm" :class="uploadStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-300'" x-text="uploadMessage"></div>
         </div>
+      </section>
+
+      <!-- Audio -->
+      <section x-show="section === 'audio'" x-cloak class="space-y-6 max-w-5xl mx-auto">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-semibold">Fichiers audio</h2>
+          <label class="cursor-pointer inline-flex items-center gap-2 text-sm text-indigo-600 dark:text-indigo-300" x-show="tenantId">
+            <input type="file" class="hidden" multiple accept="audio/*" @change="uploadAudio($event)">
+            <span class="inline-flex items-center gap-2 rounded-lg border border-indigo-500 px-3 py-1.5 text-indigo-800 dark:text-indigo-100 bg-white dark:bg-transparent hover:bg-indigo-500/10"><i class="fa-solid fa-upload"></i> Ajouter (&lt; 1 Mo)</span>
+          </label>
+        </div>
+        <template x-if="audioLoading">
+          <div class="text-sm text-slate-400">Chargement...</div>
+        </template>
+        <template x-if="!audioLoading && audioFiles.length === 0">
+          <div class="text-sm text-slate-600 dark:text-slate-400 border border-dashed border-slate-300 dark:border-slate-800 rounded-lg p-4">Aucun fichier audio.</div>
+        </template>
+        <div class="space-y-2" x-show="!audioLoading && audioFiles.length > 0">
+          <template x-for="audio in audioFiles" :key="audio.name">
+            <div class="flex items-center gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3">
+              <div class="flex-1">
+                <div class="text-sm font-semibold truncate" x-text="audio.name"></div>
+                <div class="text-xs text-slate-500" x-text="formatBytes(audio.size)"></div>
+              </div>
+              <audio :src="audio.url" controls class="w-48 h-10"></audio>
+              <button class="px-2 py-1 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 inline-flex items-center gap-1" @click="renameAudio(audio.name)">
+                <i class="fa-solid fa-pen"></i>
+              </button>
+              <button class="px-2 py-1 rounded bg-rose-600 text-white hover:bg-rose-500 inline-flex items-center gap-1" @click="deleteAudio(audio.name)">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+          </template>
+        </div>
+        <div class="text-sm" :class="audioStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-300'" x-text="audioMessage"></div>
       </section>
 
       <!-- Tension -->
@@ -374,6 +413,11 @@
         galleryLoading: true,
         uploadMessage: '',
         uploadStatus: 'ok',
+        // audio
+        audioFiles: [],
+        audioLoading: false,
+        audioMessage: '',
+        audioStatus: 'ok',
         quotaDisplay: '—',
         quotaPercent: 0,
         zoomUrl: '',
@@ -445,6 +489,7 @@
           this.theme = storedTheme === 'light' ? 'light' : 'dark';
 
           this.refreshGallery();
+          this.loadAudio();
           this.loadTension();
           this.fetchQuota();
           if (this.isSuperAdmin) {
@@ -467,7 +512,7 @@
 
         setBreadcrumb() {
           const map = {
-            galerie: 'Galerie', tension: 'Tension', users: 'Utilisateurs', quotas: 'Quotas'
+            galerie: 'Galerie', audio: 'Audio', tension: 'Tension', users: 'Utilisateurs', quotas: 'Quotas'
           };
           this.breadcrumb = 'Administration / ' + (map[this.section] || '');
           this.title = map[this.section] || 'Administration';
@@ -577,6 +622,109 @@
         openFront() {
           if (!this.tenantId) return;
           window.open(`/t/${this.tenantId}/front`, '_blank');
+        },
+        formatBytes(bytes) {
+          if (bytes === null || bytes === undefined) return '';
+          const units = ['o', 'Ko', 'Mo'];
+          let val = bytes;
+          let i = 0;
+          while (val >= 1024 && i < units.length - 1) {
+            val = val / 1024;
+            i++;
+          }
+          return `${val.toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
+        },
+
+        // Audio
+        async loadAudio() {
+          if (!this.tenantId) return;
+          this.audioLoading = true;
+          try {
+            const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/audio`, { headers: this.headersAuth() });
+            if (!res.ok) throw new Error('Audio');
+            this.audioFiles = await res.json();
+            this.audioStatus = 'ok';
+          } catch (e) {
+            this.audioFiles = [];
+            this.audioStatus = 'error';
+          }
+          this.audioLoading = false;
+        },
+        async uploadAudio(event) {
+          const files = Array.from(event.target.files || []);
+          event.target.value = '';
+          if (!files.length || !this.tenantId) return;
+          let success = 0;
+          const errors = [];
+          for (const file of files) {
+            if (file.size > 1 * 1024 * 1024) {
+              errors.push(`${file.name} dépasse 1 Mo`);
+              continue;
+            }
+            const form = new FormData();
+            form.append('audio', file);
+            try {
+              const res = await fetch(`${this.API}/api/${this.tenantId}/audio/upload`, {
+                method: 'POST',
+                headers: this.headersAuth(),
+                body: form
+              });
+              const data = await res.json().catch(() => ({}));
+              if (!res.ok) {
+                errors.push(data.error || `Échec pour ${file.name}`);
+              } else {
+                success++;
+              }
+            } catch (err) {
+              errors.push(`Réseau: ${file.name}`);
+            }
+          }
+          if (success > 0) {
+            await this.loadAudio();
+            await this.fetchQuota();
+          } else {
+            await this.fetchQuota();
+          }
+          this.audioStatus = errors.length ? 'error' : 'ok';
+          if (errors.length === 0) {
+            this.audioMessage = `${success} fichier${success > 1 ? 's' : ''} ajouté${success > 1 ? 's' : ''}.`;
+          } else {
+            const msg = [
+              success > 0 ? `${success} fichier${success > 1 ? 's' : ''} ok.` : 'Aucun fichier ajouté.',
+              errors.join(' | ')
+            ].join(' ');
+            this.audioMessage = msg;
+          }
+        },
+        async deleteAudio(name) {
+          if (!confirm('Supprimer définitivement cet audio ?')) return;
+          try {
+            await fetch(`${this.API}/api/${this.tenantId}/audio/${encodeURIComponent(name)}`, { method: 'DELETE', headers: this.headersAuth() });
+            await this.loadAudio();
+            await this.fetchQuota();
+          } catch (err) {
+            this.audioMessage = 'Suppression impossible.';
+            this.audioStatus = 'error';
+          }
+        },
+        async renameAudio(name) {
+          const newName = prompt('Nouveau nom (avec extension .mp3/.wav/.ogg/.m4a/.aac)', name);
+          if (!newName || newName === name) return;
+          try {
+            const res = await fetch(`${this.API}/api/${this.tenantId}/audio/${encodeURIComponent(name)}`, {
+              method: 'PUT',
+              headers: { ...this.headersAuth(), 'Content-Type': 'application/json' },
+              body: JSON.stringify({ newName })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.error || 'Erreur');
+            await this.loadAudio();
+            this.audioMessage = 'Nom mis à jour.';
+            this.audioStatus = 'ok';
+          } catch (err) {
+            this.audioMessage = err.message || 'Impossible de renommer.';
+            this.audioStatus = 'error';
+          }
         },
 
         // Quota
