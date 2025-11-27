@@ -757,12 +757,12 @@ video {
   width: 1rem;
 }
 
-.w-48{
-  width: 12rem;
-}
-
 .w-56{
   width: 14rem;
+}
+
+.w-60{
+  width: 15rem;
 }
 
 .w-64{
@@ -777,8 +777,8 @@ video {
   width: 100%;
 }
 
-.min-w-\[120px\]{
-  min-width: 120px;
+.min-w-\[160px\]{
+  min-width: 160px;
 }
 
 .min-w-full{
@@ -791,10 +791,6 @@ video {
 
 .max-w-5xl{
   max-width: 64rem;
-}
-
-.max-w-\[180px\]{
-  max-width: 180px;
 }
 
 .max-w-md{

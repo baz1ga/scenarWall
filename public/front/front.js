@@ -100,6 +100,14 @@ const defaultTensionLabels = {
   level4: "+10",
   level5: "+15"
 };
+let tensionAudio = {
+  level1: null,
+  level2: null,
+  level3: null,
+  level4: null,
+  level5: null
+};
+let audioPlayer = null;
 
 function readableTextColor(bgColor) {
   const match = (bgColor || "").match(/(\d+)\D+(\d+)\D+(\d+)/);
@@ -200,6 +208,8 @@ items.forEach(item => {
     items.forEach(i => i.classList.remove("selected"));
     item.classList.add("selected");
     zone1.style.borderColor = item.dataset.color;
+    const level = item.dataset.level;
+    if (level) playTensionAudio(level);
   });
 });
 
@@ -212,6 +222,7 @@ async function loadTensionConfig() {
     applyTensionFont(data.tensionFont);
     applyTensionColors(data.tensionColors);
     applyTensionLabels(data.tensionLabels);
+    tensionAudio = { ...tensionAudio, ...(data.tensionAudio || {}) };
   } catch (err) {
     console.warn("Using default tension config", err);
     applyTensionState(true);
@@ -219,6 +230,19 @@ async function loadTensionConfig() {
     applyTensionColors(defaultTensionColors);
     applyTensionLabels(defaultTensionLabels);
   }
+}
+
+function playTensionAudio(level) {
+  const name = tensionAudio[level];
+  if (!name) return;
+  const url = `/t/${TENANT}/audio/${encodeURIComponent(name)}`;
+  if (!audioPlayer) {
+    audioPlayer = new Audio();
+  }
+  audioPlayer.pause();
+  audioPlayer.src = url;
+  audioPlayer.currentTime = 0;
+  audioPlayer.play().catch(() => {});
 }
 
 // ---------------------------------------------------------
