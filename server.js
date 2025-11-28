@@ -1055,8 +1055,9 @@ app.put("/api/godmode/global-quota", requireGodMode, (req, res) => {
     return res.status(400).json({ error: "defaultQuotaMB must be a positive number" });
   }
 
-  const data = { defaultQuotaMB };
-  fs.writeFileSync(GLOBAL_FILE, JSON.stringify(data, null, 2));
+  const current = getGlobalConfig();
+  const updated = { ...current, defaultQuotaMB };
+  fs.writeFileSync(GLOBAL_FILE, JSON.stringify(updated, null, 2));
   res.json({ success: true, defaultQuotaMB });
 });
 
