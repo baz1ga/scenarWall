@@ -543,7 +543,19 @@ const storage = multer.diskStorage({
     cb(null, finalName);
   }
 });
-const upload = multer({ storage });
+const IMAGE_EXT = /\.(jpg|jpeg|png|webp)$/i;
+const upload = multer({
+  storage,
+  limits: { fileSize: 6 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const okExt = IMAGE_EXT.test(file.originalname || "");
+    const okMime = (file.mimetype || "").startsWith("image/");
+    if (okExt || okMime) return cb(null, true);
+    const err = new Error("INVALID_IMAGE");
+    err.code = "INVALID_IMAGE";
+    return cb(err);
+  }
+});
 const AUDIO_EXT = /\.(mp3|wav|ogg|m4a|aac)$/i;
 const audioStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -637,7 +649,7 @@ app.get("/api/tenant/:tenant/images", requireLogin, async (req, res) => {
   }
 
   const files = fs.readdirSync(dir)
-    .filter(f => /\.(jpg|jpeg|png)$/i.test(f));
+    .filter(f => /\.(jpg|jpeg|png|webp)$/i.test(f));
 
   await ensureThumbnails(tenantId, files);
 
@@ -656,37 +668,45 @@ app.get("/api/tenant/:tenant/images", requireLogin, async (req, res) => {
 });
 
 // UPLOAD IMAGE
-app.post("/api/:tenantId/images/upload", requireLogin, upload.single("image"), async (req, res) => {
+app.post("/api/:tenantId/images/upload", requireLogin, (req, res) => {
   const tenantId = req.params.tenantId;
   if (tenantId !== req.session.user.tenantId)
     return res.status(403).json({ error: "Forbidden tenant" });
 
-  if (!req.file) {
-    return res.status(400).json({ error: "No file uploaded" });
-  }
+  upload.single("image")(req, res, async err => {
+    if (err) {
+      if (err.code === "LIMIT_FILE_SIZE") return res.status(400).json({ error: "Image trop volumineuse (6 Mo max)" });
+      if (err.code === "INVALID_IMAGE") return res.status(400).json({ error: "Format d'image non supporté" });
+      return res.status(400).json({ error: "Échec de l'upload image" });
+    }
 
-  const base = path.join(TENANTS_DIR, tenantId);
-  const orderFile = path.join(base, "order.json");
-  const uploadedPath = req.file.path || path.join(base, "images", req.file.filename);
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
 
-  const { quotaMB } = getTenantQuota(tenantId);
-  const quotaBytes = quotaMB * 1024 * 1024;
-  const usageBytes = getTenantUsageBytes(tenantId);
-  const projectedUsage = usageBytes + (req.file.size || 0);
+    const base = path.join(TENANTS_DIR, tenantId);
+    const orderFile = path.join(base, "order.json");
+    const uploadedPath = req.file.path || path.join(base, "images", req.file.filename);
 
-  if (projectedUsage > quotaBytes) {
-    if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath);
-    return res.status(400).json({ error: "Quota exceeded" });
-  }
+    const { quotaMB } = getTenantQuota(tenantId);
+    const quotaBytes = quotaMB * 1024 * 1024;
+    const usageBytes = getTenantUsageBytes(tenantId);
+    const projectedUsage = usageBytes + (req.file.size || 0);
 
-  const order = JSON.parse(fs.readFileSync(orderFile));
+    if (projectedUsage > quotaBytes) {
+      if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath);
+      return res.status(400).json({ error: "Quota exceeded" });
+    }
 
-  order.push(req.file.filename);
-  fs.writeFileSync(orderFile, JSON.stringify(order, null, 2));
+    const order = JSON.parse(fs.readFileSync(orderFile));
 
-  await ensureThumbnail(tenantId, req.file.filename);
+    order.push(req.file.filename);
+    fs.writeFileSync(orderFile, JSON.stringify(order, null, 2));
 
-  res.json({ success: true });
+    await ensureThumbnail(tenantId, req.file.filename);
+
+    res.json({ success: true });
+  });
 });
 
 // ORDER
@@ -1141,7 +1161,7 @@ app.get("/t/:tenantId/api/images", async (req, res) => {
   if (!fs.existsSync(dir)) return res.json([]);
 
   const files = fs.readdirSync(dir)
-    .filter(f => /\.(png|jpg|jpeg)$/i.test(f))
+    .filter(f => /\.(png|jpg|jpeg|webp)$/i.test(f))
     .filter(f => !hidden.includes(f))
     .sort((a, b) => order.indexOf(a) - order.indexOf(b))
     .map(f => f);
