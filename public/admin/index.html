@@ -238,7 +238,7 @@
                 <div class="text-xs text-slate-500" x-text="formatBytes(audio.size)"></div>
               </div>
               <audio :src="audio.url" controls class="w-60 h-10"></audio>
-              <button class="px-2 py-1 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 inline-flex items-center gap-1" @click="renameAudio(audio.name)">
+              <button class="px-2 py-1 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 inline-flex items-center gap-1" @click="openRenameAudioModal(audio.name)">
                 <i class="fa-solid fa-pen"></i>
               </button>
               <button class="px-2 py-1 rounded bg-rose-600 text-white hover:bg-rose-500 inline-flex items-center gap-1" @click="deleteAudio(audio.name)">
@@ -428,6 +428,103 @@
     </div>
   </div>
 
+  <!-- Tenant quota modal -->
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center px-4"
+    x-show="tenantQuotaModal.open"
+    x-transition
+    x-cloak
+    @keydown.escape.window="closeTenantQuotaModal()"
+  >
+    <div class="absolute inset-0 bg-black/60" @click="closeTenantQuotaModal()"></div>
+    <div class="relative w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
+      <div class="flex items-center gap-3">
+        <div class="h-10 w-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl">
+          <i class="fa-solid fa-chart-pie"></i>
+        </div>
+        <div class="text-lg font-semibold text-slate-900 dark:text-slate-100">Quota personnalisé</div>
+      </div>
+      <p class="text-sm text-slate-600 dark:text-slate-300">
+        Définissez un quota (Mo) pour <span class="font-semibold" x-text="tenantQuotaModal.user?.displayName || tenantQuotaModal.user?.email || 'cet utilisateur'"></span>.
+        Laisser vide pour appliquer le quota global.
+      </p>
+      <div class="space-y-2">
+        <label class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 font-semibold">Quota (Mo)</label>
+        <input
+          type="number"
+          min="0"
+          step="0.1"
+          class="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-400 focus:outline-none"
+          x-model="tenantQuotaModal.value"
+          placeholder="Quota global"
+        >
+        <p class="text-xs text-rose-500" x-text="tenantQuotaModal.error" x-show="tenantQuotaModal.error"></p>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800" @click="closeTenantQuotaModal()">Annuler</button>
+        <button class="px-4 py-2 rounded-lg bg-emerald-500 text-slate-900 font-semibold hover:bg-emerald-400" @click="saveTenantQuota()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rename audio modal -->
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center px-4"
+    x-show="renameAudioModal.open"
+    x-transition
+    x-cloak
+    @keydown.escape.window="closeRenameAudioModal()"
+  >
+    <div class="absolute inset-0 bg-black/60" @click="closeRenameAudioModal()"></div>
+    <div class="relative w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
+      <div class="flex items-center gap-3">
+        <div class="h-10 w-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xl">
+          <i class="fa-solid fa-pen"></i>
+        </div>
+        <div class="text-lg font-semibold text-slate-900 dark:text-slate-100">Renommer l'audio</div>
+      </div>
+      <p class="text-sm text-slate-600 dark:text-slate-300">Nom actuel: <span class="font-semibold" x-text="renameAudioModal.name"></span></p>
+      <div class="space-y-2">
+        <label class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 font-semibold">Nouveau nom</label>
+        <input
+          type="text"
+          class="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+          x-model="renameAudioModal.newName"
+          placeholder="ex: ambiance.mp3"
+        >
+        <p class="text-xs text-rose-500" x-text="renameAudioModal.error" x-show="renameAudioModal.error"></p>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800" @click="closeRenameAudioModal()">Annuler</button>
+        <button class="px-4 py-2 rounded-lg bg-indigo-500 text-white font-semibold hover:bg-indigo-400" @click="confirmRenameAudio()">Renommer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm modal -->
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center px-4"
+    x-show="confirmModal.open"
+    x-transition
+    x-cloak
+    @keydown.escape.window="closeConfirm()"
+  >
+    <div class="absolute inset-0 bg-black/60" @click="closeConfirm()"></div>
+    <div class="relative w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
+      <div class="flex items-center gap-3">
+        <div class="h-10 w-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-xl">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div class="text-lg font-semibold text-slate-900 dark:text-slate-100">Confirmation</div>
+      </div>
+      <p class="text-sm text-slate-600 dark:text-slate-300" x-text="confirmModal.message"></p>
+      <div class="flex justify-end gap-2 pt-2">
+        <button class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800" @click="closeConfirm()">Annuler</button>
+        <button class="px-4 py-2 rounded-lg bg-rose-600 text-white font-semibold hover:bg-rose-500" @click="confirmYes()">Confirmer</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     function dashboard() {
       return {
@@ -501,6 +598,24 @@
         tensionMessage: '',
         tensionStatus: 'ok',
         tensionSavedAt: null,
+        // confirmations
+        confirmModal: {
+          open: false,
+          message: '',
+          action: null
+        },
+        tenantQuotaModal: {
+          open: false,
+          user: null,
+          value: '',
+          error: ''
+        },
+        renameAudioModal: {
+          open: false,
+          name: '',
+          newName: '',
+          error: ''
+        },
         // godmode users
         users: [],
         usersLoading: false,
@@ -635,6 +750,60 @@
           this.uploadMessage = msg;
           this.uploadStatus = status;
         },
+        askConfirm(message, action) {
+          this.confirmModal.message = message;
+          this.confirmModal.action = action;
+          this.confirmModal.open = true;
+        },
+        closeConfirm() {
+          this.confirmModal.open = false;
+          this.confirmModal.message = '';
+          this.confirmModal.action = null;
+        },
+        async confirmYes() {
+          const action = this.confirmModal.action;
+          this.closeConfirm();
+          if (typeof action === 'function') {
+            await action();
+          }
+        },
+        openTenantQuotaModal(user) {
+          this.tenantQuotaModal.user = user;
+          this.tenantQuotaModal.value = user.quotaOverride ? user.quotaMB : '';
+          this.tenantQuotaModal.error = '';
+          this.tenantQuotaModal.open = true;
+        },
+        closeTenantQuotaModal() {
+          this.tenantQuotaModal = { open: false, user: null, value: '', error: '' };
+        },
+        async saveTenantQuota() {
+          const user = this.tenantQuotaModal.user;
+          if (!user) return;
+          const trimmed = (this.tenantQuotaModal.value ?? '').toString().trim();
+          let payloadValue = null;
+          if (trimmed !== '') {
+            const num = parseFloat(trimmed);
+            if (Number.isNaN(num) || num <= 0) {
+              this.tenantQuotaModal.error = 'Entrez un nombre positif ou laissez vide pour quota global.';
+              return;
+            }
+            payloadValue = num;
+          }
+          this.tenantQuotaModal.error = '';
+          try {
+            const res = await fetch(`${this.API}/api/godmode/tenant-quota`, {
+              method: 'PUT',
+              headers: { ...this.headersGod(), 'Content-Type': 'application/json' },
+              body: JSON.stringify({ tenantId: user.tenantId || '', quotaMB: payloadValue })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Erreur');
+            this.closeTenantQuotaModal();
+            this.loadUsers();
+          } catch (err) {
+            this.tenantQuotaModal.error = err.message || 'Impossible de mettre à jour le quota.';
+          }
+        },
         reorderOrderFromVisible(newVisibleOrder) {
           const hiddenSet = new Set(this.hidden.map(i => i.name));
           const baseOrder = this.order && this.order.length ? [...this.order] : [];
@@ -713,10 +882,11 @@
           await this.fetchQuota();
         },
         async deleteImage(name) {
-          if (!confirm('Supprimer définitivement cette image ?')) return;
-          await fetch(`${this.API}/api/${this.tenantId}/images/${name}`, { method: 'DELETE', headers: this.headersAuth() });
-          await this.refreshGallery();
-          await this.fetchQuota();
+          this.askConfirm('Supprimer définitivement cette image ?', async () => {
+            await fetch(`${this.API}/api/${this.tenantId}/images/${name}`, { method: 'DELETE', headers: this.headersAuth() });
+            await this.refreshGallery();
+            await this.fetchQuota();
+          });
         },
         zoom(url) { this.zoomUrl = url; },
         openFront() {
@@ -797,19 +967,38 @@
           }
         },
         async deleteAudio(name) {
-          if (!confirm('Supprimer définitivement cet audio ?')) return;
-          try {
-            await fetch(`${this.API}/api/${this.tenantId}/audio/${encodeURIComponent(name)}`, { method: 'DELETE', headers: this.headersAuth() });
-            await this.loadAudio();
-            await this.fetchQuota();
-          } catch (err) {
-            this.audioMessage = 'Suppression impossible.';
-            this.audioStatus = 'error';
-          }
+          this.askConfirm('Supprimer définitivement cet audio ?', async () => {
+            try {
+              await fetch(`${this.API}/api/${this.tenantId}/audio/${encodeURIComponent(name)}`, { method: 'DELETE', headers: this.headersAuth() });
+              await this.loadAudio();
+              await this.fetchQuota();
+            } catch (err) {
+              this.audioMessage = 'Suppression impossible.';
+              this.audioStatus = 'error';
+            }
+          });
         },
         async renameAudio(name) {
-          const newName = prompt('Nouveau nom (avec extension .mp3/.wav/.ogg/.m4a/.aac)', name);
-          if (!newName || newName === name) return;
+          this.openRenameAudioModal(name);
+        },
+        openRenameAudioModal(name) {
+          this.renameAudioModal = {
+            open: true,
+            name,
+            newName: name,
+            error: ''
+          };
+        },
+        closeRenameAudioModal() {
+          this.renameAudioModal = { open: false, name: '', newName: '', error: '' };
+        },
+        async confirmRenameAudio() {
+          const { name, newName } = this.renameAudioModal;
+          if (!newName || newName === name) {
+            this.renameAudioModal.error = newName ? 'Le nom est identique.' : 'Entrez un nom.';
+            return;
+          }
+          this.renameAudioModal.error = '';
           try {
             const res = await fetch(`${this.API}/api/${this.tenantId}/audio/${encodeURIComponent(name)}`, {
               method: 'PUT',
@@ -818,11 +1007,12 @@
             });
             const data = await res.json().catch(() => ({}));
             if (!res.ok) throw new Error(data.error || 'Erreur');
+            this.closeRenameAudioModal();
             await this.loadAudio();
             this.audioMessage = 'Nom mis à jour.';
             this.audioStatus = 'ok';
           } catch (err) {
-            this.audioMessage = err.message || 'Impossible de renommer.';
+            this.renameAudioModal.error = err.message || 'Impossible de renommer.';
             this.audioStatus = 'error';
           }
         },
@@ -1014,12 +1204,13 @@
           this.usersLoading = false;
         },
         async deleteUser(email) {
-          if (!confirm('Supprimer définitivement ce compte ?')) return;
-          await fetch(`${this.API}/api/godmode/user/${email}`, {
-            method: 'DELETE',
-            headers: { ...this.headersGod(), 'Content-Type': 'application/json' }
+          this.askConfirm('Supprimer définitivement ce compte ?', async () => {
+            await fetch(`${this.API}/api/godmode/user/${email}`, {
+              method: 'DELETE',
+              headers: { ...this.headersGod(), 'Content-Type': 'application/json' }
+            });
+            this.loadUsers();
           });
-          this.loadUsers();
         },
         async loadGlobalQuota() {
           try {
@@ -1057,31 +1248,7 @@
           }
         },
         async editTenantQuota(u) {
-          const defaultVal = u.quotaOverride ? u.quotaMB : '';
-          const input = prompt('Quota en Mo (laisser vide pour quota global)', defaultVal);
-          if (input === null) return;
-          const trimmed = input.trim();
-          let payloadValue = null;
-          if (trimmed !== '') {
-            const num = parseFloat(trimmed);
-            if (Number.isNaN(num) || num <= 0) {
-              alert('Veuillez saisir un nombre positif ou laisser vide.');
-              return;
-            }
-            payloadValue = num;
-          }
-          try {
-            const res = await fetch(`${this.API}/api/godmode/tenant-quota`, {
-              method: 'PUT',
-              headers: { ...this.headersGod(), 'Content-Type': 'application/json' },
-              body: JSON.stringify({ tenantId: u.tenantId || '', quotaMB: payloadValue })
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Erreur');
-            this.loadUsers();
-          } catch (err) {
-            alert(err.message || 'Impossible de mettre à jour le quota.');
-          }
+          this.openTenantQuotaModal(u);
         },
 
       };
