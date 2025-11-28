@@ -134,7 +134,7 @@
           </template>
           <template x-for="(img, index) in visible" :key="img.name">
             <div class="flex items-center gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3">
-              <img :src="img.url" class="h-16 w-16 object-cover rounded-lg border border-slate-800" @click="zoom(img.url)">
+              <img :src="img.thumbUrl || img.url" class="h-16 w-16 object-cover rounded-lg border border-slate-800" @click="zoom(img.url)">
               <div class="flex-1">
                 <div class="text-sm font-semibold truncate" x-text="img.name"></div>
               </div>
@@ -160,7 +160,7 @@
             </template>
             <template x-for="img in hidden" :key="img.name">
             <div class="flex items-center gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3">
-                <img :src="img.url" class="h-14 w-14 object-cover rounded-lg border border-slate-800" @click="zoom(img.url)">
+                <img :src="img.thumbUrl || img.url" class="h-16 w-16 object-cover rounded-lg border border-slate-800" @click="zoom(img.url)">
                 <div class="flex-1">
                   <div class="text-sm font-semibold truncate" x-text="img.name"></div>
                 </div>

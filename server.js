@@ -7,6 +7,7 @@ const path = require("path");
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const multer = require("multer");
+const sharp = require("sharp");
 const session = require("express-session");
 
 const app = express();
@@ -17,6 +18,7 @@ const TENANTS_DIR = path.join(__dirname, "tenants");
 const FAVICONS_DIR = path.join(PUBLIC_DIR, "assets", "favicons");
 const FRONT_FILE = path.join(PUBLIC_DIR, "front", "index.html");
 const GLOBAL_FILE = path.join(DATA_DIR, "global.json");
+const THUMB_SIZE = 64;
 const DEFAULT_GLOBAL = {
   defaultQuotaMB: 100,
   apiBase: null,
@@ -474,6 +476,7 @@ app.get("/api/auth/discord/callback", async (req, res) => {
       const dir = path.join(TENANTS_DIR, tenantId);
       fs.mkdirSync(dir);
       fs.mkdirSync(path.join(dir, "images"));
+      fs.mkdirSync(path.join(dir, "thumbs"));
       fs.mkdirSync(path.join(dir, "audio"));
       fs.writeFileSync(path.join(dir, "order.json"), "[]");
       fs.writeFileSync(path.join(dir, "hidden.json"), "[]");
@@ -572,12 +575,52 @@ function isSafeName(name = "") {
   return !name.includes("..") && !name.includes("/") && !name.includes("\\");
 }
 
+function imagePath(tenantId, name) {
+  return path.join(TENANTS_DIR, tenantId, "images", name);
+}
+
+function thumbPath(tenantId, name) {
+  return path.join(TENANTS_DIR, tenantId, "thumbs", name);
+}
+
+async function ensureThumbnail(tenantId, name) {
+  const source = imagePath(tenantId, name);
+  const dest = thumbPath(tenantId, name);
+
+  if (!fs.existsSync(source)) return null;
+  if (fs.existsSync(dest)) return dest;
+
+  try {
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
+    await sharp(source)
+      .resize(THUMB_SIZE, THUMB_SIZE, { fit: "cover" })
+      .toFormat("jpeg", { quality: 70 })
+      .toFile(dest);
+    return dest;
+  } catch (err) {
+    console.error("Thumbnail generation failed", { tenantId, name, error: err.message });
+    return null;
+  }
+}
+
+async function ensureThumbnails(tenantId, files = []) {
+  const tasks = files.map(name => ensureThumbnail(tenantId, name));
+  await Promise.all(tasks);
+}
+
+function removeThumbnail(tenantId, name) {
+  const dest = thumbPath(tenantId, name);
+  if (fs.existsSync(dest)) {
+    try { fs.unlinkSync(dest); } catch (err) { console.error("Thumbnail delete failed", err); }
+  }
+}
+
 //------------------------------------------------------------
 //  IMAGES API (tenant-based URL)
 //------------------------------------------------------------
 
 // LIST IMAGES
-app.get("/api/tenant/:tenant/images", requireLogin, (req, res) => {
+app.get("/api/tenant/:tenant/images", requireLogin, async (req, res) => {
   const tenantId = req.params.tenant;
 
   // Sécurité : le user ne peut lire que son tenant
@@ -596,6 +639,8 @@ app.get("/api/tenant/:tenant/images", requireLogin, (req, res) => {
   const files = fs.readdirSync(dir)
     .filter(f => /\.(jpg|jpeg|png)$/i.test(f));
 
+  await ensureThumbnails(tenantId, files);
+
   const sorted = [...files].sort((a, b) => {
     return order.indexOf(a) - order.indexOf(b);
   });
@@ -603,6 +648,7 @@ app.get("/api/tenant/:tenant/images", requireLogin, (req, res) => {
   const list = sorted.map(f => ({
     name: f,
     url: `/t/${tenantId}/images/${f}`,
+    thumbUrl: `/t/${tenantId}/thumbs/${f}`,
     hidden: hidden.includes(f)
   }));
 
@@ -610,7 +656,7 @@ app.get("/api/tenant/:tenant/images", requireLogin, (req, res) => {
 });
 
 // UPLOAD IMAGE
-app.post("/api/:tenantId/images/upload", requireLogin, upload.single("image"), (req, res) => {
+app.post("/api/:tenantId/images/upload", requireLogin, upload.single("image"), async (req, res) => {
   const tenantId = req.params.tenantId;
   if (tenantId !== req.session.user.tenantId)
     return res.status(403).json({ error: "Forbidden tenant" });
@@ -637,6 +683,8 @@ app.post("/api/:tenantId/images/upload", requireLogin, upload.single("image"), (
 
   order.push(req.file.filename);
   fs.writeFileSync(orderFile, JSON.stringify(order, null, 2));
+
+  await ensureThumbnail(tenantId, req.file.filename);
 
   res.json({ success: true });
 });
@@ -811,6 +859,7 @@ app.delete("/api/:tenantId/images/:name", requireLogin, (req, res) => {
 
   const filePath = path.join(imagesDir, name);
   if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+  removeThumbnail(tenantId, name);
 
   hidden = hidden.filter(h => h !== name);
   fs.writeFileSync(hiddenFile, JSON.stringify(hidden, null, 2));
@@ -1047,13 +1096,28 @@ app.get("/t/:tenantId/front", (req, res) => {
 });
 
 app.get("/t/:tenantId/images/:name", (req, res) => {
-  const file = path.join(TENANTS_DIR, req.params.tenantId, "images", req.params.name);
+  const { tenantId, name } = req.params;
+  if (!isSafeName(name)) return res.status(400).send("Invalid name");
+  const file = imagePath(tenantId, name);
 
   if (!fs.existsSync(file)) {
     return res.status(404).send("Image not found");
   }
 
   res.sendFile(file);
+});
+
+app.get("/t/:tenantId/thumbs/:name", async (req, res) => {
+  const { tenantId, name } = req.params;
+  if (!isSafeName(name)) return res.status(400).send("Invalid name");
+  const thumbFile = thumbPath(tenantId, name);
+  if (!fs.existsSync(thumbFile)) {
+    const source = imagePath(tenantId, name);
+    if (!fs.existsSync(source)) return res.status(404).send("Image not found");
+    await ensureThumbnail(tenantId, name);
+  }
+  if (!fs.existsSync(thumbFile)) return res.status(404).send("Thumbnail not found");
+  return res.sendFile(thumbFile);
 });
 
 app.get("/t/:tenantId/audio/:name", (req, res) => {
@@ -1066,7 +1130,7 @@ app.get("/t/:tenantId/audio/:name", (req, res) => {
   res.sendFile(file);
 });
 
-app.get("/t/:tenantId/api/images", (req, res) => {
+app.get("/t/:tenantId/api/images", async (req, res) => {
   const tenantId = req.params.tenantId;
   const base = path.join(TENANTS_DIR, tenantId);
 
@@ -1080,12 +1144,17 @@ app.get("/t/:tenantId/api/images", (req, res) => {
     .filter(f => /\.(png|jpg|jpeg)$/i.test(f))
     .filter(f => !hidden.includes(f))
     .sort((a, b) => order.indexOf(a) - order.indexOf(b))
-    .map(f => ({
-      name: f,
-      url: `/t/${tenantId}/images/${f}`
-    }));
+    .map(f => f);
 
-  res.json(files);
+  await ensureThumbnails(tenantId, files);
+
+  const list = files.map(f => ({
+    name: f,
+    url: `/t/${tenantId}/images/${f}`,
+    thumbUrl: `/t/${tenantId}/thumbs/${f}`
+  }));
+
+  res.json(list);
 });
 
 app.get("/t/:tenantId/api/config", (req, res) => {
