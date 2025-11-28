@@ -132,17 +132,27 @@
           <template x-if="!galleryLoading && visible.length === 0">
             <div class="text-sm text-slate-600 dark:text-slate-400 border border-dashed border-slate-300 dark:border-slate-800 rounded-lg p-4">Aucune image visible.</div>
           </template>
+          <p class="text-xs text-slate-500 dark:text-slate-400" x-show="!galleryLoading && visible.length > 0">Glisser-déposer pour réordonner les images visibles.</p>
           <template x-for="(img, index) in visible" :key="img.name">
-            <div class="flex items-center gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3">
+            <div
+              class="flex items-center gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 transition-all"
+              draggable="true"
+              @dragstart="startDrag(index)"
+              @dragend="endDrag()"
+              @dragover.prevent="onDragOver(index)"
+              @drop.prevent="onDrop(index)"
+              :class="dragOverIndex === index ? 'ring-2 ring-emerald-400 ring-offset-1 ring-offset-slate-50 dark:ring-offset-slate-900 shadow-md' : ''"
+            >
+              <div class="h-16 w-6 flex items-center justify-center text-slate-400 dark:text-slate-500 cursor-grab select-none" :class="dragIndex === index ? 'cursor-grabbing text-emerald-500' : ''" title="Glisser pour réordonner">
+                <i class="fa-solid fa-grip-vertical"></i>
+              </div>
               <img :src="img.thumbUrl || img.url" class="h-16 w-16 object-cover rounded-lg border border-slate-800" @click="zoom(img.url)">
               <div class="flex-1">
                 <div class="text-sm font-semibold truncate" x-text="img.name"></div>
               </div>
-                <div class="flex items-center gap-2 text-sm">
-                  <button class="px-2 py-1 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700" @click="move(index, -1)"><i class="fa-solid fa-arrow-up"></i></button>
-                  <button class="px-2 py-1 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700" @click="move(index, 1)"><i class="fa-solid fa-arrow-down"></i></button>
-                  <button class="px-2 py-1 rounded bg-amber-500 text-slate-900 font-semibold hover:bg-amber-400" @click="hideImage(img.name)"><i class="fa-regular fa-eye-slash mr-1"></i>Cacher</button>
-                </div>
+              <div class="flex items-center gap-2 text-sm">
+                <button class="px-2 py-1 rounded bg-amber-500 text-slate-900 font-semibold hover:bg-amber-400" @click="hideImage(img.name)"><i class="fa-regular fa-eye-slash mr-1"></i>Cacher</button>
+              </div>
             </div>
           </template>
         </div>
@@ -409,6 +419,8 @@
         visible: [],
         hidden: [],
         order: [],
+        dragIndex: null,
+        dragOverIndex: null,
         galleryLoading: true,
         uploadMessage: '',
         uploadStatus: 'ok',
@@ -535,7 +547,7 @@
             const data = await res.json();
             this.visible = data.filter(i => !i.hidden);
             this.hidden = data.filter(i => i.hidden);
-            this.order = this.visible.map(i => i.name);
+            this.order = data.map(i => i.name);
           } catch (e) {
             this.visible = [];
             this.hidden = [];
@@ -595,6 +607,59 @@
           this.uploadMessage = msg;
           this.uploadStatus = status;
         },
+        reorderOrderFromVisible(newVisibleOrder) {
+          const hiddenSet = new Set(this.hidden.map(i => i.name));
+          const baseOrder = this.order && this.order.length ? [...this.order] : [];
+
+          if (!baseOrder.length) {
+            const hiddenNames = this.hidden.map(i => i.name);
+            return [...newVisibleOrder, ...hiddenNames];
+          }
+
+          const merged = [];
+          let visibleIndex = 0;
+
+          for (const name of baseOrder) {
+            if (hiddenSet.has(name)) {
+              merged.push(name);
+            } else {
+              merged.push(newVisibleOrder[visibleIndex++] || name);
+            }
+          }
+
+          while (visibleIndex < newVisibleOrder.length) {
+            merged.push(newVisibleOrder[visibleIndex++]);
+          }
+
+          return merged;
+        },
+        async persistVisibleOrder(newVisibleList) {
+          const newVisibleOrder = newVisibleList.map(i => i.name);
+          this.order = this.reorderOrderFromVisible(newVisibleOrder);
+          this.visible = newVisibleList;
+          await this.saveOrder();
+        },
+        startDrag(index) {
+          this.dragIndex = index;
+          this.dragOverIndex = index;
+        },
+        onDragOver(index) {
+          if (this.dragIndex === null) return;
+          this.dragOverIndex = index;
+        },
+        async onDrop(index) {
+          if (this.dragIndex === null) return;
+          const list = [...this.visible];
+          const [moved] = list.splice(this.dragIndex, 1);
+          list.splice(index, 0, moved);
+          this.dragIndex = null;
+          this.dragOverIndex = null;
+          await this.persistVisibleOrder(list);
+        },
+        endDrag() {
+          this.dragIndex = null;
+          this.dragOverIndex = null;
+        },
         async saveOrder() {
           await fetch(`${this.API}/api/${this.tenantId}/images/order`, {
             method: 'PUT',
@@ -604,10 +669,10 @@
         },
         async move(index, dir) {
           const newIndex = index + dir;
-          if (newIndex < 0 || newIndex >= this.order.length) return;
-          [this.order[index], this.order[newIndex]] = [this.order[newIndex], this.order[index]];
-          await this.saveOrder();
-          await this.refreshGallery();
+          if (newIndex < 0 || newIndex >= this.visible.length) return;
+          const list = [...this.visible];
+          [list[index], list[newIndex]] = [list[newIndex], list[index]];
+          await this.persistVisibleOrder(list);
         },
         async hideImage(name) {
           await fetch(`${this.API}/api/${this.tenantId}/images/hide/${name}`, { method: 'PUT', headers: this.headersAuth() });
