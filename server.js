@@ -1005,7 +1005,7 @@ app.get("/api/godmode/users", requireGodMode, (req, res) => {
     if (fs.existsSync(imagesDir)) {
       const files = fs.readdirSync(imagesDir);
 
-      count = files.filter(f => /\.(png|jpg|jpeg)$/i.test(f)).length;
+      count = files.filter(f => /\.(png|jpg|jpeg|webp)$/i.test(f)).length;
       files.forEach(f => {
         try {
           quota += fs.statSync(path.join(imagesDir, f)).size;
