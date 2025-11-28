@@ -14,6 +14,7 @@ const PORT = 3100;
 const PUBLIC_DIR = path.join(__dirname, "public");
 const DATA_DIR = path.join(__dirname, "data");
 const TENANTS_DIR = path.join(__dirname, "tenants");
+const FAVICONS_DIR = path.join(PUBLIC_DIR, "assets", "favicons");
 const FRONT_FILE = path.join(PUBLIC_DIR, "front", "index.html");
 const GLOBAL_FILE = path.join(DATA_DIR, "global.json");
 const DEFAULT_GLOBAL = {
@@ -130,6 +131,9 @@ app.use(session({
   }
 }));
 app.use(express.static(PUBLIC_DIR)); // serve login, signup, front, admin UIs
+app.get("/favicon.ico", (req, res) => {
+  res.sendFile(path.join(FAVICONS_DIR, "favicon.ico"));
+});
 
 // Legacy filenames → new structured paths
 app.get("/", (req, res) => res.redirect("/index.html"));
