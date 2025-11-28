@@ -132,29 +132,56 @@
           <template x-if="!galleryLoading && visible.length === 0">
             <div class="text-sm text-slate-600 dark:text-slate-400 border border-dashed border-slate-300 dark:border-slate-800 rounded-lg p-4">Aucune image visible.</div>
           </template>
-          <p class="text-xs text-slate-500 dark:text-slate-400" x-show="!galleryLoading && visible.length > 0">Glisser-déposer pour réordonner les images visibles.</p>
-          <template x-for="(img, index) in visible" :key="img.name">
-            <div
-              class="flex items-center gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 transition-all"
-              draggable="true"
-              @dragstart="startDrag(index)"
-              @dragend="endDrag()"
-              @dragover.prevent="onDragOver(index)"
-              @drop.prevent="onDrop(index)"
-              :class="dragOverIndex === index ? 'ring-2 ring-emerald-400 ring-offset-1 ring-offset-slate-50 dark:ring-offset-slate-900 shadow-md' : ''"
-            >
-              <div class="h-16 w-6 flex items-center justify-center text-slate-400 dark:text-slate-500 cursor-grab select-none" :class="dragIndex === index ? 'cursor-grabbing text-emerald-500' : ''" title="Glisser pour réordonner">
-                <i class="fa-solid fa-grip-vertical"></i>
+          <p class="text-xs text-slate-500 dark:text-slate-400" x-show="!galleryLoading && visible.length > 0">Glisser-déposer les cartes pour réordonner les images visibles.</p>
+          <div class="grid gap-1.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            <template x-for="(img, index) in visible" :key="img.name">
+              <div
+                class="relative rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 overflow-hidden aspect-square transition-all group"
+                draggable="true"
+                @dragstart="startDrag(index)"
+                @dragend="endDrag()"
+                @dragover.prevent="onDragOver(index)"
+                @drop.prevent="onDrop(index)"
+                :class="[
+                  'shadow-sm hover:shadow-md',
+                  dragOverIndex === index ? 'ring-2 ring-emerald-400 ring-offset-2 ring-offset-slate-50 dark:ring-offset-slate-900 shadow-lg' : '',
+                  dragIndex === index ? 'opacity-80 scale-[0.98]' : ''
+                ]"
+              >
+                <button
+                  class="absolute top-2 left-2 h-7 w-7 flex items-center justify-center rounded-full bg-white/90 dark:bg-slate-900/90 text-slate-500 hover:text-emerald-500 cursor-grab select-none border border-slate-200 dark:border-slate-700 text-xs"
+                  :class="dragIndex === index ? 'cursor-grabbing text-emerald-500' : ''"
+                  title="Glisser pour réordonner"
+                  @mousedown.prevent
+                >
+                  <i class="fa-solid fa-grip-vertical"></i>
+                </button>
+                <div class="absolute top-2 right-2 px-2 py-1 rounded-full bg-slate-900/80 text-white text-[11px] font-semibold shadow-sm">#<span x-text="index + 1"></span></div>
+                <div class="absolute inset-0">
+                  <img :src="img.thumbUrl || img.url" class="h-full w-full object-cover" @click="zoom(img.url)">
+                </div>
+                <div
+                  class="absolute inset-0 flex items-center justify-center bg-emerald-600/15 text-emerald-900 dark:text-emerald-100 text-xs font-semibold tracking-wide uppercase"
+                  x-show="dragIndex !== null && dragOverIndex === index"
+                  x-transition
+                >
+                  Déposer ici
+                </div>
+                <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/40 to-transparent p-2 text-white space-y-1.5">
+                  <div class="flex items-center justify-end text-[10px] text-white/80">
+                    <button
+                      class="h-7 w-7 inline-flex items-center justify-center rounded-full bg-white/90 text-slate-800 hover:bg-amber-500 hover:text-slate-900 transition shadow text-[12px]"
+                      @click="hideImage(img.name)"
+                      title="Cacher"
+                    >
+                      <i class="fa-regular fa-eye-slash"></i>
+                    </button>
+                  </div>
+                  <div class="text-[12px] font-semibold truncate" x-text="img.name"></div>
+                </div>
               </div>
-              <img :src="img.thumbUrl || img.url" class="h-16 w-16 object-cover rounded-lg border border-slate-800" @click="zoom(img.url)">
-              <div class="flex-1">
-                <div class="text-sm font-semibold truncate" x-text="img.name"></div>
-              </div>
-              <div class="flex items-center gap-2 text-sm">
-                <button class="px-2 py-1 rounded bg-amber-500 text-slate-900 font-semibold hover:bg-amber-400" @click="hideImage(img.name)"><i class="fa-regular fa-eye-slash mr-1"></i>Cacher</button>
-              </div>
-            </div>
-          </template>
+            </template>
+          </div>
         </div>
 
         <div class="space-y-4">

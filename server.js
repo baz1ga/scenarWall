@@ -18,7 +18,7 @@ const TENANTS_DIR = path.join(__dirname, "tenants");
 const FAVICONS_DIR = path.join(PUBLIC_DIR, "assets", "favicons");
 const FRONT_FILE = path.join(PUBLIC_DIR, "front", "index.html");
 const GLOBAL_FILE = path.join(DATA_DIR, "global.json");
-const THUMB_SIZE = 64;
+const THUMB_SIZE = 230;
 const DEFAULT_GLOBAL = {
   defaultQuotaMB: 100,
   apiBase: null,
@@ -62,8 +62,8 @@ const DEFAULT_CONFIG = {
 };
 
 const DEFAULT_SESSION_COOKIE = {
-  secure: false,
-  sameSite: "lax"
+  secure: true,
+  sameSite: "none"
 };
 
 function sanitizeFilename(name = "", fallback = "file") {
