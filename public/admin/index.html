@@ -37,34 +37,55 @@
 </head>
 <body class="min-h-screen flex bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
   <!-- Sidebar -->
-  <aside class="w-64 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col sticky top-0 h-screen">
-    <div class="px-6 py-5 flex items-center justify-center">
-        <div class="text-3xl font-semibold text-emerald-500 font-pangolin text-center">.ScenarWall.</div>
+  <aside class="bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col sticky top-0 h-screen transition-all duration-200" :class="sidebarCollapsed ? 'w-20' : 'w-64'">
+    <div class="px-3 py-5 flex items-center justify-center">
+        <div class="text-3xl font-semibold text-emerald-500 font-pangolin text-center" x-show="!sidebarCollapsed">.ScenarWall.</div>
+        <div class="text-xl font-semibold text-emerald-500 font-pangolin" x-show="sidebarCollapsed">.SW.</div>
     </div>
-    <nav class="flex-1 px-3 space-y-1">
-      <button @click="section = 'galerie'" :class="section === 'galerie' ? 'bg-slate-800 text-emerald-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-left" x-show="tenantId">
+    <nav class="flex-1 space-y-1" :class="sidebarCollapsed ? 'px-1' : 'px-3'">
+      <button @click="section = 'galerie'" :class="[
+        sidebarCollapsed ? 'justify-center gap-0 px-0' : 'justify-start gap-3 px-3',
+        section === 'galerie' ? 'bg-slate-800 text-emerald-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'
+      ]" class="w-full flex items-center py-2 rounded-lg text-sm font-medium text-left transition" x-show="tenantId">
         <i class="fa-regular fa-image text-base"></i>
-        <span>Galerie</span>
+        <span x-show="!sidebarCollapsed">Galerie</span>
       </button>
-      <button @click="section = 'audio'; loadAudio()" :class="section === 'audio' ? 'bg-slate-800 text-indigo-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-left" x-show="tenantId">
+      <button @click="section = 'audio'; loadAudio()" :class="[
+        sidebarCollapsed ? 'justify-center gap-0 px-0' : 'justify-start gap-3 px-3',
+        section === 'audio' ? 'bg-slate-800 text-indigo-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'
+      ]" class="w-full flex items-center py-2 rounded-lg text-sm font-medium text-left transition" x-show="tenantId">
         <i class="fa-solid fa-music text-base"></i>
-        <span>Audio</span>
+        <span x-show="!sidebarCollapsed">Audio</span>
       </button>
-      <button @click="section = 'tension'" :class="section === 'tension' ? 'bg-slate-800 text-amber-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-left" x-show="tenantId">
+      <button @click="section = 'tension'" :class="[
+        sidebarCollapsed ? 'justify-center gap-0 px-0' : 'justify-start gap-3 px-3',
+        section === 'tension' ? 'bg-slate-800 text-amber-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'
+      ]" class="w-full flex items-center py-2 rounded-lg text-sm font-medium text-left transition" x-show="tenantId">
         <i class="fa-solid fa-bolt text-base"></i>
-        <span>Tension</span>
+        <span x-show="!sidebarCollapsed">Tension</span>
       </button>
-      <button @click="section = 'users'" :class="section === 'users' ? 'bg-slate-800 text-sky-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-left" x-show="isSuperAdmin">
+      <button @click="section = 'users'" :class="[
+        sidebarCollapsed ? 'justify-center gap-0 px-0' : 'justify-start gap-3 px-3',
+        section === 'users' ? 'bg-slate-800 text-sky-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'
+      ]" class="w-full flex items-center py-2 rounded-lg text-sm font-medium text-left transition" x-show="isSuperAdmin">
         <i class="fa-solid fa-users text-base"></i>
-        <span>Utilisateurs</span>
+        <span x-show="!sidebarCollapsed">Utilisateurs</span>
       </button>
     </nav>
-    <div class="px-4 py-4 text-xs text-slate-500 space-y-3">
+    <div class="px-4 py-4 text-xs text-slate-500 space-y-3" x-show="!sidebarCollapsed">
       <div data-include="donation-box"></div>
       <a class="inline-flex w-full items-center justify-center gap-2 rounded-lg text-center border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 font-semibold px-3 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition" href="https://tally.so/r/NpqM6N" target="_blank" rel="noopener">
         🎲 Envie d'améliorer .ScenarWall. ?
       </a>
       <div data-include="legal-footer" data-variant="auth"></div>
+    </div>
+    <div class="px-3 pb-4">
+      <button class="w-full inline-flex items-center rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition py-2" :class="sidebarCollapsed ? 'justify-center gap-0' : 'justify-between gap-3 px-3'" @click="toggleSidebar()" :aria-label="sidebarCollapsed ? 'Déplier la barre latérale' : 'Réduire la barre latérale'" :title="sidebarCollapsed ? 'Déplier' : 'Réduire'">
+        <span class="inline-flex items-center gap-2">
+          <i :class="sidebarCollapsed ? 'fa-solid fa-angles-right' : 'fa-solid fa-angles-left'"></i>
+          <span x-show="!sidebarCollapsed">Réduire</span>
+        </span>
+      </button>
     </div>
   </aside>
 
@@ -545,6 +566,7 @@
         breadcrumb: 'Administration',
         title: 'ScenarWall',
         theme: 'dark',
+        sidebarCollapsed: false,
         userMenu: false,
         avatarUrl: getAvatar() || '',
         avatarInitial: 'A',
@@ -658,6 +680,8 @@
 
           const storedTheme = localStorage.getItem('sw_theme');
           this.theme = storedTheme === 'light' ? 'light' : 'dark';
+          const storedSidebar = localStorage.getItem('sw_admin_sidebar_collapsed');
+          this.sidebarCollapsed = storedSidebar === '1';
 
           this.refreshGallery();
           this.loadAudio();
@@ -679,6 +703,10 @@
         toggleTheme() {
           this.theme = this.theme === 'dark' ? 'light' : 'dark';
           localStorage.setItem('sw_theme', this.theme);
+        },
+        toggleSidebar() {
+          this.sidebarCollapsed = !this.sidebarCollapsed;
+          localStorage.setItem('sw_admin_sidebar_collapsed', this.sidebarCollapsed ? '1' : '0');
         },
 
         setBreadcrumb() {
