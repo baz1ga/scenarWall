@@ -80,10 +80,9 @@
       <div data-include="legal-footer" data-variant="auth"></div>
     </div>
     <div class="px-3 pb-4">
-      <button class="w-full inline-flex items-center rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition py-2" :class="sidebarCollapsed ? 'justify-center gap-0' : 'justify-between gap-3 px-3'" @click="toggleSidebar()" :aria-label="sidebarCollapsed ? 'Déplier la barre latérale' : 'Réduire la barre latérale'" :title="sidebarCollapsed ? 'Déplier' : 'Réduire'">
-        <span class="inline-flex items-center gap-2">
+      <button class="w-full inline-flex items-center text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition py-2" :class="sidebarCollapsed ? 'justify-center gap-0' : 'justify-between gap-3 px-3'" @click="toggleSidebar()" :aria-label="sidebarCollapsed ? 'Déplier la barre latérale' : 'Réduire la barre latérale'" :title="sidebarCollapsed ? 'Déplier' : 'Réduire'">
+        <span class="inline-flex items-center gap-2" :class="sidebarCollapsed ? '' : 'flex-1 justify-end'">
           <i :class="sidebarCollapsed ? 'fa-solid fa-angles-right' : 'fa-solid fa-angles-left'"></i>
-          <span x-show="!sidebarCollapsed">Réduire</span>
         </span>
       </button>
     </div>
