@@ -276,8 +276,8 @@
                   >
                 </label>
                 <img :src="img.thumbUrl || img.url" class="h-16 w-16 object-cover rounded-lg border border-slate-800" @click="zoom(img.url)">
-                <div class="flex-1">
-                  <div class="text-sm font-semibold truncate" x-text="img.name"></div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-sm font-semibold truncate" :title="img.name" x-text="img.name"></div>
                 </div>
                 <div class="flex items-center gap-2 text-sm">
                   <button class="px-2 py-1 rounded bg-emerald-500 text-slate-900 font-semibold hover:bg-emerald-400" @click="showImage(img.name)"><i class="fa-regular fa-eye mr-1"></i>Afficher</button>
