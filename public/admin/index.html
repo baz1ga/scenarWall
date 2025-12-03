@@ -165,6 +165,7 @@
             </label>
           </div>
         </div>
+        <!-- Images visibles -->
         <div class="space-y-2">
           <template x-if="galleryLoading">
             <div class="text-sm text-slate-400">Chargement...</div>
@@ -172,7 +173,7 @@
           <template x-if="!galleryLoading && visible.length === 0">
             <div class="text-sm text-slate-600 dark:text-slate-400 border border-dashed border-slate-300 dark:border-slate-800 rounded-lg p-4">Aucune image visible.</div>
           </template>
-          <p class="text-xs text-slate-500 dark:text-slate-400" x-show="!galleryLoading && visible.length > 0">L'ordre des images ici sera reprise en mode <strong>Présentateur</strong></p>
+          <p class="text-xs text-slate-500 dark:text-slate-400" x-show="!galleryLoading && visible.length > 0">L'ordre des images ici sera repris en mode <strong>Présentateur</strong></p>
           <div class="grid gap-1.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             <template x-for="(img, index) in visible" :key="img.name">
               <div
@@ -288,12 +289,23 @@
 
       <!-- Audio -->
       <section x-show="section === 'audio'" x-cloak class="space-y-6 max-w-5xl mx-auto">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between gap-3">
           <h2 class="text-lg font-semibold">Fichiers audio</h2>
-          <label class="cursor-pointer inline-flex items-center gap-2 text-sm text-indigo-600 dark:text-indigo-300" x-show="tenantId">
-            <input type="file" class="hidden" multiple accept="audio/*" @change="uploadAudio($event)">
-            <span class="inline-flex items-center gap-2 rounded-lg border border-indigo-500 px-3 py-1.5 text-indigo-800 dark:text-indigo-100 bg-white dark:bg-transparent hover:bg-indigo-500/10"><i class="fa-solid fa-upload"></i> Ajouter (&lt; 1 Mo)</span>
-          </label>
+          <div class="flex items-center gap-2">
+            <button
+              class="inline-flex items-center gap-2 rounded-lg border border-rose-200 dark:border-rose-900 bg-white dark:bg-slate-950 px-3 py-1.5 text-xs text-rose-700 dark:text-rose-200 hover:bg-rose-50 dark:hover:bg-rose-950 transition disabled:opacity-40 disabled:cursor-not-allowed"
+              @click="deleteSelectedAudio()"
+              :disabled="audioLoading || selectedAudio.length === 0"
+              :title="selectedAudio.length === 0 ? 'Sélectionnez des fichiers' : 'Supprimer la sélection'"
+            >
+              <i class="fa-solid fa-trash"></i> Supprimer
+              <span class="inline-flex items-center justify-center min-w-[1.25rem] h-5 rounded-full bg-rose-100 dark:bg-rose-900 px-2" x-text="selectedAudio.length" x-show="selectedAudio.length > 0"></span>
+            </button>
+            <label class="cursor-pointer inline-flex items-center gap-2 text-sm text-indigo-600 dark:text-indigo-300" x-show="tenantId">
+              <input type="file" class="hidden" multiple accept="audio/*" @change="uploadAudio($event)">
+              <span class="inline-flex items-center gap-2 rounded-lg border border-indigo-500 px-3 py-1.5 text-indigo-800 dark:text-indigo-100 bg-white dark:bg-transparent hover:bg-indigo-500/10"><i class="fa-solid fa-upload"></i> Ajouter (&lt; 1 Mo)</span>
+            </label>
+          </div>
         </div>
         <template x-if="audioLoading">
           <div class="text-sm text-slate-400">Chargement...</div>
@@ -304,6 +316,15 @@
         <div class="space-y-2" x-show="!audioLoading && audioFiles.length > 0">
           <template x-for="audio in audioFiles" :key="audio.name">
             <div class="flex items-center gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3">
+              <label class="h-8 w-8 flex items-center justify-center rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow cursor-pointer">
+                <input
+                  type="checkbox"
+                  class="h-4 w-4 rounded border border-slate-400 bg-white text-emerald-500 accent-emerald-500 cursor-pointer"
+                  :checked="selectedAudio.includes(audio.name)"
+                  @change.stop="toggleSelectAudio(audio.name)"
+                  :aria-label="`Sélectionner ${audio.name}`"
+                >
+              </label>
               <div class="flex-1">
                 <div class="text-sm font-semibold truncate" x-text="audio.name"></div>
                 <div class="text-xs text-slate-500" x-text="formatBytes(audio.size)"></div>
@@ -311,9 +332,6 @@
               <audio :src="audio.url" controls class="w-60 h-10"></audio>
               <button class="px-2 py-1 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 inline-flex items-center gap-1" @click="openRenameAudioModal(audio.name)">
                 <i class="fa-solid fa-pen"></i>
-              </button>
-              <button class="px-2 py-1 rounded bg-rose-600 text-white hover:bg-rose-500 inline-flex items-center gap-1" @click="deleteAudio(audio.name)">
-                <i class="fa-solid fa-trash"></i>
               </button>
             </div>
           </template>
@@ -628,6 +646,7 @@
         audioLoading: false,
         audioMessage: '',
         audioStatus: 'ok',
+        selectedAudio: [],
         quotaDisplay: '—',
         quotaPercent: 0,
         zoomUrl: '',
@@ -1047,9 +1066,11 @@
             if (!res.ok) throw new Error('Audio');
             this.audioFiles = await res.json();
             this.audioStatus = 'ok';
+            this.selectedAudio = this.selectedAudio.filter(name => this.audioFiles.some(a => a.name === name));
           } catch (e) {
             this.audioFiles = [];
             this.audioStatus = 'error';
+            this.selectedAudio = [];
           }
           this.audioLoading = false;
         },
@@ -1099,7 +1120,32 @@
             this.audioMessage = msg;
           }
         },
+        toggleSelectAudio(name) {
+          if (this.selectedAudio.includes(name)) {
+            this.selectedAudio = this.selectedAudio.filter(n => n !== name);
+          } else {
+            this.selectedAudio = [...this.selectedAudio, name];
+          }
+        },
+        async deleteSelectedAudio() {
+          if (!this.selectedAudio.length) return;
+          const names = [...this.selectedAudio];
+          this.askConfirm(`Supprimer définitivement ${names.length} audio${names.length > 1 ? 's' : ''} ?`, async () => {
+            try {
+              for (const name of names) {
+                await fetch(`${this.API}/api/${this.tenantId}/audio/${encodeURIComponent(name)}`, { method: 'DELETE', headers: this.headersAuth() });
+              }
+              this.selectedAudio = [];
+              await this.loadAudio();
+              await this.fetchQuota();
+            } catch (err) {
+              this.audioMessage = 'Suppression impossible.';
+              this.audioStatus = 'error';
+            }
+          });
+        },
         async deleteAudio(name) {
+          this.selectedAudio = this.selectedAudio.filter(n => n !== name);
           this.askConfirm('Supprimer définitivement cet audio ?', async () => {
             try {
               await fetch(`${this.API}/api/${this.tenantId}/audio/${encodeURIComponent(name)}`, { method: 'DELETE', headers: this.headersAuth() });
