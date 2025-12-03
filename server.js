@@ -1261,6 +1261,9 @@ wss.on("connection", (ws, req) => {
     if (msg.type === "tension:update" && typeof msg.level === "string") {
       broadcastTenant(ws.meta.tenantId, { type: "tension:update", level: msg.level });
     }
+    if (msg.type === "slideshow:update" && typeof msg.index === "number") {
+      broadcastTenant(ws.meta.tenantId, { type: "slideshow:update", index: msg.index });
+    }
   });
 });
 

@@ -9,6 +9,10 @@ export function gmDashboard() {
     playlist: [],
     playlistLoading: false,
     playlistError: '',
+    slideshowImages: [],
+    slideshowIndex: 0,
+    slideshowLoading: false,
+    slideshowError: '',
     tensionEnabled: false,
     tensionLevels: [],
     tensionAudio: {},
@@ -34,6 +38,55 @@ export function gmDashboard() {
     tensionButtonLabel(delta) {
       const lvl = this.tensionTargetLevel(delta);
       return lvl ? lvl.label : '';
+    },
+
+    async loadSlideshow() {
+      if (!this.tenantId) {
+        this.slideshowImages = [];
+        return;
+      }
+      this.slideshowLoading = true;
+      this.slideshowError = '';
+      try {
+        const res = await fetch(`/t/${this.tenantId}/api/images`);
+        if (!res.ok) throw new Error('Impossible de charger les images');
+        const data = await res.json();
+        const visible = Array.isArray(data) ? data.filter(img => img.hidden !== true && img.visible !== false) : [];
+        this.slideshowImages = visible;
+        this.slideshowIndex = 0;
+        this.sendSlideshow(0);
+      } catch (e) {
+        this.slideshowImages = [];
+        this.slideshowError = e.message || 'Erreur de chargement';
+      }
+      this.slideshowLoading = false;
+    },
+    currentSlide() {
+      if (!this.slideshowImages.length) return null;
+      return this.slideshowImages[this.slideshowIndex] || null;
+    },
+    prevSlideObj() {
+      if (!this.slideshowImages.length) return null;
+      const idx = (this.slideshowIndex - 1 + this.slideshowImages.length) % this.slideshowImages.length;
+      return this.slideshowImages[idx] || null;
+    },
+    nextSlideObj() {
+      if (!this.slideshowImages.length) return null;
+      const idx = (this.slideshowIndex + 1) % this.slideshowImages.length;
+      return this.slideshowImages[idx] || null;
+    },
+    setSlide(index) {
+      if (!this.slideshowImages.length) return;
+      const len = this.slideshowImages.length;
+      const safeIndex = ((index % len) + len) % len;
+      this.slideshowIndex = safeIndex;
+      this.sendSlideshow(safeIndex);
+    },
+    prevSlide() {
+      this.setSlide(this.slideshowIndex - 1);
+    },
+    nextSlide() {
+      this.setSlide(this.slideshowIndex + 1);
     },
 
     async loadTensionConfig() {
@@ -108,6 +161,7 @@ export function gmDashboard() {
       this.connectSocket();
       await this.loadTensionConfig();
       await this.loadPlaylist();
+      await this.loadSlideshow();
     },
 
     connectSocket() {
@@ -140,6 +194,14 @@ export function gmDashboard() {
         this.socket.send(JSON.stringify({ type: 'tension:update', level: levelKey }));
       } catch (e) {
         // ignore send errors
+      }
+    },
+    sendSlideshow(index) {
+      if (!this.socket || this.socket.readyState !== WebSocket.OPEN) return;
+      try {
+        this.socket.send(JSON.stringify({ type: 'slideshow:update', index }));
+      } catch (e) {
+        // ignore
       }
     },
 

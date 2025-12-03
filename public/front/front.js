@@ -49,8 +49,13 @@ async function loadCarouselImages() {
       return;
     }
 
-    carouselIndex = 0;
-    updateCarousel();
+    if (pendingSlideIndex !== null) {
+      setSlideIndex(pendingSlideIndex);
+      pendingSlideIndex = null;
+    } else {
+      carouselIndex = 0;
+      updateCarousel();
+    }
 
   } catch (err) {
     console.error("❌ Erreur chargement images :", err);
@@ -66,12 +71,14 @@ function updateCarousel() {
 //  FLECHES ← →
 // ---------------------------------------------------------
 document.getElementById("carousel-prev").onclick = () => {
+  if (slideshowControlled) return;
   if (!carouselImages.length) return;
   carouselIndex = (carouselIndex - 1 + carouselImages.length) % carouselImages.length;
   updateCarousel();
 };
 
 document.getElementById("carousel-next").onclick = () => {
+  if (slideshowControlled) return;
   if (!carouselImages.length) return;
   carouselIndex = (carouselIndex + 1) % carouselImages.length;
   updateCarousel();
@@ -86,6 +93,8 @@ const tensionBar = document.querySelector(".tension-bar");
 let tensionEnabled = true;
 let tensionFont = "Audiowide";
 let gmControlled = true;
+let slideshowControlled = false;
+let pendingSlideIndex = null;
 let tensionSocket = null;
 let tensionSocketTimer = null;
 const defaultZoneBorder = { top: "13px", right: "30px", bottom: "13px", left: "30px" };
@@ -235,6 +244,17 @@ function selectTensionLevel(level) {
   playTensionAudio(target.dataset.level);
 }
 
+function setSlideIndex(idx) {
+  if (!carouselImages.length) {
+    pendingSlideIndex = idx;
+    return;
+  }
+  const len = carouselImages.length;
+  const safeIndex = ((idx % len) + len) % len;
+  carouselIndex = safeIndex;
+  updateCarousel();
+}
+
 function setupTensionSocket() {
   if (!TENANT) return;
   if (tensionSocket) {
@@ -246,12 +266,14 @@ function setupTensionSocket() {
   tensionSocket = ws;
   ws.onopen = () => {
     setGmControlled(true);
+    slideshowControlled = true;
     if (tensionSocketTimer) {
       clearTimeout(tensionSocketTimer);
       tensionSocketTimer = null;
     }
   };
   ws.onclose = () => {
+    slideshowControlled = false;
     tensionSocketTimer = setTimeout(setupTensionSocket, 2000);
   };
   ws.onerror = () => ws.close();
@@ -260,6 +282,10 @@ function setupTensionSocket() {
       const data = JSON.parse(evt.data || "{}");
       if (data.type === "tension:update" && data.level) {
         selectTensionLevel(data.level);
+      }
+      if (data.type === "slideshow:update" && typeof data.index === "number") {
+        slideshowControlled = true;
+        setSlideIndex(data.index);
       }
     } catch (e) {
       // ignore parse errors

@@ -89,9 +89,46 @@
                   <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Tension désactivée.</p>
                 </template>
               </div>
-              <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm">
-                <h3 class="text-lg font-semibold mb-1">Diaporama</h3>
-                <p class="text-sm text-slate-600 dark:text-slate-300">Contrôles de diaporama à venir.</p>
+              <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm space-y-2 h-[190px] overflow-hidden">
+                <div class="flex items-center justify-between gap-2">
+                  <h3 class="text-lg font-semibold">Diaporama</h3>
+                </div>
+                <template x-if="slideshowLoading">
+                  <p class="text-sm text-slate-500 dark:text-slate-400">Chargement des images...</p>
+                </template>
+                <template x-if="slideshowError">
+                  <p class="text-sm text-rose-500" x-text="slideshowError"></p>
+                </template>
+                <template x-if="!slideshowLoading && slideshowImages.length === 0 && !slideshowError">
+                  <p class="text-sm text-slate-500 dark:text-slate-400">Aucune image disponible.</p>
+                </template>
+                <div class="grid grid-cols-3 gap-3 items-stretch" x-show="!slideshowLoading && slideshowImages.length > 0">
+                  <div class="flex flex-col justify-center">
+                    <div class="rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden bg-slate-100 dark:bg-slate-800 opacity-80 cursor-pointer max-h-[90px]"
+                         @click="prevSlide()"
+                         title="Aller à l'image précédente">
+                      <template x-if="prevSlideObj()">
+                        <img class="w-full h-full object-cover" :src="prevSlideObj().url" :alt="prevSlideObj().name || 'Image précédente'">
+                      </template>
+                    </div>
+                  </div>
+                  <div class="flex flex-col justify-center transform scale-[1.03]">
+                    <div class="rounded-lg border-2 border-emerald-400 dark:border-emerald-500 overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-lg max-h-[120px]">
+                      <template x-if="currentSlide()">
+                        <img class="w-full h-full object-cover" :src="currentSlide().url" :alt="currentSlide().name || 'Image actuelle'">
+                      </template>
+                    </div>
+                  </div>
+                  <div class="flex flex-col justify-center">
+                    <div class="rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden bg-slate-100 dark:bg-slate-800 opacity-80 cursor-pointer max-h-[90px]"
+                         @click="nextSlide()"
+                         title="Aller à l'image suivante">
+                      <template x-if="nextSlideObj()">
+                        <img class="w-full h-full object-cover" :src="nextSlideObj().url" :alt="nextSlideObj().name || 'Image suivante'">
+                      </template>
+                    </div>
+                  </div>
+                </div>
               </div>
               <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm">
                 <h3 class="text-lg font-semibold mb-1">Playlist</h3>
@@ -130,7 +167,7 @@
           </div>
           <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm">
             <h3 class="text-lg font-semibold">Streamdeck</h3>
-            <div class="flex items-center gap-3 mt-2">
+            <div class="grid grid-cols-3 gap-3 mt-2">
               <button
                 class="h-16 w-16 inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                 :style="tensionButtonStyle(-1)"
@@ -144,6 +181,22 @@
                 @click="changeTension(1)"
               >
                 <span class="text-[14px] font-normal" x-text="tensionButtonLabel(1)"></span>
+              </button>
+              <button
+                class="h-16 w-16 inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                @click="prevSlide()"
+                :disabled="slideshowImages.length === 0"
+              >
+                <i class="fa-solid fa-chevron-left text-base"></i>
+                <span class="text-[11px]">Slide -</span>
+              </button>
+              <button
+                class="h-16 w-16 inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                @click="nextSlide()"
+                :disabled="slideshowImages.length === 0"
+              >
+                <i class="fa-solid fa-chevron-right text-base"></i>
+                <span class="text-[11px]">Slide +</span>
               </button>
             </div>
           </div>

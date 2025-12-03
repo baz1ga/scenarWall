@@ -96,6 +96,12 @@ body.front {
 .carousel-arrow.left { left: 16px; }
 .carousel-arrow.right { right: 16px; }
 
+/* Hide navigation UI and slide counter on front */
+.carousel-arrow,
+#photo-number {
+  display: none !important;
+}
+
 /* ================================================
    ⚡ TENSION BAR
    ================================================ */
