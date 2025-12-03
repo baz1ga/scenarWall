@@ -50,9 +50,6 @@ const DEFAULT_TENSION_LABELS = {
   level4: "+10",
   level5: "+15"
 };
-const STREAMDECK_DICE_OPTIONS = [
-  "1d20","1d12","1d10","1d8","1d6","1d4","1d100","1d oui/non","1d oui mais","1d non mais"
-];
 const DEFAULT_CONFIG = {
   tensionEnabled: true,
   tensionColors: { ...DEFAULT_TENSION_COLORS },
@@ -65,12 +62,7 @@ const DEFAULT_CONFIG = {
     level4: null,
     level5: null
   },
-  quotaMB: null,
-  streamdeck: {
-    dice1: "1d20",
-    dice2: "1d20",
-    dice3: "1d20"
-  }
+  quotaMB: null
 };
 const DEFAULT_TENANT_SESSION = {
   timer: {
@@ -293,8 +285,7 @@ function loadConfig(tenantId) {
       ...DEFAULT_CONFIG,
       ...data,
       tensionColors: normalizeTensionColors(data.tensionColors),
-      tensionLabels: normalizeTensionLabels(data.tensionLabels),
-      streamdeck: { ...DEFAULT_CONFIG.streamdeck, ...(data.streamdeck || {}) }
+      tensionLabels: normalizeTensionLabels(data.tensionLabels)
     };
   } catch (err) {
     console.error("Failed to read config, using defaults", err);
@@ -887,27 +878,6 @@ app.put("/api/:tenantId/config/tension", requireLogin, (req, res) => {
   res.json({ success: true, config });
 });
 
-app.put("/api/:tenantId/config/streamdeck", requireLogin, (req, res) => {
-  const tenantId = req.params.tenantId;
-  const { streamdeck } = req.body || {};
-
-  if (tenantId !== req.session.user.tenantId)
-    return res.status(403).json({ error: "Forbidden tenant" });
-
-  if (!streamdeck || typeof streamdeck !== "object") {
-    return res.status(400).json({ error: "streamdeck must be an object" });
-  }
-  const validate = (val) => STREAMDECK_DICE_OPTIONS.includes(val);
-  const dice1 = validate(streamdeck.dice1) ? streamdeck.dice1 : DEFAULT_CONFIG.streamdeck.dice1;
-  const dice2 = validate(streamdeck.dice2) ? streamdeck.dice2 : DEFAULT_CONFIG.streamdeck.dice2;
-  const dice3 = validate(streamdeck.dice3) ? streamdeck.dice3 : DEFAULT_CONFIG.streamdeck.dice3;
-
-  const config = loadConfig(tenantId);
-  config.streamdeck = { dice1, dice2, dice3 };
-  saveConfig(tenantId, config);
-  res.json({ success: true, streamdeck: config.streamdeck });
-});
-
 // HIDE
 app.put("/api/:tenantId/images/hide/:name", requireLogin, (req, res) => {
   const tenantId = req.params.tenantId;
@@ -1354,6 +1324,12 @@ wss.on("connection", (ws, req) => {
     }
     if (msg.type === "slideshow:update" && typeof msg.index === "number") {
       broadcastTenant(ws.meta.tenantId, { type: "slideshow:update", index: msg.index });
+    }
+    if (msg.type === "hourglass:command" && typeof msg.action === "string") {
+      const payload = { type: "hourglass:command", action: msg.action };
+      if (typeof msg.durationSeconds === "number") payload.durationSeconds = msg.durationSeconds;
+      if (typeof msg.visible === "boolean") payload.visible = msg.visible;
+      broadcastTenant(ws.meta.tenantId, payload);
     }
   });
 });

@@ -13,9 +13,6 @@ export function gmDashboard() {
     slideshowIndex: 0,
     slideshowLoading: false,
     slideshowError: '',
-    streamDeckDice: { dice1: '1d20', dice2: '1d20', dice3: '1d20' },
-    diceOptions: ['1d20','1d12','1d10','1d8','1d6','1d4','1d100','1d oui/non','1d oui mais','1d non mais'],
-    diceModal: { open: false, target: 'dice1', value: '1d20' },
     timerRunning: false,
     timerElapsedMs: 0,
     timerStartedAt: null,
@@ -25,6 +22,14 @@ export function gmDashboard() {
     tensionLevels: [],
     tensionAudio: {},
     selectedTension: '',
+    hourglassDuration: 60,
+    hourglassDurationTemp: 60,
+    hourglassModalOpen: false,
+    hourglassRunning: false,
+    hourglassStartedAt: null,
+    hourglassRemainingMs: 0,
+    _hourglassInterval: null,
+    hourglassVisible: true,
     socket: null,
     socketTimer: null,
     _tensionAudio: null,
@@ -158,6 +163,82 @@ export function gmDashboard() {
       await this.saveTimer();
     },
 
+    normalizeHourglassDuration(val) {
+      const n = Number(val);
+      return Number.isFinite(n) && n > 0 ? n : this.hourglassDuration;
+    },
+    startHourglassLoop(durationMs) {
+      if (this._hourglassInterval) clearInterval(this._hourglassInterval);
+      this.hourglassRunning = true;
+      this.hourglassRemainingMs = durationMs;
+      this.hourglassStartedAt = Date.now();
+      this._hourglassInterval = setInterval(() => {
+        if (!this.hourglassRunning || !this.hourglassStartedAt) return;
+        const elapsed = Date.now() - this.hourglassStartedAt;
+        const remaining = Math.max(0, durationMs - elapsed);
+        this.hourglassRemainingMs = remaining;
+        if (remaining === 0) {
+          this.stopHourglassLoop();
+        }
+      }, 500);
+    },
+    stopHourglassLoop() {
+      this.hourglassRunning = false;
+      this.hourglassStartedAt = null;
+      if (this._hourglassInterval) {
+        clearInterval(this._hourglassInterval);
+        this._hourglassInterval = null;
+      }
+    },
+    sendHourglass(action, payload = {}) {
+      if (!this.socket || this.socket.readyState !== WebSocket.OPEN) return;
+      try {
+        this.socket.send(JSON.stringify({ type: 'hourglass:command', action, ...payload }));
+      } catch (e) {
+        // ignore send errors
+      }
+    },
+    toggleHourglassVisibility() {
+      this.hourglassVisible = !this.hourglassVisible;
+      this.sendHourglass('visibility', { visible: this.hourglassVisible });
+    },
+    flipHourglass() {
+      const duration = this.normalizeHourglassDuration(this.hourglassDuration);
+      this.hourglassDuration = duration;
+      this.hourglassVisible = true;
+      this.sendHourglass('visibility', { visible: true });
+      this.sendHourglass('flip', { durationSeconds: duration });
+      this.startHourglassLoop(duration * 1000);
+    },
+    flipButtonLabel() {
+      return this.hourglassRunning ? 'Flip' : 'Lancer';
+    },
+    openHourglassModal() {
+      this.hourglassDurationTemp = this.hourglassDuration;
+      this.hourglassModalOpen = true;
+    },
+    closeHourglassModal() {
+      this.hourglassModalOpen = false;
+    },
+    applyHourglassDuration() {
+      const duration = this.normalizeHourglassDuration(this.hourglassDurationTemp);
+      this.hourglassDuration = duration;
+      this.hourglassModalOpen = false;
+      this.hourglassVisible = true;
+      this.sendHourglass('visibility', { visible: true });
+      this.sendHourglass('setDuration', { durationSeconds: duration });
+      // Pas de flip auto, juste mise à jour de la durée
+    },
+    hourglassDisplay() {
+      if (!this.hourglassRunning) return 'Durée';
+      const ms = Math.max(0, Math.floor(this.hourglassRemainingMs));
+      const sec = Math.ceil(ms / 1000);
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      const pad = (n) => n.toString().padStart(2, '0');
+      return `${m}:${pad(s)}`;
+    },
+
     async loadSlideshow() {
       if (!this.tenantId) {
         this.slideshowImages = [];
@@ -221,7 +302,6 @@ export function gmDashboard() {
         const colors = data.tensionColors || {};
         const labels = data.tensionLabels || {};
         this.tensionAudio = data.tensionAudio || {};
-        this.streamDeckDice = { ...this.streamDeckDice, ...(data.streamdeck || {}) };
         const defaults = {
           level1: '#37aa32',
           level2: '#f8d718',
@@ -344,38 +424,6 @@ export function gmDashboard() {
         await player.play();
       } catch (e) {
         // ignore play errors
-      }
-    },
-
-    openDiceModal(target) {
-      this.diceModal.target = target;
-      this.diceModal.value = this.streamDeckDice[target] || '1d20';
-      this.diceModal.open = true;
-    },
-    closeDiceModal() {
-      this.diceModal.open = false;
-    },
-    async saveDiceSelection() {
-      const target = this.diceModal.target;
-      const value = this.diceModal.value;
-      if (!target || !this.diceOptions.includes(value)) {
-        this.closeDiceModal();
-        return;
-      }
-      this.streamDeckDice = { ...this.streamDeckDice, [target]: value };
-      this.closeDiceModal();
-      await this.persistStreamdeck();
-    },
-    async persistStreamdeck() {
-      if (!this.tenantId) return;
-      try {
-        await fetch(`${this.API}/api/${this.tenantId}/config/streamdeck`, {
-          method: 'PUT',
-          headers: { ...this.headersAuth(), 'Content-Type': 'application/json' },
-          body: JSON.stringify({ streamdeck: this.streamDeckDice })
-        });
-      } catch (e) {
-        // ignore persist errors
       }
     }
   };

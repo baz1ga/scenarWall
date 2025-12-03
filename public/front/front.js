@@ -120,6 +120,9 @@ let tensionAudio = {
   level5: null
 };
 let audioPlayer = null;
+let hourglass = null;
+const hourglassTimeEl = document.getElementById("hourglass-time");
+let hourglassVisible = false;
 
 function readableTextColor(bgColor) {
   const match = (bgColor || "").match(/(\d+)\D+(\d+)\D+(\d+)/);
@@ -287,6 +290,9 @@ function setupTensionSocket() {
         slideshowControlled = true;
         setSlideIndex(data.index);
       }
+      if (data.type === "hourglass:command" && data.action) {
+        applyHourglassCommand(data);
+      }
     } catch (e) {
       // ignore parse errors
     }
@@ -313,16 +319,52 @@ async function loadTensionConfig() {
 }
 
 function playTensionAudio(level) {
-  const name = tensionAudio[level];
-  if (!name) return;
-  const url = `/t/${TENANT}/audio/${encodeURIComponent(name)}`;
-  if (!audioPlayer) {
-    audioPlayer = new Audio();
+  // Lecture audio désactivée côté front
+}
+
+// ---------------------------------------------------------
+// SABLIER
+// ---------------------------------------------------------
+function initHourglass() {
+  const wrapper = document.querySelector("#hourglass-shell .hourglass-wrapper");
+  if (!wrapper || !window.PixelHourglass) return;
+  hourglass = new window.PixelHourglass(wrapper, { durationSeconds: 60, fillPercent: 97 });
+  updateHourglassTime();
+  setInterval(updateHourglassTime, 500);
+  setHourglassVisibility(hourglassVisible);
+}
+
+function updateHourglassTime() {
+  if (!hourglass || !hourglassTimeEl) return;
+  const remaining = Math.max(0, Math.ceil(hourglass.durationSeconds - (hourglass.elapsedMs / 1000)));
+  hourglassTimeEl.textContent = `${remaining}s`;
+}
+
+function setHourglassVisibility(visible) {
+  hourglassVisible = visible !== false;
+  const shell = document.getElementById("hourglass-shell");
+  if (shell) {
+    shell.style.display = hourglassVisible ? "flex" : "none";
   }
-  audioPlayer.pause();
-  audioPlayer.src = url;
-  audioPlayer.currentTime = 0;
-  audioPlayer.play().catch(() => {});
+}
+
+function applyHourglassCommand(cmd) {
+  if (!hourglass) return;
+  const duration = Number(cmd.durationSeconds);
+  const hasDuration = Number.isFinite(duration) && duration > 0;
+  if (cmd.action === "flip") {
+    hourglass.flip(hasDuration ? { durationSeconds: duration } : {});
+  } else if (cmd.action === "reset") {
+    hourglass.reset(hasDuration ? { durationSeconds: duration } : {});
+  } else if (cmd.action === "play") {
+    if (hasDuration) hourglass.reset({ durationSeconds: duration });
+    hourglass.play();
+  } else if (cmd.action === "setDuration") {
+    hourglass.reset(hasDuration ? { durationSeconds: duration } : {});
+  } else if (cmd.action === "visibility") {
+    setHourglassVisibility(cmd.visible !== false);
+  }
+  updateHourglassTime();
 }
 
 // ---------------------------------------------------------
@@ -332,4 +374,5 @@ setGmControlled(true);
 loadTensionConfig().then(() => {
   setupTensionSocket();
   loadCarouselImages();
+  initHourglass();
 });

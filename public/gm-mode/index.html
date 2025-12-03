@@ -59,7 +59,7 @@
             <h2 class="text-xl font-semibold mb-2 inline-flex items-center gap-2"><i class="fa-solid fa-stream"></i> Timeline scènes</h2>
           </div>
 
-          <div class="grid gap-4 md:grid-cols-[1fr_1.1fr]">
+          <div class="grid gap-4 md:grid-cols-[1fr_500px]">
             <!-- Bloc notes -->
             <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-5 shadow-sm space-y-3">
               <h2 class="text-xl font-semibold inline-flex items-center gap-2"><i class="fa-solid fa-note-sticky"></i> Notes</h2>
@@ -204,7 +204,7 @@
                 class="h-[72px] w-[72px] inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                 @click="resetTimer()"
               >
-                <i class="fa-solid fa-rotate-left text-xl"></i>
+                <i class="fa-solid fa-stopwatch-20 text-xl"></i>
                 <span class="text-[12px]">Reset</span>
               </button>
               <!-- Ligne 2 : Slide - / Tension - / Slide + -->
@@ -231,28 +231,27 @@
                 <i class="fa-solid fa-chevron-right text-xl"></i>
                 <span class="text-[12px]">Slide +</span>
               </button>
-              <!-- Ligne 3 : Dés -->
-              <div class="relative h-[72px] w-[72px] inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-sm font-semibold text-slate-800 dark:text-slate-100">
-                <span class="text-[16px] font-bold" x-text="streamDeckDice.dice1"></span>
-                <button class="absolute top-1 right-1 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-                        @click.stop="openDiceModal('dice1')" title="Configurer ce dé">
-                  <i class="fa-solid fa-dice-d20"></i>
-                </button>
-              </div>
-              <div class="relative h-[72px] w-[72px] inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-sm font-semibold text-slate-800 dark:text-slate-100">
-                <span class="text-[16px] font-bold" x-text="streamDeckDice.dice2"></span>
-                <button class="absolute top-1 right-1 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-                        @click.stop="openDiceModal('dice2')" title="Configurer ce dé">
-                  <i class="fa-solid fa-dice-d20"></i>
-                </button>
-              </div>
-              <div class="relative h-[72px] w-[72px] inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-sm font-semibold text-slate-800 dark:text-slate-100">
-                <span class="text-[16px] font-bold" x-text="streamDeckDice.dice3"></span>
-                <button class="absolute top-1 right-1 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-                        @click.stop="openDiceModal('dice3')" title="Configurer ce dé">
-                  <i class="fa-solid fa-dice-d20"></i>
-                </button>
-              </div>
+              <button
+                class="h-[72px] w-[72px] inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                @click="flipHourglass()"
+              >
+                <i class="fa-solid fa-hourglass-half text-amber-500"></i>
+                <span class="text-[12px] text-amber-500" x-text="flipButtonLabel()"></span>
+              </button>
+              <button
+                class="h-[72px] w-[72px] inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                @click="openHourglassModal()"
+              >
+                <i class="fa-solid fa-hourglass-start text-amber-500"></i>
+                <span class="text-[12px] text-amber-500" x-text="hourglassDisplay()"></span>
+              </button>
+              <button
+                class="h-[72px] w-[72px] inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                @click="toggleHourglassVisibility()"
+              >
+                <i class="fa-solid text-amber-500" :class="hourglassVisible ? 'fa-hourglass-half' : 'fa-hourglass'"></i>
+                <span class="text-[12px] text-amber-500" x-text="hourglassVisible ? 'Masquer' : 'Afficher'"></span>
+              </button>
             </div>
           </div>
         </aside>
@@ -260,30 +259,42 @@
     </main>
   </div>
 
-  <!-- Modal configuration dés -->
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4" x-show="diceModal.open" x-transition x-cloak>
-    <div class="bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 w-full max-w-sm p-4 space-y-3">
+  <div x-cloak x-show="hourglassModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+    <div class="bg-white dark:bg-slate-950 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-sm p-5 space-y-4">
       <div class="flex items-center justify-between">
-        <h4 class="text-lg font-semibold">Choisir un dé</h4>
-        <button class="text-slate-500 hover:text-slate-800 dark:hover:text-slate-200" @click="closeDiceModal()">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
+        <h3 class="text-lg font-semibold inline-flex items-center gap-2"><i class="fa-solid fa-hourglass-half text-amber-500"></i> Durée du sablier</h3>
+        <button class="text-slate-500 hover:text-slate-800 dark:hover:text-slate-200" @click="closeHourglassModal()"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div class="space-y-2 max-h-64 overflow-y-auto pr-1">
-        <template x-for="opt in diceOptions" :key="opt">
-          <button
-            class="w-full text-left px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-            :class="diceModal.value === opt ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200 border-emerald-400 dark:border-emerald-700' : ''"
-            @click="diceModal.value = opt"
-            x-text="opt">
-          </button>
-        </template>
+      <div class="space-y-2">
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">Presets</label>
+        <div class="flex flex-wrap gap-2">
+          <button class="px-3 py-1.5 rounded-lg border border-amber-500 text-amber-600 dark:text-amber-400 text-sm hover:bg-amber-50 dark:hover:bg-amber-500/10"
+                  @click="hourglassDurationTemp = 30">30s</button>
+          <button class="px-3 py-1.5 rounded-lg border border-amber-500 text-amber-600 dark:text-amber-400 text-sm hover:bg-amber-50 dark:hover:bg-amber-500/10"
+                  @click="hourglassDurationTemp = 60">1min</button>
+          <button class="px-3 py-1.5 rounded-lg border border-amber-500 text-amber-600 dark:text-amber-400 text-sm hover:bg-amber-50 dark:hover:bg-amber-500/10"
+                  @click="hourglassDurationTemp = 180">3min</button>
+          <button class="px-3 py-1.5 rounded-lg border border-amber-500 text-amber-600 dark:text-amber-400 text-sm hover:bg-amber-50 dark:hover:bg-amber-500/10"
+                  @click="hourglassDurationTemp = 300">5min</button>
+        </div>
+      </div>
+      <div class="space-y-2">
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">Durée (slider, max 30min)</label>
+        <input type="range" min="30" max="1800" step="5" x-model.number="hourglassDurationTemp" class="w-full">
+        <div class="flex items-center justify-between text-sm text-slate-600 dark:text-slate-300">
+          <span>30s</span>
+          <span x-text="`${Math.floor(hourglassDurationTemp/60)}m ${Math.round(hourglassDurationTemp%60)}s`"></span>
+          <span>30min</span>
+        </div>
       </div>
       <div class="flex justify-end gap-2 pt-2">
-        <button class="px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800" @click="closeDiceModal()">Annuler</button>
-        <button class="px-3 py-2 text-sm rounded-lg bg-emerald-600 text-white hover:bg-emerald-500" @click="saveDiceSelection()">Enregistrer</button>
+        <button class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                @click="closeHourglassModal()">Annuler</button>
+        <button class="px-4 py-2 rounded-lg bg-amber-500 text-white text-sm font-semibold hover:bg-amber-400"
+                @click="applyHourglassDuration()">Valider</button>
       </div>
     </div>
   </div>
+
 </body>
 </html>

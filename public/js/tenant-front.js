@@ -27,11 +27,11 @@ const zone1 = document.getElementById("zone1");
 // 3. Sons (optionnels)
 // ---------------------------------------------
 const sounds = {
-  green: document.getElementById("sound-green"),
-  yellow: document.getElementById("sound-yellow"),
-  orange: document.getElementById("sound-orange"),
-  red: document.getElementById("sound-red"),
-  black: document.getElementById("sound-black")
+  green: null,
+  yellow: null,
+  orange: null,
+  red: null,
+  black: null
 };
 let gmControlled = true;
 let slideshowControlled = false;
@@ -139,15 +139,7 @@ items.forEach(item => {
     );
 
     // stoppe tous les sons
-    Object.values(sounds).forEach(s => {
-      if (s) {
-        s.pause();
-        s.currentTime = 0;
-      }
-    });
-
-    // jouer un son (optionnel)
-    // if (sounds[colorName]) sounds[colorName].play();
+    // sons désactivés
   });
 });
 
