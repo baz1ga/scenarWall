@@ -159,10 +159,13 @@
               <i class="fa-solid fa-eye-slash"></i> Cacher
               <span class="inline-flex items-center justify-center min-w-[1.25rem] h-5 rounded-full bg-slate-200 dark:bg-slate-800 px-2" x-text="selectedVisible.length" x-show="selectedVisible.length > 0"></span>
             </button>
-            <label class="cursor-pointer inline-flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-300" x-show="tenantId">
-              <input type="file" class="hidden" multiple @change="uploadFile($event)">
-              <span class="inline-flex items-center gap-2 rounded-lg border border-emerald-500 px-3 py-1.5 text-emerald-800 dark:text-emerald-100 bg-white dark:bg-transparent hover:bg-emerald-500/10"><i class="fa-solid fa-upload"></i> Ajouter (&lt; 6 Mo)</span>
-            </label>
+            <button
+              class="inline-flex h-[34px] items-center gap-2 rounded-lg border border-emerald-500 px-3 py-1.5 text-sm text-emerald-800 dark:text-emerald-100 bg-white dark:bg-transparent hover:bg-emerald-500/10 transition"
+              x-show="tenantId"
+              @click="openUploadModal()"
+            >
+              <i class="fa-solid fa-upload"></i> Ajouter (&lt; 6 Mo)
+            </button>
           </div>
         </div>
         <!-- Images visibles -->
@@ -527,6 +530,52 @@
     </main>
   </div>
 
+  <!-- Upload images modal -->
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center px-4"
+    x-show="uploadModalOpen"
+    x-transition
+    x-cloak
+    @keydown.escape.window="closeUploadModal()"
+  >
+    <div class="absolute inset-0 bg-black/60" @click="closeUploadModal()"></div>
+    <div class="relative w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
+      <div class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800">
+        <button
+          class="px-4 py-2 text-sm font-semibold"
+          :class="uploadTab === 'drop' ? 'text-emerald-600 dark:text-emerald-300 border-b-2 border-emerald-500' : 'text-slate-500 dark:text-slate-400'"
+          @click="setUploadTab('drop')"
+        >
+          Charger
+        </button>
+        <button
+          class="px-4 py-2 text-sm font-semibold text-slate-400 cursor-not-allowed"
+          @click.prevent
+        >
+          Onglet à venir
+        </button>
+      </div>
+
+      <div class="space-y-4" x-show="uploadTab === 'drop'">
+        <div
+          class="rounded-2xl border-2 border-dashed border-emerald-300 dark:border-emerald-700 bg-emerald-50/50 dark:bg-emerald-900/10 p-6 text-center transition cursor-pointer"
+          :class="uploadDragActive ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : ''"
+          @dragover.prevent="uploadDragActive = true"
+          @dragleave.prevent="uploadDragActive = false"
+          @drop="handleUploadDrop($event)"
+          @click="$refs.uploadInput.click()"
+        >
+          <div class="text-3xl text-emerald-500 mb-2"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+          <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">PNG, JPG, WEBP — Taille max 6 Mo par fichier</div>
+          <div class="mt-3">
+            <span class="inline-flex items-center gap-2 rounded-lg border border-emerald-500 px-3 py-1.5 text-sm text-emerald-800 dark:text-emerald-100 bg-white dark:bg-transparent hover:bg-emerald-500/10">Parcourir</span>
+          </div>
+          <input type="file" multiple accept="image/*" class="hidden" x-ref="uploadInput" @change="uploadFile($event)">
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Zoom overlay -->
   <div class="fixed inset-0 bg-black/80 flex items-center justify-center z-50" x-show="zoomUrl" x-transition x-cloak @click="zoomUrl = ''" title="Cliquer pour fermer">
     <div class="relative max-w-4xl w-full px-6">
@@ -659,6 +708,9 @@
         galleryLoading: true,
         uploadMessage: '',
         uploadStatus: 'ok',
+        uploadModalOpen: false,
+        uploadTab: 'drop',
+        uploadDragActive: false,
         // audio
         audioFiles: [],
         audioLoading: false,
@@ -820,9 +872,30 @@
           }
           this.galleryLoading = false;
         },
-        async uploadFile(event) {
-          const files = Array.from(event.target.files || []);
-          event.target.value = '';
+        openUploadModal() {
+          this.uploadModalOpen = true;
+          this.uploadTab = 'drop';
+          this.uploadDragActive = false;
+        },
+        closeUploadModal() {
+          this.uploadModalOpen = false;
+          this.uploadDragActive = false;
+        },
+        setUploadTab(tab) {
+          this.uploadTab = tab;
+        },
+        handleUploadDrop(event) {
+          event.preventDefault();
+          const files = Array.from(event.dataTransfer?.files || []);
+          this.uploadDragActive = false;
+          if (!files.length) return;
+          this.uploadFile(files);
+        },
+        async uploadFile(eventOrFiles) {
+          const files = Array.isArray(eventOrFiles)
+            ? Array.from(eventOrFiles)
+            : Array.from(eventOrFiles?.target?.files || []);
+          if (eventOrFiles?.target) eventOrFiles.target.value = '';
           if (!files.length || !this.tenantId) return;
 
           let success = 0;
@@ -855,6 +928,7 @@
           if (success > 0) {
             await this.refreshGallery();
             await this.fetchQuota();
+            this.closeUploadModal();
           } else {
             await this.fetchQuota();
           }
