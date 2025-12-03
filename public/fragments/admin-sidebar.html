@@ -1,0 +1,73 @@
+<aside class="bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col sticky top-0 h-screen transition-all duration-200" :class="sidebarCollapsed ? 'w-20' : 'w-64'">
+  <div class="px-3 py-5 flex items-center justify-center">
+    <div class="text-3xl font-semibold text-emerald-500 font-pangolin text-center" x-show="!sidebarCollapsed">.ScenarWall.</div>
+    <div class="text-xl font-semibold text-emerald-500 font-pangolin" x-show="sidebarCollapsed">.SW.</div>
+  </div>
+  <nav class="flex-1 space-y-1" :class="sidebarCollapsed ? 'px-1' : 'px-3'">
+    <a href="/admin/?section=galerie" @click.prevent="navigateSection('galerie')" :class="[
+      sidebarCollapsed ? 'justify-center gap-0 px-0' : 'justify-start gap-3 px-3',
+      section === 'galerie' ? 'bg-slate-800 text-emerald-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'
+    ]" class="w-full flex items-center py-2 rounded-lg text-sm font-medium text-left transition">
+      <i class="fa-regular fa-image text-base"></i>
+      <span x-show="!sidebarCollapsed">Galerie</span>
+    </a>
+    <a href="/admin/?section=audio" @click.prevent="navigateSection('audio')" :class="[
+      sidebarCollapsed ? 'justify-center gap-0 px-0' : 'justify-start gap-3 px-3',
+      section === 'audio' ? 'bg-slate-800 text-indigo-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'
+    ]" class="w-full flex items-center py-2 rounded-lg text-sm font-medium text-left transition">
+      <i class="fa-solid fa-music text-base"></i>
+      <span x-show="!sidebarCollapsed">Audio</span>
+    </a>
+    <a href="/admin/?section=tension" @click.prevent="navigateSection('tension')" :class="[
+      sidebarCollapsed ? 'justify-center gap-0 px-0' : 'justify-start gap-3 px-3',
+      section === 'tension' ? 'bg-slate-800 text-amber-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'
+    ]" class="w-full flex items-center py-2 rounded-lg text-sm font-medium text-left transition">
+      <i class="fa-solid fa-bolt text-base"></i>
+      <span x-show="!sidebarCollapsed">Tension</span>
+    </a>
+    <a href="/admin/?section=users" @click.prevent="navigateSection('users')" :class="[
+      sidebarCollapsed ? 'justify-center gap-0 px-0' : 'justify-start gap-3 px-3',
+      section === 'users' ? 'bg-slate-800 text-sky-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'
+    ]" class="w-full flex items-center py-2 rounded-lg text-sm font-medium text-left transition" x-show="isSuperAdmin">
+      <i class="fa-solid fa-users text-base"></i>
+      <span x-show="!sidebarCollapsed">Utilisateurs</span>
+    </a>
+    <a href="/gm-mode/" :class="[
+      sidebarCollapsed ? 'justify-center gap-0 px-0' : 'justify-start gap-3 px-3',
+      section === 'gm' ? 'bg-slate-800 text-emerald-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'
+    ]" class="w-full flex items-center py-2 rounded-lg text-sm font-medium text-left transition" @click="section = 'gm'">
+      <i class="fa-solid fa-hat-wizard text-base"></i>
+      <span x-show="!sidebarCollapsed">Game Master</span>
+    </a>
+  </nav>
+  <div class="px-4 py-4 text-xs text-slate-500 space-y-3" x-show="!sidebarCollapsed">
+    <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 text-center shadow-sm text-sm">
+      <div class="flex items-center gap-2 text-emerald-500 font-semibold uppercase tracking-[0.08em] text-xs mb-1"></div>
+      <p class="text-slate-700 dark:text-slate-300 mb-3">Un coup de pouce pour l'hébergement et la 🍺</p>
+      <a class="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-500 text-slate-900 font-semibold px-3 py-2 text-sm hover:bg-emerald-400 transition" href="https://www.buymeacoffee.com/baz1ga" target="_blank" rel="noopener">
+        <i class="fa-solid fa-heart"></i> Soutenez-nous
+      </a>
+    </div>
+    <a class="inline-flex w-full items-center justify-center gap-2 rounded-lg text-center border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 font-semibold px-3 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition" href="https://tally.so/r/NpqM6N" target="_blank" rel="noopener">
+      🎲 Envie d'améliorer .ScenarWall. ?
+    </a>
+    <footer class="sw-legal-footer mt-2 text-center text-xs leading-6 text-slate-500 dark:text-slate-400 space-y-1">
+      <div class="text-base font-semibold text-emerald-500 font-pangolin">.ScenarWall. 2025 Bêta</div>
+      <div class="author uppercase tracking-[0.06em] font-semibold text-slate-700 dark:text-slate-300">
+        @Baz1ga & @MattBD<i class="fa-brands fa-discord"></i> Discord)
+      </div>
+      <div class="links inline-flex flex-wrap gap-3 items-center justify-center">
+        <a class="text-emerald-500 hover:text-emerald-400 transition" href="https://phserres.notion.site/Mentions-l-gales-2b625b4f22b780e4852aeeb762578222?pvs=74" target="_blank" rel="noopener">Mentions légales</a>
+        <a class="text-emerald-500 hover:text-emerald-400 transition" href="https://phserres.notion.site/Politique-de-confidentialit-2b625b4f22b780a6b2dce2997443e591?pvs=73"  target="_blank" rel="noopener">Politique de confidentialité</a>
+        <a class="text-emerald-500 hover:text-emerald-400 transition" href="https://phserres.notion.site/Conditions-G-n-rales-d-Utilisation-2b825b4f22b780d68ef6c926efa35af8"  target="_blank" rel="noopener">CGU</a>
+      </div>
+    </footer>
+  </div>
+  <div class="px-3 pb-4">
+    <button class="w-full inline-flex items-center text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition py-2" :class="sidebarCollapsed ? 'justify-center gap-0' : 'justify-between gap-3 px-3'" @click="toggleSidebar()" :aria-label="sidebarCollapsed ? 'Déplier la barre latérale' : 'Réduire la barre latérale'" :title="sidebarCollapsed ? 'Déplier' : 'Réduire'">
+      <span class="inline-flex items-center gap-2" :class="sidebarCollapsed ? '' : 'flex-1 justify-end'">
+        <i :class="sidebarCollapsed ? 'fa-solid fa-angles-right' : 'fa-solid fa-angles-left'"></i>
+      </span>
+    </button>
+  </div>
+</aside>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr" x-data="gmDashboard()" x-init="init()" x-bind:class="theme === 'dark' ? 'dark' : ''" class="min-h-screen">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScenarWall – Game Master Mode</title>
+  <link rel="icon" href="/assets/favicons/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicons/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicons/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="stylesheet" href="/css/tailwind.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Scripts order matters: config/auth/fragments -> gm module -> Alpine -->
+  <script>
+    (() => {
+      const saved = localStorage.getItem('sw_theme');
+      const prefers = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      const mode = saved || prefers;
+      document.documentElement.classList.toggle('dark', mode === 'dark');
+    })();
+  </script>
+  <script src="/js/common/config.js"></script>
+  <script src="/js/common/auth.js"></script>
+  <script src="/js/common/fragments-loader.js" defer></script>
+  <script type="module" src="/js/admin/gm-dashboard.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <style>
+    @font-face {
+      font-family: 'Pangolin';
+      src: url('/assets/font/Pangolin-Regular.ttf') format('truetype');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    .font-pangolin { font-family: 'Pangolin', 'Comic Sans MS', cursive; }
+    [x-cloak]{display:none!important}
+  </style>
+</head>
+<body class="min-h-screen flex bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
+  <!-- Sidebar -->
+  <div data-include="admin-sidebar"></div>
+
+  <!-- Main -->
+  <div class="flex-1 flex flex-col min-h-screen bg-slate-50 dark:bg-slate-900">
+    <!-- Top bar -->
+    <div data-include="admin-header"></div>
+
+    <!-- Content -->
+    <main class="flex-1 p-6 bg-slate-50 dark:bg-slate-900 space-y-6">
+      <section class="max-w-4xl mx-auto space-y-4">
+        <h2 class="text-2xl font-semibold">Game Master Mode</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400">
+          Utilise la barre latérale pour accéder aux sections Admin ou retourne au panneau principal.
+        </p>
+        <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm">
+          <p class="text-sm text-slate-600 dark:text-slate-300">
+            Les outils Game Master dédiés seront bientôt disponibles ici.
+          </p>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

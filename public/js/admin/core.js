@@ -52,14 +52,61 @@ export function coreSection() {
       const storedSidebar = localStorage.getItem('sw_admin_sidebar_collapsed');
       this.sidebarCollapsed = storedSidebar === '1';
 
-      this.refreshGallery();
-      this.loadAudio();
-      this.loadTension();
-      this.fetchQuota();
-      if (this.isSuperAdmin) {
+      // section depuis l'URL ?section=...
+      const params = new URLSearchParams(window.location.search || '');
+      const requested = params.get('section');
+      const allowed = ['galerie', 'audio', 'tension', 'users'];
+      if (requested && allowed.includes(requested)) {
+        this.section = requested;
+      }
+
+      if (typeof this.fetchQuota === 'function') this.fetchQuota();
+      if (typeof this.refreshGallery === 'function') this.refreshGallery();
+      if (typeof this.loadAudio === 'function') this.loadAudio();
+      if (typeof this.loadTension === 'function') this.loadTension();
+      if (this.isSuperAdmin && typeof this.loadUsers === 'function') {
         this.loadUsers();
+      }
+      if (this.isSuperAdmin && typeof this.loadGlobalQuota === 'function') {
         this.loadGlobalQuota();
       }
+
+      // charger les données de la section demandée
+      if (this.section === 'audio' && typeof this.loadAudio === 'function') {
+        this.loadAudio();
+      }
+      if (this.section === 'tension' && typeof this.loadTension === 'function') {
+        this.loadTension();
+      }
+      if (this.section === 'users' && this.isSuperAdmin && typeof this.loadUsers === 'function') {
+        this.loadUsers();
+      }
+    },
+
+    navigateSection(target) {
+      const adminPath = window.location.pathname.startsWith('/admin');
+      if (!adminPath) {
+        window.location.href = `/admin/?section=${target}`;
+        return;
+      }
+      this.section = target;
+      if (target === 'galerie' && typeof this.refreshGallery === 'function') {
+        this.refreshGallery();
+      }
+      if (target === 'audio' && typeof this.loadAudio === 'function') {
+        this.loadAudio();
+      }
+      if (target === 'tension' && typeof this.loadTension === 'function') {
+        this.loadTension();
+      }
+      if (target === 'users' && this.isSuperAdmin && typeof this.loadUsers === 'function') {
+        this.loadUsers();
+      }
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('section', target);
+        window.history.replaceState({}, '', url.toString());
+      } catch (e) {}
     },
 
     headersAuth() {
