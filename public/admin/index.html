@@ -164,7 +164,7 @@
               x-show="tenantId"
               @click="openUploadModal()"
             >
-              <i class="fa-solid fa-upload"></i> Ajouter (&lt; 6 Mo)
+              <i class="fa-solid fa-upload"></i> Ajouter
             </button>
           </div>
         </div>
@@ -539,7 +539,7 @@
     @keydown.escape.window="closeUploadModal()"
   >
     <div class="absolute inset-0 bg-black/60" @click="closeUploadModal()"></div>
-    <div class="relative w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
+    <div class="relative w-full max-w-2xl max-h-[800px] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 flex flex-col space-y-4 overflow-hidden">
       <div class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800">
         <button
           class="px-4 py-2 text-sm font-semibold"
@@ -554,6 +554,16 @@
           @click="setUploadTab('url')"
         >
           Import via URL
+        </button>
+        <button
+          class="px-4 py-2 text-sm font-semibold"
+          :class="uploadTab === 'pixabay' ? 'text-emerald-600 dark:text-emerald-300 border-b-2 border-emerald-500' : 'text-slate-500 dark:text-slate-400'"
+          @click="setUploadTab('pixabay')"
+        >
+          <span class="inline-flex items-center gap-2">
+            <img src="https://pixabay.com/favicon-16x16.png" alt="" class="h-4 w-4">
+            <span>Pixabay</span>
+          </span>
         </button>
       </div>
 
@@ -580,7 +590,7 @@
             type="url"
             x-model="uploadUrl"
             class="flex-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-400 focus:outline-none"
-            placeholder="Copier l'url de votre image ici"
+            placeholder="Coller l'url de votre image ici"
           >
           <button
             class="inline-flex h-[34px] items-center gap-2 rounded-lg border border-emerald-500 px-3 py-1.5 text-sm text-emerald-800 dark:text-emerald-100 bg-white dark:bg-transparent hover:bg-emerald-500/10 transition disabled:opacity-50"
@@ -592,6 +602,42 @@
           </button>
         </div>
         <p class="text-xs" :class="uploadUrlStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-300'" x-text="uploadUrlMessage"></p>
+      </div>
+      <div class="space-y-3" x-show="uploadTab === 'pixabay'">
+        <div class="flex items-center gap-2">
+          <input
+            type="text"
+            x-model="pixabayQuery"
+            class="flex-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-400 focus:outline-none"
+            placeholder="Rechercher sur Pixabay (ex: forêt, mer, montagne...)"
+          >
+          <button
+            class="inline-flex h-[34px] items-center gap-2 rounded-lg border border-emerald-500 px-3 py-1.5 text-sm text-emerald-800 dark:text-emerald-100 bg-white dark:bg-transparent hover:bg-emerald-500/10 transition disabled:opacity-50"
+            @click="searchPixabay()"
+            :disabled="pixabayLoading || !pixabayQuery.trim()"
+          >
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <span x-text="pixabayLoading ? 'Recherche...' : 'Rechercher'"></span>
+          </button>
+        </div>
+        <p class="text-xs" :class="pixabayStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-300'" x-text="pixabayMessage"></p>
+        <div class="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4" x-show="pixabayResults.length > 0">
+          <template x-for="img in pixabayResults" :key="img.id">
+            <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
+              <img :src="img.webformatURL" :alt="img.tags" class="h-32 w-full object-cover">
+              <div class="p-3 flex items-center justify-between">
+                <div class="text-xs text-slate-500 truncate" x-text="img.user || 'Pixabay'"></div>
+                <button
+                  class="inline-flex items-center gap-1 rounded-lg bg-emerald-500 text-slate-900 px-2 py-1 text-xs font-semibold hover:bg-emerald-400"
+                  @click="importPixabay(img.largeImageURL || img.webformatURL)"
+                  :disabled="uploadUrlLoading"
+                >
+                  <i class="fa-solid fa-cloud-arrow-down"></i> Importer
+                </button>
+              </div>
+            </div>
+          </template>
+        </div>
       </div>
     </div>
   </div>
@@ -735,6 +781,13 @@
         uploadUrlMessage: '',
         uploadUrlStatus: 'ok',
         uploadUrlLoading: false,
+        pixabayKey: '49797384-13a3b93e3da8aa780309630f7',
+        pixabayQuery: '',
+        pixabayLoading: false,
+        pixabayResults: [],
+        pixabayMessage: '',
+        pixabayStatus: 'ok',
+        pixabayInitialized: false,
         // audio
         audioFiles: [],
         audioLoading: false,
@@ -909,6 +962,12 @@
           this.uploadTab = tab;
           this.uploadUrlMessage = '';
           this.uploadUrlStatus = 'ok';
+          this.pixabayMessage = '';
+          this.pixabayStatus = 'ok';
+          if (tab === 'pixabay' && !this.pixabayInitialized && !this.pixabayLoading) {
+            if (!this.pixabayQuery.trim()) this.pixabayQuery = 'nature';
+            this.searchPixabay(true);
+          }
         },
         handleUploadDrop(event) {
           event.preventDefault();
@@ -969,18 +1028,19 @@
             this.setUpload(msg, 'error');
           }
         },
-        async uploadFromUrl() {
-          if (!this.uploadUrl || !this.tenantId) return;
+        async uploadFromUrl(urlOverride = '') {
+          const targetUrl = urlOverride || this.uploadUrl;
+          if (!targetUrl || !this.tenantId) return;
           this.uploadUrlLoading = true;
           this.uploadUrlMessage = '';
           this.uploadUrlStatus = 'ok';
           try {
-            const res = await fetch(this.uploadUrl, { mode: 'cors' }).catch(() => null);
+            const res = await fetch(targetUrl, { mode: 'cors' }).catch(() => null);
             if (!res || !res.ok) throw new Error('Impossible de récupérer le fichier.');
             const blob = await res.blob();
             const contentType = res.headers.get('content-type') || '';
             if (!contentType.startsWith('image/')) throw new Error('Le lien ne pointe pas vers une image.');
-            const urlPath = this.uploadUrl.split('/').pop() || 'image';
+            const urlPath = targetUrl.split('/').pop() || 'image';
             const extFromType = contentType.split('/')[1]?.split(';')[0] || 'jpg';
             const safeName = urlPath.match(/[^?#]+/)?.[0] || `remote.${extFromType}`;
             const fileName = safeName.includes('.') ? safeName : `${safeName}.${extFromType}`;
@@ -994,6 +1054,47 @@
             this.uploadUrlStatus = 'error';
           }
           this.uploadUrlLoading = false;
+        },
+        async searchPixabay(allowEmpty = false) {
+          if (!this.pixabayKey) return;
+          const qTrim = this.pixabayQuery.trim();
+          const query = qTrim || (allowEmpty ? 'nature' : '');
+          if (!query) return;
+          if (!qTrim) this.pixabayQuery = query;
+          this.pixabayLoading = true;
+          this.pixabayMessage = '';
+          this.pixabayStatus = 'ok';
+          try {
+            const q = encodeURIComponent(query);
+            const res = await fetch(`https://pixabay.com/api/?key=${this.pixabayKey}&q=${q}&image_type=photo&per_page=30&orientation=horizontal&safesearch=true`).catch(() => null);
+            if (!res || !res.ok) throw new Error('Recherche impossible sur Pixabay.');
+            const data = await res.json();
+            this.pixabayResults = Array.isArray(data.hits) ? data.hits : [];
+            if (this.pixabayResults.length === 0) {
+              this.pixabayMessage = 'Aucun résultat.';
+              this.pixabayStatus = 'error';
+            } else {
+              this.pixabayInitialized = true;
+            }
+          } catch (err) {
+            this.pixabayResults = [];
+            this.pixabayMessage = err.message || 'Erreur Pixabay.';
+            this.pixabayStatus = 'error';
+          }
+          this.pixabayLoading = false;
+        },
+        async importPixabay(url) {
+          if (!url) return;
+          this.pixabayMessage = '';
+          this.pixabayStatus = 'ok';
+          await this.uploadFromUrl(url);
+          if (this.uploadUrlStatus === 'ok') {
+            this.pixabayMessage = 'Image importée depuis Pixabay.';
+            this.pixabayStatus = 'ok';
+          } else {
+            this.pixabayMessage = this.uploadUrlMessage || 'Import Pixabay impossible.';
+            this.pixabayStatus = 'error';
+          }
         },
         setUpload(msg, status = 'ok') {
           this.uploadMessage = msg;
