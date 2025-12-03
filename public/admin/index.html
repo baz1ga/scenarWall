@@ -311,8 +311,29 @@
           <div class="text-sm text-slate-600 dark:text-slate-400 border border-dashed border-slate-300 dark:border-slate-800 rounded-lg p-4">Aucun fichier audio.</div>
         </template>
         <div class="space-y-2" x-show="!audioLoading && audioFiles.length > 0">
-          <template x-for="audio in audioFiles" :key="audio.name">
-            <div class="flex items-center gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3">
+          <template x-for="(audio, index) in audioFiles" :key="audio.name">
+            <div
+              class="flex items-center gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 transition"
+              draggable="true"
+              @dragstart="startAudioDrag(index)"
+              @dragend="endAudioDrag()"
+              @dragover.prevent="onAudioDragOver(index)"
+              @drop.prevent="onAudioDrop(index)"
+              :class="[
+                audioDragOverIndex === index && audioDragIndex !== null ? 'ring-2 ring-indigo-400 ring-offset-2 ring-offset-slate-50 dark:ring-offset-slate-900 shadow-lg' : '',
+                audioDragIndex === index ? 'opacity-80 scale-[0.99]' : ''
+              ]"
+            >
+              <button
+                class="h-8 w-8 inline-flex items-center justify-center rounded-lg bg-white/90 dark:bg-slate-900/90 text-slate-500 hover:text-indigo-500 border border-slate-200 dark:border-slate-700 cursor-grab select-none"
+                :class="audioDragIndex === index ? 'cursor-grabbing text-indigo-500' : ''"
+                title="Glisser pour réordonner"
+                draggable="true"
+                @dragstart.stop="startAudioDrag(index)"
+                @dragend.stop="endAudioDrag()"
+              >
+                <i class="fa-solid fa-grip-vertical text-sm"></i>
+              </button>
               <label class="h-8 w-8 flex items-center justify-center rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow cursor-pointer">
                 <input
                   type="checkbox"
@@ -644,6 +665,8 @@
         audioMessage: '',
         audioStatus: 'ok',
         selectedAudio: [],
+        audioDragIndex: null,
+        audioDragOverIndex: null,
         quotaDisplay: '—',
         quotaPercent: 0,
         zoomUrl: '',
@@ -1123,6 +1146,36 @@
           } else {
             this.selectedAudio = [...this.selectedAudio, name];
           }
+        },
+        async persistAudioOrder(list) {
+          this.audioFiles = list;
+          const order = list.map(a => a.name);
+          await fetch(`${this.API}/api/${this.tenantId}/audio/order`, {
+            method: 'PUT',
+            headers: { ...this.headersAuth(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ order })
+          });
+        },
+        startAudioDrag(index) {
+          this.audioDragIndex = index;
+          this.audioDragOverIndex = index;
+        },
+        onAudioDragOver(index) {
+          if (this.audioDragIndex === null) return;
+          this.audioDragOverIndex = index;
+        },
+        async onAudioDrop(index) {
+          if (this.audioDragIndex === null) return;
+          const list = [...this.audioFiles];
+          const [moved] = list.splice(this.audioDragIndex, 1);
+          list.splice(index, 0, moved);
+          this.audioDragIndex = null;
+          this.audioDragOverIndex = null;
+          await this.persistAudioOrder(list);
+        },
+        endAudioDrag() {
+          this.audioDragIndex = null;
+          this.audioDragOverIndex = null;
         },
         async deleteSelectedAudio() {
           if (!this.selectedAudio.length) return;

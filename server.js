@@ -479,6 +479,7 @@ app.get("/api/auth/discord/callback", async (req, res) => {
       fs.mkdirSync(path.join(dir, "thumbs"));
       fs.mkdirSync(path.join(dir, "audio"));
       fs.writeFileSync(path.join(dir, "order.json"), "[]");
+      fs.writeFileSync(path.join(dir, "audio-order.json"), "[]");
       fs.writeFileSync(path.join(dir, "hidden.json"), "[]");
       fs.writeFileSync(path.join(dir, "config.json"), JSON.stringify(DEFAULT_CONFIG, null, 2));
 
@@ -625,6 +626,20 @@ function removeThumbnail(tenantId, name) {
   if (fs.existsSync(dest)) {
     try { fs.unlinkSync(dest); } catch (err) { console.error("Thumbnail delete failed", err); }
   }
+}
+
+function audioOrderFile(tenantId) {
+  return path.join(TENANTS_DIR, tenantId, "audio-order.json");
+}
+
+function readAudioOrder(tenantId) {
+  const file = audioOrderFile(tenantId);
+  if (!fs.existsSync(file)) fs.writeFileSync(file, "[]");
+  return JSON.parse(fs.readFileSync(file, "utf8"));
+}
+
+function writeAudioOrder(tenantId, order) {
+  fs.writeFileSync(audioOrderFile(tenantId), JSON.stringify(order, null, 2));
 }
 
 //------------------------------------------------------------
@@ -904,19 +919,29 @@ app.get("/api/tenant/:tenant/audio", requireLogin, (req, res) => {
     return res.json([]);
   }
 
+  const order = readAudioOrder(tenantId);
   const files = fs.readdirSync(dir).filter(f => AUDIO_EXT.test(f));
-  const list = files.map(name => {
-    const filePath = path.join(dir, name);
-    let size = 0;
-    try {
-      size = fs.statSync(filePath).size;
-    } catch {}
-    return {
-      name,
-      url: `/t/${tenantId}/audio/${name}`,
-      size
-    };
+  const sorted = [...files].sort((a, b) => {
+    const ia = order.indexOf(a);
+    const ib = order.indexOf(b);
+    const va = ia === -1 ? Number.MAX_SAFE_INTEGER : ia;
+    const vb = ib === -1 ? Number.MAX_SAFE_INTEGER : ib;
+    if (va !== vb) return va - vb;
+    return a.localeCompare(b);
   });
+
+  const list = sorted.map(name => {
+      const filePath = path.join(dir, name);
+      let size = 0;
+      try {
+        size = fs.statSync(filePath).size;
+      } catch {}
+      return {
+        name,
+        url: `/t/${tenantId}/audio/${name}`,
+        size
+      };
+    });
 
   res.json(list);
 });
@@ -944,6 +969,10 @@ app.post("/api/:tenantId/audio/upload", requireLogin, (req, res) => {
       return res.status(400).json({ error: "Quota exceeded" });
     }
 
+    const order = readAudioOrder(tenantId);
+    order.push(req.file.filename);
+    writeAudioOrder(tenantId, order);
+
     res.json({ success: true, name: req.file.filename, size: fileSize });
   });
 });
@@ -958,7 +987,18 @@ app.delete("/api/:tenantId/audio/:name", requireLogin, (req, res) => {
   if (fs.existsSync(filePath)) {
     try { fs.unlinkSync(filePath); } catch {}
   }
+  const order = readAudioOrder(tenantId).filter(n => n !== name);
+  writeAudioOrder(tenantId, order);
   return res.json({ success: true });
+});
+
+app.put("/api/:tenantId/audio/order", requireLogin, (req, res) => {
+  const { tenantId } = req.params;
+  if (tenantId !== req.session.user.tenantId)
+    return res.status(403).json({ error: "Forbidden tenant" });
+  const newOrder = Array.isArray(req.body.order) ? req.body.order.filter(isSafeName) : [];
+  writeAudioOrder(tenantId, newOrder);
+  res.json({ success: true });
 });
 
 app.put("/api/:tenantId/audio/:name", requireLogin, (req, res) => {
@@ -980,6 +1020,8 @@ app.put("/api/:tenantId/audio/:name", requireLogin, (req, res) => {
 
   try {
     fs.renameSync(src, dest);
+    const order = readAudioOrder(tenantId).map(n => n === name ? newName : n);
+    writeAudioOrder(tenantId, order);
     return res.json({ success: true, name: newName });
   } catch (err) {
     return res.status(500).json({ error: "Rename failed" });
