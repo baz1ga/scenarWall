@@ -147,12 +147,23 @@
     <main class="flex-1 p-6 bg-slate-50 dark:bg-slate-900 space-y-6">
       <!-- Galerie -->
       <section x-show="section === 'galerie'" x-cloak class="space-y-6 max-w-5xl mx-auto mt-6">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between gap-3">
           <h2 class="text-lg font-semibold">Images visibles</h2>
-          <label class="cursor-pointer inline-flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-300" x-show="tenantId">
-            <input type="file" class="hidden" multiple @change="uploadFile($event)">
-            <span class="inline-flex items-center gap-2 rounded-lg border border-emerald-500 px-3 py-1.5 text-emerald-800 dark:text-emerald-100 bg-white dark:bg-transparent hover:bg-emerald-500/10"><i class="fa-solid fa-upload"></i> Ajouter (&lt; 6 Mo)</span>
-          </label>
+          <div class="flex items-center gap-2">
+            <button
+              class="inline-flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition disabled:opacity-40 disabled:cursor-not-allowed"
+              @click="hideSelectedVisible()"
+              :disabled="galleryLoading || selectedVisible.length === 0"
+              :title="selectedVisible.length === 0 ? 'Sélectionnez des images' : 'Cacher la sélection'"
+            >
+              <i class="fa-solid fa-eye-slash"></i> Cacher
+              <span class="inline-flex items-center justify-center min-w-[1.25rem] h-5 rounded-full bg-slate-200 dark:bg-slate-800 px-2" x-text="selectedVisible.length" x-show="selectedVisible.length > 0"></span>
+            </button>
+            <label class="cursor-pointer inline-flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-300" x-show="tenantId">
+              <input type="file" class="hidden" multiple @change="uploadFile($event)">
+              <span class="inline-flex items-center gap-2 rounded-lg border border-emerald-500 px-3 py-1.5 text-emerald-800 dark:text-emerald-100 bg-white dark:bg-transparent hover:bg-emerald-500/10"><i class="fa-solid fa-upload"></i> Ajouter (&lt; 6 Mo)</span>
+            </label>
+          </div>
         </div>
         <div class="space-y-2">
           <template x-if="galleryLoading">
@@ -177,6 +188,17 @@
                   dragIndex === index ? 'opacity-80 scale-[0.98]' : ''
                 ]"
               >
+                <div class="absolute top-2 right-2 z-20 flex items-center gap-2">
+                  <label class="h-8 w-8 flex items-center justify-center rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow cursor-pointer">
+                    <input
+                      type="checkbox"
+                      class="h-4 w-4 rounded border border-slate-400 bg-white text-emerald-500 accent-emerald-500 cursor-pointer"
+                      :checked="selectedVisible.includes(img.name)"
+                      @change.stop="toggleSelectVisible(img.name)"
+                      :aria-label="`Sélectionner ${img.name}`"
+                    >
+                  </label>
+                </div>
                 <button
                   class="absolute top-2 left-2 h-7 w-7 flex items-center justify-center rounded-full bg-white/90 dark:bg-slate-900/90 text-slate-500 hover:text-emerald-500 cursor-grab select-none border border-slate-200 dark:border-slate-700 text-xs"
                   :class="dragIndex === index ? 'cursor-grabbing text-emerald-500' : ''"
@@ -185,7 +207,7 @@
                 >
                   <i class="fa-solid fa-grip-vertical"></i>
                 </button>
-                <div class="absolute top-2 right-2 px-2 py-1 rounded-full bg-slate-900/80 text-white text-[11px] font-semibold shadow-sm">#<span x-text="index + 1"></span></div>
+                <div class="absolute bottom-2 left-2 px-2 py-1 rounded-full bg-slate-900/80 text-white text-[11px] font-semibold shadow-sm">#<span x-text="index + 1"></span></div>
                 <div class="absolute inset-0">
                   <img :src="img.thumbUrl || img.url" class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105 group-active:scale-[1.02]" @click="zoom(img.url)">
                 </div>
@@ -198,25 +220,36 @@
                   Déposer ici
                 </div>
                 <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/40 to-transparent p-2 text-white space-y-1.5">
-                  <div class="flex items-center justify-end text-[10px] text-white/80">
-                    <button
-                      class="h-7 w-7 inline-flex items-center justify-center rounded-full bg-white/90 text-slate-800 hover:bg-amber-500 hover:text-slate-900 transition shadow text-[12px]"
-                      @click="hideImage(img.name)"
-                      title="Cacher"
-                    >
-                      <i class="fa-regular fa-eye-slash"></i>
-                    </button>
-                  </div>
                   <div class="text-[12px] font-semibold truncate" x-text="img.name"></div>
                 </div>
               </div>
             </template>
           </div>
         </div>
-
+        <!-- Images cachées -->
         <div class="space-y-4">
-          <div class="flex items-center justify-between">
+          <div class="flex items-center justify-between gap-3">
             <h2 class="text-lg font-semibold">Images cachées</h2>
+            <div class="flex items-center gap-2">
+              <button
+                class="inline-flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                @click="showSelectedHidden()"
+                :disabled="galleryLoading || selectedHidden.length === 0"
+                :title="selectedHidden.length === 0 ? 'Sélectionnez des images' : 'Rendre visibles la sélection'"
+              >
+                <i class="fa-regular fa-eye"></i> Afficher
+                <span class="inline-flex items-center justify-center min-w-[1.25rem] h-5 rounded-full bg-slate-200 dark:bg-slate-800 px-2" x-text="selectedHidden.length" x-show="selectedHidden.length > 0"></span>
+              </button>
+              <button
+                class="inline-flex items-center gap-2 rounded-lg border border-rose-200 dark:border-rose-900 bg-white dark:bg-slate-950 px-3 py-1.5 text-xs text-rose-700 dark:text-rose-200 hover:bg-rose-50 dark:hover:bg-rose-950 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                @click="deleteSelectedHidden()"
+                :disabled="galleryLoading || selectedHidden.length === 0"
+                :title="selectedHidden.length === 0 ? 'Sélectionnez des images' : 'Supprimer la sélection'"
+              >
+                <i class="fa-solid fa-trash"></i> Supprimer
+                <span class="inline-flex items-center justify-center min-w-[1.25rem] h-5 rounded-full bg-rose-100 dark:bg-rose-900 px-2" x-text="selectedHidden.length" x-show="selectedHidden.length > 0"></span>
+              </button>
+            </div>
           </div>
           <div class="space-y-2">
             <template x-if="galleryLoading">
@@ -227,6 +260,15 @@
             </template>
             <template x-for="img in hidden" :key="img.name">
             <div class="flex items-center gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3">
+                <label class="h-8 w-8 flex items-center justify-center rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow cursor-pointer">
+                  <input
+                    type="checkbox"
+                    class="h-4 w-4 rounded border border-slate-400 bg-white text-emerald-500 accent-emerald-500 cursor-pointer"
+                    :checked="selectedHidden.includes(img.name)"
+                    @change.stop="toggleSelectHidden(img.name)"
+                    :aria-label="`Sélectionner ${img.name}`"
+                  >
+                </label>
                 <img :src="img.thumbUrl || img.url" class="h-16 w-16 object-cover rounded-lg border border-slate-800" @click="zoom(img.url)">
                 <div class="flex-1">
                   <div class="text-sm font-semibold truncate" x-text="img.name"></div>
@@ -576,6 +618,8 @@
         order: [],
         dragIndex: null,
         dragOverIndex: null,
+        selectedVisible: [],
+        selectedHidden: [],
         galleryLoading: true,
         uploadMessage: '',
         uploadStatus: 'ok',
@@ -727,9 +771,13 @@
             this.visible = data.filter(i => !i.hidden);
             this.hidden = data.filter(i => i.hidden);
             this.order = data.map(i => i.name);
+            this.selectedVisible = this.selectedVisible.filter(name => this.visible.some(v => v.name === name));
+            this.selectedHidden = this.selectedHidden.filter(name => this.hidden.some(h => h.name === name));
           } catch (e) {
             this.visible = [];
             this.hidden = [];
+            this.selectedVisible = [];
+            this.selectedHidden = [];
           }
           this.galleryLoading = false;
         },
@@ -907,19 +955,68 @@
           [list[index], list[newIndex]] = [list[newIndex], list[index]];
           await this.persistVisibleOrder(list);
         },
+        toggleSelectVisible(name) {
+          if (this.selectedVisible.includes(name)) {
+            this.selectedVisible = this.selectedVisible.filter(n => n !== name);
+          } else {
+            this.selectedVisible = [...this.selectedVisible, name];
+          }
+        },
+        toggleSelectHidden(name) {
+          if (this.selectedHidden.includes(name)) {
+            this.selectedHidden = this.selectedHidden.filter(n => n !== name);
+          } else {
+            this.selectedHidden = [...this.selectedHidden, name];
+          }
+        },
+        async hideSelectedVisible() {
+          if (!this.selectedVisible.length) return;
+          const names = [...this.selectedVisible];
+          for (const name of names) {
+            await fetch(`${this.API}/api/${this.tenantId}/images/hide/${name}`, { method: 'PUT', headers: this.headersAuth() });
+          }
+          this.selectedVisible = [];
+          await this.refreshGallery();
+          await this.fetchQuota();
+        },
         async hideImage(name) {
+          this.selectedVisible = this.selectedVisible.filter(n => n !== name);
           await fetch(`${this.API}/api/${this.tenantId}/images/hide/${name}`, { method: 'PUT', headers: this.headersAuth() });
           await this.refreshGallery();
           await this.fetchQuota();
         },
         async showImage(name) {
+          this.selectedHidden = this.selectedHidden.filter(n => n !== name);
           await fetch(`${this.API}/api/${this.tenantId}/images/show/${name}`, { method: 'PUT', headers: this.headersAuth() });
           await this.refreshGallery();
           await this.fetchQuota();
         },
         async deleteImage(name) {
           this.askConfirm('Supprimer définitivement cette image ?', async () => {
+            this.selectedHidden = this.selectedHidden.filter(n => n !== name);
             await fetch(`${this.API}/api/${this.tenantId}/images/${name}`, { method: 'DELETE', headers: this.headersAuth() });
+            await this.refreshGallery();
+            await this.fetchQuota();
+          });
+        },
+        async showSelectedHidden() {
+          if (!this.selectedHidden.length) return;
+          const names = [...this.selectedHidden];
+          for (const name of names) {
+            await fetch(`${this.API}/api/${this.tenantId}/images/show/${name}`, { method: 'PUT', headers: this.headersAuth() });
+          }
+          this.selectedHidden = [];
+          await this.refreshGallery();
+          await this.fetchQuota();
+        },
+        async deleteSelectedHidden() {
+          if (!this.selectedHidden.length) return;
+          const names = [...this.selectedHidden];
+          this.askConfirm(`Supprimer définitivement ${names.length} image${names.length > 1 ? 's' : ''} ?`, async () => {
+            for (const name of names) {
+              await fetch(`${this.API}/api/${this.tenantId}/images/${name}`, { method: 'DELETE', headers: this.headersAuth() });
+            }
+            this.selectedHidden = [];
             await this.refreshGallery();
             await this.fetchQuota();
           });
