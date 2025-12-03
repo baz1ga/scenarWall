@@ -22,6 +22,7 @@ const THUMB_SIZE = 230;
 const DEFAULT_GLOBAL = {
   defaultQuotaMB: 100,
   apiBase: null,
+  pixabayKey: null,
   discordClientId: null,
   discordClientSecret: null,
   discordRedirectUri: null,

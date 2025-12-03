@@ -532,7 +532,7 @@
 
   <!-- Upload images modal -->
   <div
-    class="fixed inset-0 z-50 flex items-center justify-center px-4"
+    class="fixed inset-0 z-50 flex items-center justify-center px-3"
     x-show="uploadModalOpen"
     x-transition
     x-cloak
@@ -603,24 +603,25 @@
         </div>
         <p class="text-xs" :class="uploadUrlStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-300'" x-text="uploadUrlMessage"></p>
       </div>
-      <div class="space-y-3" x-show="uploadTab === 'pixabay'">
+      <div class="space-y-3 flex-1 overflow-y-auto pr-1" x-show="uploadTab === 'pixabay'">
         <div class="flex items-center gap-2">
           <input
             type="text"
             x-model="pixabayQuery"
-            class="flex-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-400 focus:outline-none"
-            placeholder="Rechercher sur Pixabay (ex: forêt, mer, montagne...)"
+            class="flex-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-400 focus:outline-none disabled:opacity-50"
+            :placeholder="pixabayKey ? 'Rechercher sur Pixabay (ex: forêt, mer, montagne...)' : 'Clé API manquante'"
+            :disabled="!pixabayKey"
           >
           <button
             class="inline-flex h-[34px] items-center gap-2 rounded-lg border border-emerald-500 px-3 py-1.5 text-sm text-emerald-800 dark:text-emerald-100 bg-white dark:bg-transparent hover:bg-emerald-500/10 transition disabled:opacity-50"
             @click="searchPixabay()"
-            :disabled="pixabayLoading || !pixabayQuery.trim()"
+            :disabled="pixabayLoading || !pixabayQuery.trim() || !pixabayKey"
           >
             <i class="fa-solid fa-magnifying-glass"></i>
             <span x-text="pixabayLoading ? 'Recherche...' : 'Rechercher'"></span>
           </button>
         </div>
-        <p class="text-xs" :class="pixabayStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-300'" x-text="pixabayMessage"></p>
+        <p class="text-xs" :class="pixabayStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-300'" x-text="pixabayMessage || (!pixabayKey ? 'Clé API Pixabay manquante dans global.json' : '')"></p>
         <div class="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4" x-show="pixabayResults.length > 0">
           <template x-for="img in pixabayResults" :key="img.id">
             <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
@@ -781,7 +782,7 @@
         uploadUrlMessage: '',
         uploadUrlStatus: 'ok',
         uploadUrlLoading: false,
-        pixabayKey: '49797384-13a3b93e3da8aa780309630f7',
+        pixabayKey: window.PIXABAY_KEY || '',
         pixabayQuery: '',
         pixabayLoading: false,
         pixabayResults: [],
@@ -870,7 +871,13 @@
         globalQuotaMessage: '',
         globalQuotaStatus: 'ok',
 
-        init() {
+        async init() {
+          if (window.API_READY && typeof window.API_READY.then === 'function') {
+            try { await window.API_READY; } catch (e) {}
+          }
+          if (window.PIXABAY_KEY) {
+            this.pixabayKey = window.PIXABAY_KEY;
+          }
           if (!this.token) {
             window.location.href = '/index.html';
             return;
@@ -965,6 +972,11 @@
           this.pixabayMessage = '';
           this.pixabayStatus = 'ok';
           if (tab === 'pixabay' && !this.pixabayInitialized && !this.pixabayLoading) {
+            if (!this.pixabayKey) {
+              this.pixabayMessage = 'Clé API Pixabay manquante. Ajoutez-la dans global.json.';
+              this.pixabayStatus = 'error';
+              return;
+            }
             if (!this.pixabayQuery.trim()) this.pixabayQuery = 'nature';
             this.searchPixabay(true);
           }
@@ -1066,10 +1078,11 @@
           this.pixabayStatus = 'ok';
           try {
             const q = encodeURIComponent(query);
-            const res = await fetch(`https://pixabay.com/api/?key=${this.pixabayKey}&q=${q}&image_type=photo&per_page=30&orientation=horizontal&safesearch=true`).catch(() => null);
+            const res = await fetch(`https://pixabay.com/api/?key=${this.pixabayKey}&q=${q}&image_type=all&per_page=30&orientation=horizontal&safesearch=true`).catch(() => null);
             if (!res || !res.ok) throw new Error('Recherche impossible sur Pixabay.');
             const data = await res.json();
-            this.pixabayResults = Array.isArray(data.hits) ? data.hits : [];
+            const hits = Array.isArray(data.hits) ? data.hits : [];
+            this.pixabayResults = hits.filter(h => h.type === 'photo' || h.type === 'illustration');
             if (this.pixabayResults.length === 0) {
               this.pixabayMessage = 'Aucun résultat.';
               this.pixabayStatus = 'error';

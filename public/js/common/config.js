@@ -15,6 +15,7 @@ window.API_READY = (async function initApiBase() {
       if (data.apiBase) {
         window.API_BASE = data.apiBase;
       }
+      window.PIXABAY_KEY = data.pixabayKey || null;
     }
   } catch (err) {
     console.warn("Impossible de charger la config globale, fallback utilisé", err);
