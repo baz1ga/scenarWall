@@ -546,13 +546,14 @@
           :class="uploadTab === 'drop' ? 'text-emerald-600 dark:text-emerald-300 border-b-2 border-emerald-500' : 'text-slate-500 dark:text-slate-400'"
           @click="setUploadTab('drop')"
         >
-          Charger
+          Dépôt de fichiers
         </button>
         <button
-          class="px-4 py-2 text-sm font-semibold text-slate-400 cursor-not-allowed"
-          @click.prevent
+          class="px-4 py-2 text-sm font-semibold"
+          :class="uploadTab === 'url' ? 'text-emerald-600 dark:text-emerald-300 border-b-2 border-emerald-500' : 'text-slate-500 dark:text-slate-400'"
+          @click="setUploadTab('url')"
         >
-          Onglet à venir
+          Import via URL
         </button>
       </div>
 
@@ -572,6 +573,25 @@
           </div>
           <input type="file" multiple accept="image/*" class="hidden" x-ref="uploadInput" @change="uploadFile($event)">
         </div>
+      </div>
+      <div class="space-y-3" x-show="uploadTab === 'url'">        
+        <div class="flex items-center gap-2">
+          <input
+            type="url"
+            x-model="uploadUrl"
+            class="flex-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-400 focus:outline-none"
+            placeholder="Copier l'url de votre image ici"
+          >
+          <button
+            class="inline-flex h-[34px] items-center gap-2 rounded-lg border border-emerald-500 px-3 py-1.5 text-sm text-emerald-800 dark:text-emerald-100 bg-white dark:bg-transparent hover:bg-emerald-500/10 transition disabled:opacity-50"
+            @click="uploadFromUrl()"
+            :disabled="uploadUrlLoading || !uploadUrl"
+          >
+            <i class="fa-solid fa-cloud-arrow-down"></i>
+            <span x-text="uploadUrlLoading ? 'Chargement...' : 'Importer'"></span>
+          </button>
+        </div>
+        <p class="text-xs" :class="uploadUrlStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-300'" x-text="uploadUrlMessage"></p>
       </div>
     </div>
   </div>
@@ -711,6 +731,10 @@
         uploadModalOpen: false,
         uploadTab: 'drop',
         uploadDragActive: false,
+        uploadUrl: '',
+        uploadUrlMessage: '',
+        uploadUrlStatus: 'ok',
+        uploadUrlLoading: false,
         // audio
         audioFiles: [],
         audioLoading: false,
@@ -883,6 +907,8 @@
         },
         setUploadTab(tab) {
           this.uploadTab = tab;
+          this.uploadUrlMessage = '';
+          this.uploadUrlStatus = 'ok';
         },
         handleUploadDrop(event) {
           event.preventDefault();
@@ -942,6 +968,32 @@
             ].join(' ');
             this.setUpload(msg, 'error');
           }
+        },
+        async uploadFromUrl() {
+          if (!this.uploadUrl || !this.tenantId) return;
+          this.uploadUrlLoading = true;
+          this.uploadUrlMessage = '';
+          this.uploadUrlStatus = 'ok';
+          try {
+            const res = await fetch(this.uploadUrl, { mode: 'cors' }).catch(() => null);
+            if (!res || !res.ok) throw new Error('Impossible de récupérer le fichier.');
+            const blob = await res.blob();
+            const contentType = res.headers.get('content-type') || '';
+            if (!contentType.startsWith('image/')) throw new Error('Le lien ne pointe pas vers une image.');
+            const urlPath = this.uploadUrl.split('/').pop() || 'image';
+            const extFromType = contentType.split('/')[1]?.split(';')[0] || 'jpg';
+            const safeName = urlPath.match(/[^?#]+/)?.[0] || `remote.${extFromType}`;
+            const fileName = safeName.includes('.') ? safeName : `${safeName}.${extFromType}`;
+            const file = new File([blob], fileName, { type: contentType || 'image/jpeg' });
+            await this.uploadFile([file]);
+            this.uploadUrlMessage = 'Image importée avec succès.';
+            this.uploadUrlStatus = 'ok';
+            this.uploadUrl = '';
+          } catch (err) {
+            this.uploadUrlMessage = err.message || 'Import depuis URL impossible.';
+            this.uploadUrlStatus = 'error';
+          }
+          this.uploadUrlLoading = false;
         },
         setUpload(msg, status = 'ok') {
           this.uploadMessage = msg;
