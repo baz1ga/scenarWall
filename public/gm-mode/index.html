@@ -37,18 +37,18 @@
     [x-cloak]{display:none!important}
   </style>
 </head>
-<body class="min-h-screen flex bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
+<body class="min-h-screen flex bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100 overflow-hidden">
   <!-- Sidebar -->
   <div data-include="admin-sidebar"></div>
 
   <!-- Main -->
-  <div class="flex-1 flex flex-col min-h-screen bg-slate-50 dark:bg-slate-900">
+  <div class="flex-1 flex flex-col h-screen bg-slate-50 dark:bg-slate-900 overflow-hidden">
     <!-- Top bar -->
     <div data-include="admin-header"></div>
 
     <!-- Content -->
-    <main class="flex-1 p-6 bg-slate-50 dark:bg-slate-900">
-      <div class="max-w-7xl mx-auto grid gap-6 md:grid-cols-[2fr_1fr]">
+    <main class="flex-1 p-5 bg-slate-50 dark:bg-slate-900 overflow-auto">
+      <div class="max-w-7xl mx-auto grid gap-4 md:grid-cols-[2fr_1fr]">
         <section class="space-y-4">
           <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-5 shadow-sm">
             <h2 class="text-xl font-semibold mb-2">Titre session</h2>          </div>
@@ -65,9 +65,29 @@
               </p>
             </div>
             <div class="space-y-3">
-              <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm">
-                <h3 class="text-lg font-semibold mb-1">Tension</h3>
-                <p class="text-sm text-slate-600 dark:text-slate-300">État ou réglages de tension à venir.</p>
+              <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm transition"
+                   :style="selectedTension ? `background:${tensionLevels.find(l=>l.key===selectedTension)?.color || ''}22; border-color:${tensionLevels.find(l=>l.key===selectedTension)?.color || ''}` : ''">
+                <div class="flex flex-wrap items-center gap-3">
+                  <h3 class="text-lg font-semibold">Tension</h3>
+                  <template x-if="tensionEnabled">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <template x-for="level in tensionLevels" :key="level.key">
+                        <div
+                          class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap cursor-pointer transition"
+                          :style="`background:${level.color}; border:1px solid ${level.color}; color:${level.textColor};`"
+                          :class="selectedTension === level.key ? 'ring-2 ring-offset-1 ring-emerald-400 dark:ring-emerald-500/80 shadow-md scale-[1.03]' : ''"
+                          @click="playTension(level.key)"
+                          :aria-label="`Lancer le niveau ${level.label}`"
+                        >
+                          <span x-text="level.label"></span>
+                        </div>
+                      </template>
+                    </div>
+                  </template>
+                </div>
+                <template x-if="!tensionEnabled">
+                  <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Tension désactivée.</p>
+                </template>
               </div>
               <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm">
                 <h3 class="text-lg font-semibold mb-1">Diaporama</h3>
@@ -75,7 +95,25 @@
               </div>
               <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm">
                 <h3 class="text-lg font-semibold mb-1">Playlist</h3>
-                <p class="text-sm text-slate-600 dark:text-slate-300">Gestion de playlist à venir.</p>
+                <template x-if="playlistLoading">
+                  <p class="text-sm text-slate-500 dark:text-slate-400">Chargement...</p>
+                </template>
+                <template x-if="!playlistLoading && playlist.length === 0 && !playlistError">
+                  <p class="text-sm text-slate-500 dark:text-slate-400">Aucun fichier audio.</p>
+                </template>
+                <template x-if="playlistError">
+                  <p class="text-sm text-rose-500" x-text="playlistError"></p>
+                </template>
+                <div class="space-y-1.5" x-show="!playlistLoading && playlist.length > 0">
+                  <template x-for="audio in playlist" :key="audio.name">
+                    <div class="rounded border border-slate-200 dark:border-slate-800 p-2 bg-white dark:bg-slate-900 flex items-center gap-2">
+                      <div class="flex-1 min-w-0">
+                        <div class="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate" :title="audio.name" x-text="audio.name"></div>
+                      </div>
+                      <audio class="w-40 sm:w-56 h-8" controls :src="audio.url"></audio>
+                    </div>
+                  </template>
+                </div>
               </div>
             </div>
           </div>
@@ -92,7 +130,22 @@
           </div>
           <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm">
             <h3 class="text-lg font-semibold">Streamdeck</h3>
-            <p class="text-sm text-slate-600 dark:text-slate-300">Intégration Streamdeck à venir.</p>
+            <div class="flex items-center gap-3 mt-2">
+              <button
+                class="h-16 w-16 inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                :style="tensionButtonStyle(-1)"
+                @click="changeTension(-1)"
+              >
+                <span class="text-[14px] font-normal" x-text="tensionButtonLabel(-1)"></span>
+              </button>
+              <button
+                class="h-16 w-16 inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                :style="tensionButtonStyle(1)"
+                @click="changeTension(1)"
+              >
+                <span class="text-[14px] font-normal" x-text="tensionButtonLabel(1)"></span>
+              </button>
+            </div>
           </div>
         </aside>
       </div>

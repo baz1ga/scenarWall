@@ -33,6 +33,9 @@ const sounds = {
   red: document.getElementById("sound-red"),
   black: document.getElementById("sound-black")
 };
+let gmControlled = true;
+let tensionSocket = null;
+let tensionSocketTimer = null;
 
 // ---------------------------------------------
 // 4. Charger les images du tenant
@@ -111,7 +114,7 @@ function applyTensionState(enabled) {
 
 items.forEach(item => {
   item.addEventListener("click", () => {
-    if (!tensionEnabled) return;
+    if (!tensionEnabled || gmControlled) return;
 
     // reset visuel
     items.forEach(i => i.classList.remove("selected"));
@@ -139,6 +142,53 @@ items.forEach(item => {
   });
 });
 
+function setGmControlled(state) {
+  gmControlled = !!state;
+  items.forEach(i => {
+    i.style.pointerEvents = gmControlled ? "none" : "auto";
+  });
+}
+
+function selectTension(level) {
+  if (!items.length || !tensionEnabled) return;
+  const target = Array.from(items).find(i => i.dataset.level === level) || items[0];
+  items.forEach(i => i.classList.remove("selected"));
+  target.classList.add("selected");
+  zone1.style.borderColor = target.dataset.color;
+}
+
+function setupTensionSocket() {
+  if (!TENANT) return;
+  if (tensionSocket) {
+    tensionSocket.close();
+    tensionSocket = null;
+  }
+  const proto = location.protocol === "https:" ? "wss" : "ws";
+  const ws = new WebSocket(`${proto}://${location.host}/ws?tenantId=${encodeURIComponent(TENANT)}&role=front`);
+  tensionSocket = ws;
+  ws.onopen = () => {
+    setGmControlled(true);
+    if (tensionSocketTimer) {
+      clearTimeout(tensionSocketTimer);
+      tensionSocketTimer = null;
+    }
+  };
+  ws.onclose = () => {
+    tensionSocketTimer = setTimeout(setupTensionSocket, 2000);
+  };
+  ws.onerror = () => ws.close();
+  ws.onmessage = (evt) => {
+    try {
+      const data = JSON.parse(evt.data || "{}");
+      if (data.type === "tension:update" && data.level) {
+        selectTension(data.level);
+      }
+    } catch (e) {
+      // ignore
+    }
+  };
+}
+
 // ---------------------------------------------
 // 8. Init tension
 // ---------------------------------------------
@@ -157,5 +207,8 @@ async function initTension() {
 // ---------------------------------------------
 // 9. INITIALISATION DU FRONT
 // ---------------------------------------------
-initTension();
-loadCarouselImages();
+setGmControlled(true);
+initTension().then(() => {
+  setupTensionSocket();
+  loadCarouselImages();
+});

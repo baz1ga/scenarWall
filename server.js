@@ -2,6 +2,7 @@
 //  SCENARWALL — SERVER.JS (Option 2 : tenant dans l’URL)
 //------------------------------------------------------------
 const express = require("express");
+const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
@@ -9,8 +10,10 @@ const bcrypt = require("bcryptjs");
 const multer = require("multer");
 const sharp = require("sharp");
 const session = require("express-session");
+const WebSocket = require("ws");
 
 const app = express();
+const server = http.createServer(app);
 const PORT = 3100;
 const PUBLIC_DIR = path.join(__dirname, "public");
 const DATA_DIR = path.join(__dirname, "data");
@@ -1226,7 +1229,41 @@ app.get("/t/:tenantId/api/config", (req, res) => {
   res.json(config);
 });
 //------------------------------------------------------------
+//  WEBSOCKET (tension sync)
+//------------------------------------------------------------
+const wss = new WebSocket.Server({ server, path: "/ws" });
 
-app.listen(PORT, () => {
+function broadcastTenant(tenantId, payload) {
+  const msg = JSON.stringify(payload);
+  wss.clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN && client.meta && client.meta.tenantId === tenantId) {
+      client.send(msg);
+    }
+  });
+}
+
+wss.on("connection", (ws, req) => {
+  try {
+    const urlObj = new URL(req.url, `http://${req.headers.host}`);
+    ws.meta = {
+      tenantId: urlObj.searchParams.get("tenantId") || null,
+      role: urlObj.searchParams.get("role") || "front"
+    };
+  } catch {
+    ws.meta = { tenantId: null, role: "front" };
+  }
+
+  ws.on("message", data => {
+    let msg = null;
+    try { msg = JSON.parse(data.toString()); } catch { return; }
+    if (!ws.meta || !ws.meta.tenantId) return;
+
+    if (msg.type === "tension:update" && typeof msg.level === "string") {
+      broadcastTenant(ws.meta.tenantId, { type: "tension:update", level: msg.level });
+    }
+  });
+});
+
+server.listen(PORT, () => {
   console.log(`🚀 ScenarWall API running at http://localhost:${PORT}`);
 });

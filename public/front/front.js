@@ -85,6 +85,9 @@ const zone1 = document.getElementById("zone1");
 const tensionBar = document.querySelector(".tension-bar");
 let tensionEnabled = true;
 let tensionFont = "Audiowide";
+let gmControlled = true;
+let tensionSocket = null;
+let tensionSocketTimer = null;
 const defaultZoneBorder = { top: "13px", right: "30px", bottom: "13px", left: "30px" };
 const defaultTensionColors = {
   level1: "#37aa32",
@@ -204,7 +207,7 @@ function applyTensionFont(fontName) {
 
 items.forEach(item => {
   item.addEventListener("click", () => {
-    if (!tensionEnabled) return;
+    if (!tensionEnabled || gmControlled) return;
     items.forEach(i => i.classList.remove("selected"));
     item.classList.add("selected");
     zone1.style.borderColor = item.dataset.color;
@@ -212,6 +215,57 @@ items.forEach(item => {
     if (level) playTensionAudio(level);
   });
 });
+
+function setGmControlled(state) {
+  gmControlled = !!state;
+  if (tensionBar) {
+    tensionBar.classList.toggle("gm-controlled", gmControlled);
+  }
+  items.forEach(i => {
+    i.style.pointerEvents = gmControlled ? "none" : "auto";
+  });
+}
+
+function selectTensionLevel(level) {
+  if (!items.length || !tensionEnabled) return;
+  const target = Array.from(items).find(i => i.dataset.level === level) || items[0];
+  items.forEach(i => i.classList.remove("selected"));
+  target.classList.add("selected");
+  zone1.style.borderColor = target.dataset.color;
+  playTensionAudio(target.dataset.level);
+}
+
+function setupTensionSocket() {
+  if (!TENANT) return;
+  if (tensionSocket) {
+    tensionSocket.close();
+    tensionSocket = null;
+  }
+  const proto = location.protocol === "https:" ? "wss" : "ws";
+  const ws = new WebSocket(`${proto}://${location.host}/ws?tenantId=${encodeURIComponent(TENANT)}&role=front`);
+  tensionSocket = ws;
+  ws.onopen = () => {
+    setGmControlled(true);
+    if (tensionSocketTimer) {
+      clearTimeout(tensionSocketTimer);
+      tensionSocketTimer = null;
+    }
+  };
+  ws.onclose = () => {
+    tensionSocketTimer = setTimeout(setupTensionSocket, 2000);
+  };
+  ws.onerror = () => ws.close();
+  ws.onmessage = (evt) => {
+    try {
+      const data = JSON.parse(evt.data || "{}");
+      if (data.type === "tension:update" && data.level) {
+        selectTensionLevel(data.level);
+      }
+    } catch (e) {
+      // ignore parse errors
+    }
+  };
+}
 
 async function loadTensionConfig() {
   try {
@@ -248,4 +302,8 @@ function playTensionAudio(level) {
 // ---------------------------------------------------------
 // INIT
 // ---------------------------------------------------------
-loadTensionConfig().then(loadCarouselImages);
+setGmControlled(true);
+loadTensionConfig().then(() => {
+  setupTensionSocket();
+  loadCarouselImages();
+});

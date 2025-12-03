@@ -166,5 +166,10 @@ export function coreSection() {
         this.quotaPercent = 0;
       }
     },
+
+    openFront() {
+      if (!this.tenantId) return;
+      window.open(`/t/${this.tenantId}/front`, '_blank');
+    },
   };
 }

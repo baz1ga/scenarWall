@@ -826,6 +826,10 @@ video {
   width: 1rem;
 }
 
+.w-40{
+  width: 10rem;
+}
+
 .w-56{
   width: 14rem;
 }
@@ -899,6 +903,12 @@ video {
 .scale-\[0\.99\]{
   --tw-scale-x: 0.99;
   --tw-scale-y: 0.99;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.scale-\[1\.03\]{
+  --tw-scale-x: 1.03;
+  --tw-scale-y: 1.03;
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
 }
 
@@ -1018,6 +1028,10 @@ video {
   --tw-space-y-reverse: 0;
   margin-top: calc(1.5rem * calc(1 - var(--tw-space-y-reverse)));
   margin-bottom: calc(1.5rem * var(--tw-space-y-reverse));
+}
+
+.overflow-auto{
+  overflow: auto;
 }
 
 .overflow-hidden{
@@ -1441,6 +1455,10 @@ video {
   font-size: 12px;
 }
 
+.text-\[14px\]{
+  font-size: 14px;
+}
+
 .text-base{
   font-size: 1rem;
   line-height: 1.5rem;
@@ -1472,6 +1490,10 @@ video {
 
 .font-medium{
   font-weight: 500;
+}
+
+.font-normal{
+  font-weight: 400;
 }
 
 .font-semibold{
@@ -1671,6 +1693,12 @@ video {
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
 }
 
+.shadow-md{
+  --tw-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --tw-shadow-colored: 0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
 .shadow-sm{
   --tw-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --tw-shadow-colored: 0 1px 2px 0 var(--tw-shadow-color);
@@ -1697,6 +1725,10 @@ video {
 .ring-indigo-400{
   --tw-ring-opacity: 1;
   --tw-ring-color: rgb(129 140 248 / var(--tw-ring-opacity, 1));
+}
+
+.ring-offset-1{
+  --tw-ring-offset-width: 1px;
 }
 
 .ring-offset-2{
@@ -2021,6 +2053,10 @@ video {
   color: rgb(148 163 184 / var(--tw-text-opacity, 1));
 }
 
+.dark\:ring-emerald-500\/80:is(.dark *){
+  --tw-ring-color: rgb(16 185 129 / 0.8);
+}
+
 .dark\:ring-offset-slate-900:is(.dark *){
   --tw-ring-offset-color: #0f172a;
 }
@@ -2047,6 +2083,10 @@ video {
 
   .sm\:w-44{
     width: 11rem;
+  }
+
+  .sm\:w-56{
+    width: 14rem;
   }
 
   .sm\:grid-cols-2{
