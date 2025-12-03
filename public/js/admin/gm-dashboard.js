@@ -13,6 +13,14 @@ export function gmDashboard() {
     slideshowIndex: 0,
     slideshowLoading: false,
     slideshowError: '',
+    streamDeckDice: { dice1: '1d20', dice2: '1d20', dice3: '1d20' },
+    diceOptions: ['1d20','1d12','1d10','1d8','1d6','1d4','1d100','1d oui/non','1d oui mais','1d non mais'],
+    diceModal: { open: false, target: 'dice1', value: '1d20' },
+    timerRunning: false,
+    timerElapsedMs: 0,
+    timerStartedAt: null,
+    _timerInterval: null,
+    _timerTick: 0,
     tensionEnabled: false,
     tensionLevels: [],
     tensionAudio: {},
@@ -33,11 +41,121 @@ export function gmDashboard() {
     },
     tensionButtonStyle(delta) {
       const lvl = this.tensionTargetLevel(delta);
-      return lvl ? `background:${lvl.color}; border-color:${lvl.color}; color:${lvl.textColor};` : '';
+      if (!lvl) return '';
+      // slightly desaturate via opacity overlay
+      return `background:${lvl.color}DD; border-color:${lvl.color}; color:${lvl.textColor};`;
     },
     tensionButtonLabel(delta) {
       const lvl = this.tensionTargetLevel(delta);
       return lvl ? lvl.label : '';
+    },
+
+    timerDisplay() {
+      // consume tick to refresh Alpine reactivity
+      void this._timerTick;
+      const total = this.timerRunning && this.timerStartedAt
+        ? this.timerElapsedMs + (Date.now() - this.timerStartedAt)
+        : this.timerElapsedMs;
+      const ms = Math.max(0, Math.floor(total));
+      const sec = Math.floor(ms / 1000) % 60;
+      const min = Math.floor(ms / 60000) % 60;
+      const hrs = Math.floor(ms / 3600000);
+      const pad = (n) => n.toString().padStart(2, '0');
+      return `${pad(hrs)}:${pad(min)}:${pad(sec)}`;
+    },
+    timerParts() {
+      void this._timerTick;
+      const total = this.timerRunning && this.timerStartedAt
+        ? this.timerElapsedMs + (Date.now() - this.timerStartedAt)
+        : this.timerElapsedMs;
+      const ms = Math.max(0, Math.floor(total));
+      const sec = Math.floor(ms / 1000) % 60;
+      const min = Math.floor(ms / 60000) % 60;
+      const hrs = Math.floor(ms / 3600000);
+      const pad = (n) => n.toString().padStart(2, '0');
+      return { h: pad(hrs), m: pad(min), s: pad(sec) };
+    },
+    colonClass() {
+      if (!this.timerRunning) return 'opacity-100';
+      return (this._timerTick % 1000) < 500 ? 'opacity-100' : 'opacity-20';
+    },
+    startTimerLoop() {
+      if (this._timerInterval) {
+        clearInterval(this._timerInterval);
+      }
+      this._timerInterval = setInterval(() => {
+        this._timerTick = Date.now();
+      }, 500);
+    },
+    stopTimerLoop() {
+      if (this._timerInterval) {
+        clearInterval(this._timerInterval);
+        this._timerInterval = null;
+      }
+    },
+    async loadTimer() {
+      if (!this.tenantId) return;
+      try {
+        const res = await fetch(`${this.API}/api/${this.tenantId}/session`, { headers: this.headersAuth() });
+        if (!res.ok) throw new Error('timer');
+        const data = await res.json();
+        const timer = data.timer || {};
+        this.timerRunning = !!timer.running;
+        this.timerElapsedMs = typeof timer.elapsedMs === 'number' ? timer.elapsedMs : 0;
+        this.timerStartedAt = timer.startedAt ? new Date(timer.startedAt).getTime() : null;
+        if (this.timerRunning && !this.timerStartedAt) {
+          this.timerStartedAt = Date.now();
+        }
+        if (this.timerRunning) {
+          this.startTimerLoop();
+        } else {
+          this.stopTimerLoop();
+        }
+      } catch (e) {
+        this.timerRunning = false;
+        this.timerElapsedMs = 0;
+        this.timerStartedAt = null;
+        this.stopTimerLoop();
+      }
+    },
+    async saveTimer() {
+      if (!this.tenantId) return;
+      try {
+        await fetch(`${this.API}/api/${this.tenantId}/session/timer`, {
+          method: 'PUT',
+          headers: { ...this.headersAuth(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            running: this.timerRunning,
+            elapsedMs: this.timerElapsedMs,
+            startedAt: this.timerStartedAt ? new Date(this.timerStartedAt).toISOString() : null
+          })
+        });
+      } catch (e) {
+        // ignore
+      }
+    },
+    async resetTimer() {
+      this.timerRunning = false;
+      this.timerElapsedMs = 0;
+      this.timerStartedAt = null;
+      this.stopTimerLoop();
+      await this.saveTimer();
+    },
+    async toggleTimer() {
+      if (!this.timerRunning) {
+        this.timerStartedAt = Date.now();
+        this.timerRunning = true;
+        this.startTimerLoop();
+      } else {
+        const now = Date.now();
+        if (this.timerStartedAt) {
+          this.timerElapsedMs += now - this.timerStartedAt;
+        }
+        this.timerStartedAt = null;
+        this.timerRunning = false;
+        this.stopTimerLoop();
+      }
+      await this.saveTimer();
     },
 
     async loadSlideshow() {
@@ -103,6 +221,7 @@ export function gmDashboard() {
         const colors = data.tensionColors || {};
         const labels = data.tensionLabels || {};
         this.tensionAudio = data.tensionAudio || {};
+        this.streamDeckDice = { ...this.streamDeckDice, ...(data.streamdeck || {}) };
         const defaults = {
           level1: '#37aa32',
           level2: '#f8d718',
@@ -162,6 +281,7 @@ export function gmDashboard() {
       await this.loadTensionConfig();
       await this.loadPlaylist();
       await this.loadSlideshow();
+      await this.loadTimer();
     },
 
     connectSocket() {
@@ -224,6 +344,38 @@ export function gmDashboard() {
         await player.play();
       } catch (e) {
         // ignore play errors
+      }
+    },
+
+    openDiceModal(target) {
+      this.diceModal.target = target;
+      this.diceModal.value = this.streamDeckDice[target] || '1d20';
+      this.diceModal.open = true;
+    },
+    closeDiceModal() {
+      this.diceModal.open = false;
+    },
+    async saveDiceSelection() {
+      const target = this.diceModal.target;
+      const value = this.diceModal.value;
+      if (!target || !this.diceOptions.includes(value)) {
+        this.closeDiceModal();
+        return;
+      }
+      this.streamDeckDice = { ...this.streamDeckDice, [target]: value };
+      this.closeDiceModal();
+      await this.persistStreamdeck();
+    },
+    async persistStreamdeck() {
+      if (!this.tenantId) return;
+      try {
+        await fetch(`${this.API}/api/${this.tenantId}/config/streamdeck`, {
+          method: 'PUT',
+          headers: { ...this.headersAuth(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ streamdeck: this.streamDeckDice })
+        });
+      } catch (e) {
+        // ignore persist errors
       }
     }
   };
