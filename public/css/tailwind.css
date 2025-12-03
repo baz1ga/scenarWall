@@ -770,6 +770,10 @@ video {
   height: 2.25rem;
 }
 
+.h-\[34px\]{
+  height: 34px;
+}
+
 .h-full{
   height: 100%;
 }
@@ -1096,6 +1100,11 @@ video {
 .border-indigo-500{
   --tw-border-opacity: 1;
   border-color: rgb(99 102 241 / var(--tw-border-opacity, 1));
+}
+
+.border-rose-200{
+  --tw-border-opacity: 1;
+  border-color: rgb(254 205 211 / var(--tw-border-opacity, 1));
 }
 
 .border-slate-200{
@@ -1570,6 +1579,11 @@ video {
   color: rgb(225 29 72 / var(--tw-text-opacity, 1));
 }
 
+.text-rose-700{
+  --tw-text-opacity: 1;
+  color: rgb(190 18 60 / var(--tw-text-opacity, 1));
+}
+
 .text-sky-300{
   --tw-text-opacity: 1;
   color: rgb(125 211 252 / var(--tw-text-opacity, 1));
@@ -1746,6 +1760,11 @@ video {
   background-color: rgb(99 102 241 / 0.1);
 }
 
+.hover\:bg-rose-50:hover{
+  --tw-bg-opacity: 1;
+  background-color: rgb(255 241 242 / var(--tw-bg-opacity, 1));
+}
+
 .hover\:bg-rose-500:hover{
   --tw-bg-opacity: 1;
   background-color: rgb(244 63 94 / var(--tw-bg-opacity, 1));
@@ -1812,6 +1831,14 @@ video {
   --tw-ring-color: rgb(129 140 248 / var(--tw-ring-opacity, 1));
 }
 
+.disabled\:cursor-not-allowed:disabled{
+  cursor: not-allowed;
+}
+
+.disabled\:opacity-40:disabled{
+  opacity: 0.4;
+}
+
 .disabled\:opacity-50:disabled{
   opacity: 0.5;
 }
@@ -1850,6 +1877,11 @@ video {
 .dark\:border-emerald-700:is(.dark *){
   --tw-border-opacity: 1;
   border-color: rgb(4 120 87 / var(--tw-border-opacity, 1));
+}
+
+.dark\:border-rose-900:is(.dark *){
+  --tw-border-opacity: 1;
+  border-color: rgb(136 19 55 / var(--tw-border-opacity, 1));
 }
 
 .dark\:border-slate-700:is(.dark *){
@@ -1942,6 +1974,11 @@ video {
   color: rgb(165 180 252 / var(--tw-text-opacity, 1));
 }
 
+.dark\:text-rose-200:is(.dark *){
+  --tw-text-opacity: 1;
+  color: rgb(254 205 211 / var(--tw-text-opacity, 1));
+}
+
 .dark\:text-rose-300:is(.dark *){
   --tw-text-opacity: 1;
   color: rgb(253 164 175 / var(--tw-text-opacity, 1));
@@ -1974,6 +2011,11 @@ video {
 
 .dark\:ring-offset-slate-900:is(.dark *){
   --tw-ring-offset-color: #0f172a;
+}
+
+.dark\:hover\:bg-rose-950:hover:is(.dark *){
+  --tw-bg-opacity: 1;
+  background-color: rgb(76 5 25 / var(--tw-bg-opacity, 1));
 }
 
 .dark\:hover\:bg-slate-700:hover:is(.dark *){

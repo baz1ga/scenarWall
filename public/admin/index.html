@@ -153,7 +153,7 @@
           <h2 class="text-lg font-semibold">Images visibles</h2>
           <div class="flex items-center gap-2">
             <button
-              class="btn-ghost"
+              class="btn-ghost inline-flex h-[34px] items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition disabled:opacity-40 disabled:cursor-not-allowed"
               @click="hideSelectedVisible()"
               :disabled="galleryLoading || selectedVisible.length === 0"
               :title="selectedVisible.length === 0 ? 'Sélectionnez des images' : 'Cacher la sélection'"
@@ -162,7 +162,7 @@
               <span class="badge-count" x-text="selectedVisible.length" x-show="selectedVisible.length > 0"></span>
             </button>
             <button
-              class="btn-outline-emerald"
+              class="btn-outline-emerald inline-flex h-[34px] items-center gap-2 rounded-lg border border-emerald-500 px-3 py-1.5 text-sm text-emerald-800 dark:text-emerald-100 bg-white dark:bg-transparent hover:bg-emerald-500/10 transition"
               x-show="tenantId"
               @click="openUploadModal()"
             >
@@ -238,7 +238,7 @@
             <h2 class="text-lg font-semibold">Images cachées</h2>
             <div class="flex items-center gap-2">
               <button
-                class="btn-ghost"
+                class="btn-ghost inline-flex h-[34px] items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition disabled:opacity-40 disabled:cursor-not-allowed"
                 @click="showSelectedHidden()"
                 :disabled="galleryLoading || selectedHidden.length === 0"
                 :title="selectedHidden.length === 0 ? 'Sélectionnez des images' : 'Rendre visibles la sélection'"
@@ -247,7 +247,7 @@
                 <span class="badge-count" x-text="selectedHidden.length" x-show="selectedHidden.length > 0"></span>
               </button>
               <button
-                class="btn-outline-rose"
+                class="btn-outline-rose inline-flex h-[34px] items-center gap-2 rounded-lg border border-rose-200 dark:border-rose-900 bg-white dark:bg-slate-950 px-3 py-1.5 text-xs text-rose-700 dark:text-rose-200 hover:bg-rose-50 dark:hover:bg-rose-950 transition disabled:opacity-40 disabled:cursor-not-allowed"
                 @click="deleteSelectedHidden()"
                 :disabled="galleryLoading || selectedHidden.length === 0"
                 :title="selectedHidden.length === 0 ? 'Sélectionnez des images' : 'Supprimer la sélection'"
@@ -295,7 +295,7 @@
           <h2 class="text-lg font-semibold">Fichiers audio</h2>
           <div class="flex items-center gap-2">
             <button
-              class="btn-outline-rose"
+              class="btn-outline-rose inline-flex h-[34px] items-center gap-2 rounded-lg border border-rose-200 dark:border-rose-900 bg-white dark:bg-slate-950 px-3 py-1.5 text-xs text-rose-700 dark:text-rose-200 hover:bg-rose-50 dark:hover:bg-rose-950 transition disabled:opacity-40 disabled:cursor-not-allowed"
               @click="deleteSelectedAudio()"
               :disabled="audioLoading || selectedAudio.length === 0"
               :title="selectedAudio.length === 0 ? 'Sélectionnez des fichiers' : 'Supprimer la sélection'"
