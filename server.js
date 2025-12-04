@@ -1219,6 +1219,53 @@ app.put("/api/:tenantId/session/notes", requireLogin, (req, res) => {
 });
 
 //------------------------------------------------------------
+//  ADMIN BOOTSTRAP (enable admin without existing GodMode)
+//------------------------------------------------------------
+app.post("/api/bootstrap/admin", (req, res) => {
+  const bootstrapToken = process.env.ADMIN_BOOTSTRAP_TOKEN;
+  const token = req.body?.token || req.headers["x-bootstrap-token"];
+  if (!bootstrapToken || token !== bootstrapToken) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+
+  const { discordId, username } = req.body || {};
+  if (!discordId && !(typeof username === "string" && username.trim())) {
+    return res.status(400).json({ error: "discordId or username is required" });
+  }
+
+  const users = getUsers();
+  let target = null;
+  if (discordId) {
+    target = users.find(u => u.discordId === discordId);
+  } else {
+    const name = username.trim().toLowerCase();
+    const matches = users.filter(u => (u.displayName || "").toLowerCase() === name);
+    if (matches.length > 1) {
+      return res.status(409).json({
+        error: "Ambiguous username, provide discordId",
+        matches: matches.map(u => ({
+          email: u.email,
+          discordId: u.discordId || null,
+          displayName: u.displayName || null
+        }))
+      });
+    }
+    target = matches[0] || null;
+  }
+
+  if (!target) return res.status(404).json({ error: "User not found" });
+  target.admin = true;
+  saveUsers(users);
+  return res.json({
+    success: true,
+    email: target.email,
+    discordId: target.discordId || null,
+    displayName: target.displayName || null,
+    admin: target.admin
+  });
+});
+
+//------------------------------------------------------------
 //  GODMODE MODULE
 //------------------------------------------------------------
 app.get("/api/godmode/users", requireGodMode, (req, res) => {
