@@ -14,10 +14,11 @@ const WebSocket = require("ws");
 
 const app = express();
 const server = http.createServer(app);
-const PORT = 3100;
+const PORT = process.env.PORT || 3100;
+const HOST = process.env.HOST || "0.0.0.0";
 const PUBLIC_DIR = path.join(__dirname, "public");
-const DATA_DIR = path.join(__dirname, "data");
-const TENANTS_DIR = path.join(__dirname, "tenants");
+const DATA_DIR = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : path.join(__dirname, "data");
+const TENANTS_DIR = process.env.TENANTS_DIR ? path.resolve(process.env.TENANTS_DIR) : path.join(__dirname, "tenants");
 const FAVICONS_DIR = path.join(PUBLIC_DIR, "assets", "favicons");
 const FRONT_FILE = path.join(PUBLIC_DIR, "front", "index.html");
 const GLOBAL_FILE = path.join(DATA_DIR, "global.json");
@@ -139,14 +140,25 @@ app.use(express.json());
 app.set("trust proxy", 1);
 const globalConfig = getGlobalConfig();
 
+const hostedEnv = Boolean(
+  process.env.RAILWAY_STATIC_URL ||
+  process.env.VERCEL ||
+  process.env.FLY_ALLOC_ID ||
+  process.env.RENDER
+);
+const cookieSecure = typeof globalConfig.sessionCookie?.secure === "boolean"
+  ? globalConfig.sessionCookie.secure
+  : hostedEnv || DEFAULT_SESSION_COOKIE.secure;
+const cookieSameSite = globalConfig.sessionCookie?.sameSite || (cookieSecure ? "none" : "lax");
+
 app.use(session({
   secret: process.env.SESSION_SECRET || "change-me",
   resave: false,
   saveUninitialized: false,
   store: new FileStore(SESSIONS_FILE),
   cookie: {
-    secure: globalConfig.sessionCookie?.secure ?? DEFAULT_SESSION_COOKIE.secure,
-    sameSite: globalConfig.sessionCookie?.sameSite || DEFAULT_SESSION_COOKIE.sameSite,
+    secure: cookieSecure,
+    sameSite: cookieSameSite,
     httpOnly: true,
     maxAge: 30 * 24 * 60 * 60 * 1000
   }
@@ -317,12 +329,26 @@ function getGlobalConfig() {
     return { ...DEFAULT_GLOBAL };
   }
 
+  const envOverrides = {};
+  if (process.env.API_BASE) envOverrides.apiBase = process.env.API_BASE;
+  if (!envOverrides.apiBase && process.env.RAILWAY_STATIC_URL) {
+    envOverrides.apiBase = `https://${process.env.RAILWAY_STATIC_URL}`;
+  }
+  if (process.env.PIXABAY_KEY) envOverrides.pixabayKey = process.env.PIXABAY_KEY;
+  if (process.env.DISCORD_CLIENT_ID) envOverrides.discordClientId = process.env.DISCORD_CLIENT_ID;
+  if (process.env.DISCORD_CLIENT_SECRET) envOverrides.discordClientSecret = process.env.DISCORD_CLIENT_SECRET;
+  if (process.env.DISCORD_REDIRECT_URI) {
+    envOverrides.discordRedirectUri = process.env.DISCORD_REDIRECT_URI;
+  } else if (envOverrides.apiBase) {
+    envOverrides.discordRedirectUri = `${envOverrides.apiBase}/api/auth/discord/callback`;
+  }
+
   try {
     const data = JSON.parse(fs.readFileSync(GLOBAL_FILE, "utf8"));
-    return { ...DEFAULT_GLOBAL, ...data };
+    return { ...DEFAULT_GLOBAL, ...data, ...envOverrides };
   } catch (err) {
     console.error("Failed to read global config, using defaults", err);
-    return { ...DEFAULT_GLOBAL };
+    return { ...DEFAULT_GLOBAL, ...envOverrides };
   }
 }
 
@@ -1407,6 +1433,6 @@ wss.on("connection", (ws, req) => {
   });
 });
 
-server.listen(PORT, () => {
-  console.log(`🚀 ScenarWall API running at http://localhost:${PORT}`);
+server.listen(PORT, HOST, () => {
+  console.log(`🚀 ScenarWall API running at http://${HOST}:${PORT}`);
 });
