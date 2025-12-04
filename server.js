@@ -346,6 +346,14 @@ function getGlobalConfig() {
     return { ...DEFAULT_GLOBAL };
   }
 
+  const resolveRedirect = (value, apiBase) => {
+    if (!value) return value;
+    if (value.includes("${API_BASE}") && apiBase) {
+      return value.replace("${API_BASE}", apiBase);
+    }
+    return value;
+  };
+
   const envOverrides = {};
   if (process.env.API_BASE) envOverrides.apiBase = process.env.API_BASE;
   if (!envOverrides.apiBase && process.env.RAILWAY_STATIC_URL) {
@@ -355,7 +363,9 @@ function getGlobalConfig() {
   if (process.env.DISCORD_CLIENT_ID) envOverrides.discordClientId = process.env.DISCORD_CLIENT_ID;
   if (process.env.DISCORD_CLIENT_SECRET) envOverrides.discordClientSecret = process.env.DISCORD_CLIENT_SECRET;
   if (process.env.DISCORD_REDIRECT_URI) {
-    envOverrides.discordRedirectUri = process.env.DISCORD_REDIRECT_URI;
+    envOverrides.discordRedirectUri = envOverrides.apiBase
+      ? resolveRedirect(process.env.DISCORD_REDIRECT_URI, envOverrides.apiBase)
+      : process.env.DISCORD_REDIRECT_URI;
   } else if (envOverrides.apiBase) {
     envOverrides.discordRedirectUri = `${envOverrides.apiBase}/api/auth/discord/callback`;
   }
