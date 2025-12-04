@@ -324,6 +324,11 @@ function loadConfig(tenantId) {
 }
 
 function getGlobalConfig() {
+  // Ensure base directory exists before attempting to read/write the global file
+  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+  const globalDir = path.dirname(GLOBAL_FILE);
+  if (!fs.existsSync(globalDir)) fs.mkdirSync(globalDir, { recursive: true });
+
   if (!fs.existsSync(GLOBAL_FILE)) {
     fs.writeFileSync(GLOBAL_FILE, JSON.stringify(DEFAULT_GLOBAL, null, 2));
     return { ...DEFAULT_GLOBAL };
