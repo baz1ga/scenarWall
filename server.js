@@ -86,6 +86,18 @@ const DEFAULT_SESSION_COOKIE = {
   sameSite: "none"
 };
 
+function resolveDiscordSettings(req) {
+  const baseConfig = getGlobalConfig();
+  let redirectUri = baseConfig.discordRedirectUri;
+  if (!redirectUri) {
+    const host = req.headers["x-forwarded-host"] || req.headers.host;
+    const protoHeader = req.headers["x-forwarded-proto"];
+    const proto = (protoHeader || (req.secure ? "https" : "http")).toString().split(",")[0].trim() || "http";
+    if (host) redirectUri = `${proto}://${host}/api/auth/discord/callback`;
+  }
+  return { ...baseConfig, discordRedirectUri: redirectUri };
+}
+
 function sanitizeFilename(name = "", fallback = "file") {
   const base = name.toString().replace(/[^a-zA-Z0-9._-]/g, "_").replace(/_+/g, "_").replace(/^[_\.-]+|[_\.-]+$/g, "");
   return base || fallback;
@@ -467,7 +479,7 @@ app.post("/api/login", async (req, res) => {
 //------------------------------------------------------------
 app.get("/api/auth/discord/login", (req, res) => {
   if (req.session && req.session.user) return res.redirect("/dashboard");
-  const config = getGlobalConfig();
+  const config = resolveDiscordSettings(req);
   const { discordClientId, discordRedirectUri, discordScopes } = config;
   if (!discordClientId || !discordRedirectUri) {
     return res.status(503).json({ error: "Discord OAuth non configuré" });
@@ -487,7 +499,7 @@ app.get("/api/auth/discord/login", (req, res) => {
 });
 
 app.get("/api/auth/discord/callback", async (req, res) => {
-  const config = getGlobalConfig();
+  const config = resolveDiscordSettings(req);
   const { discordClientId, discordClientSecret, discordRedirectUri, allowedGuildId } = config;
   const { code, state } = req.query;
 
