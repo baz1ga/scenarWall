@@ -123,6 +123,7 @@ let audioPlayer = null;
 let hourglass = null;
 const hourglassTimeEl = document.getElementById("hourglass-time");
 let hourglassVisible = false;
+let hourglassShowTimer = false;
 
 function readableTextColor(bgColor) {
   const match = (bgColor || "").match(/(\d+)\D+(\d+)\D+(\d+)/);
@@ -332,6 +333,7 @@ function initHourglass() {
   updateHourglassTime();
   setInterval(updateHourglassTime, 500);
   setHourglassVisibility(hourglassVisible);
+  setHourglassTimerVisibility(hourglassShowTimer);
 }
 
 function updateHourglassTime() {
@@ -342,9 +344,22 @@ function updateHourglassTime() {
 
 function setHourglassVisibility(visible) {
   hourglassVisible = visible !== false;
-  const shell = document.getElementById("hourglass-shell");
-  if (shell) {
-    shell.style.display = hourglassVisible ? "flex" : "none";
+  const container = document.getElementById("hourglass");
+  if (container) {
+    container.style.display = hourglassVisible ? "flex" : "none";
+  }
+  // Hide timer when hourglass hidden
+  if (!hourglassVisible) {
+    setHourglassTimerVisibility(false);
+  } else {
+    setHourglassTimerVisibility(hourglassShowTimer);
+  }
+}
+
+function setHourglassTimerVisibility(show) {
+  hourglassShowTimer = !!show;
+  if (hourglassTimeEl) {
+    hourglassTimeEl.style.display = hourglassShowTimer ? "block" : "none";
   }
 }
 
@@ -362,7 +377,12 @@ function applyHourglassCommand(cmd) {
   } else if (cmd.action === "setDuration") {
     hourglass.reset(hasDuration ? { durationSeconds: duration } : {});
   } else if (cmd.action === "visibility") {
+    if (cmd.visible !== false && typeof cmd.show === "boolean") {
+      setHourglassTimerVisibility(cmd.show);
+    }
     setHourglassVisibility(cmd.visible !== false);
+  } else if (cmd.action === "showTimer") {
+    setHourglassTimerVisibility(cmd.show !== false);
   }
   updateHourglassTime();
 }

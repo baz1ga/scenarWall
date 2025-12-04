@@ -69,11 +69,11 @@
             </div>
             <div class="space-y-3">
               <!-- Bloc tension -->
-              <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 pt-3 pl-4 pr-4 pb-3 shadow-sm transition h-[62px]"
-                   :style="selectedTension ? `background:${tensionLevels.find(l=>l.key===selectedTension)?.color || ''}22; border-color:${tensionLevels.find(l=>l.key===selectedTension)?.color || ''}` : ''">
-                <div class="flex flex-wrap items-center gap-3">
-                  <h3 class="text-lg font-semibold inline-flex items-center gap-2"><i class="fa-solid fa-bolt"></i> Tension</h3>
-                  <template x-if="tensionEnabled">
+              <template x-if="tensionEnabled">
+                <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 pt-3 pl-4 pr-4 pb-3 shadow-sm transition h-[62px]"
+                     :style="selectedTension ? `background:${tensionLevels.find(l=>l.key===selectedTension)?.color || ''}22; border-color:${tensionLevels.find(l=>l.key===selectedTension)?.color || ''}` : ''">
+                  <div class="flex flex-wrap items-center gap-3">
+                    <h3 class="text-lg font-semibold inline-flex items-center gap-2"><i class="fa-solid fa-bolt"></i> Tension</h3>
                     <div class="flex flex-wrap items-center gap-2">
                       <template x-for="level in tensionLevels" :key="level.key">
                         <div
@@ -87,12 +87,17 @@
                         </div>
                       </template>
                     </div>
-                  </template>
+                  </div>
                 </div>
-                <template x-if="!tensionEnabled">
-                  <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Tension désactivée.</p>
-                </template>
-              </div>
+              </template>
+              <template x-if="!tensionEnabled">
+                <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 pt-3 pl-4 pr-4 pb-3 shadow-sm transition h-[62px]">
+                  <div class="flex items-center gap-3">
+                    <h3 class="text-lg font-semibold inline-flex items-center gap-2 text-slate-400 dark:text-slate-500"><i class="fa-solid fa-bolt"></i> Tension</h3>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Tension désactivée.</p>
+                  </div>
+                </div>
+              </template>
               <!-- Bloc diaporama -->
               <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm space-y-2 h-[190px] overflow-hidden">
                 <div class="flex items-center justify-between gap-2">
@@ -149,11 +154,11 @@
                 </template>
                 <div class="space-y-1.5 overflow-y-auto pr-1" x-show="!playlistLoading && playlist.length > 0" style="max-height: 260px;">
                   <template x-for="audio in playlist" :key="audio.name">
-                    <div class="rounded border border-slate-200 dark:border-slate-800 p-2 bg-white dark:bg-slate-900 flex items-center gap-2">
+                    <div class="bg-white dark:bg-slate-900 flex items-center gap-2">
                       <div class="flex-1 min-w-0">
                         <div class="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate" :title="audio.name" x-text="audio.name"></div>
                       </div>
-                      <audio class="w-40 sm:w-56 h-8" controls :src="audio.url"></audio>
+                      <audio class="w-full sm:w-80 h-10" controls :src="audio.url"></audio>
                     </div>
                   </template>
                 </div>
@@ -197,6 +202,8 @@
                 class="h-[72px] w-[72px] inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-lg font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                 :style="tensionButtonStyle(1)"
                 @click="changeTension(1)"
+                :disabled="!tensionEnabled"
+                :class="!tensionEnabled ? 'opacity-50 cursor-not-allowed' : ''"
               >
                 <span class="text-[18px] font-extrabold" x-text="tensionButtonLabel(1)"></span>
               </button>
@@ -220,6 +227,8 @@
                 class="h-[72px] w-[72px] inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-lg font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                 :style="tensionButtonStyle(-1)"
                 @click="changeTension(-1)"
+                :disabled="!tensionEnabled"
+                :class="!tensionEnabled ? 'opacity-50 cursor-not-allowed' : ''"
               >
                 <span class="text-[18px] font-extrabold" x-text="tensionButtonLabel(-1)"></span>
               </button>
@@ -233,14 +242,16 @@
               </button>
               <button
                 class="h-[72px] w-[72px] inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                @click="flipHourglass()"
+                @click="playOrResetHourglass()"
               >
                 <i class="fa-solid fa-hourglass-half text-amber-500"></i>
-                <span class="text-[12px] text-amber-500" x-text="flipButtonLabel()"></span>
+                <span class="text-[12px] text-amber-500" x-text="hourglassButtonLabel()"></span>
               </button>
               <button
                 class="h-[72px] w-[72px] inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                 @click="openHourglassModal()"
+                :disabled="hourglassRunning || hourglassVisible"
+                :class="(hourglassRunning || hourglassVisible) ? 'opacity-50 cursor-not-allowed' : ''"
               >
                 <i class="fa-solid fa-hourglass-start text-amber-500"></i>
                 <span class="text-[12px] text-amber-500" x-text="hourglassDisplay()"></span>
@@ -265,8 +276,7 @@
         <h3 class="text-lg font-semibold inline-flex items-center gap-2"><i class="fa-solid fa-hourglass-half text-amber-500"></i> Durée du sablier</h3>
         <button class="text-slate-500 hover:text-slate-800 dark:hover:text-slate-200" @click="closeHourglassModal()"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div class="space-y-2">
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">Presets</label>
+      <div class="space-y-2">    
         <div class="flex flex-wrap gap-2">
           <button class="px-3 py-1.5 rounded-lg border border-amber-500 text-amber-600 dark:text-amber-400 text-sm hover:bg-amber-50 dark:hover:bg-amber-500/10"
                   @click="hourglassDurationTemp = 30">30s</button>
@@ -286,6 +296,17 @@
           <span x-text="`${Math.floor(hourglassDurationTemp/60)}m ${Math.round(hourglassDurationTemp%60)}s`"></span>
           <span>30min</span>
         </div>
+      </div>
+      <div class="flex items-center gap-2 pt-1">
+        <label class="relative inline-flex items-center cursor-pointer select-none">
+          <input type="checkbox" class="sr-only peer" x-model="hourglassShowTimer"
+                 @change="sendHourglass('showTimer', { show: hourglassVisible ? !!hourglassShowTimer : false })">
+          <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-amber-500 rounded-full dark:bg-slate-700 peer-checked:bg-amber-500 transition relative">
+            <div class="absolute top-[3px] left-[3px] h-4 w-4 bg-white rounded-full shadow-sm transition"
+                 :style="hourglassShowTimer ? 'transform: translateX(20px);' : 'transform: translateX(0);'"></div>
+          </div>
+          <span class="ml-3 text-sm font-medium text-slate-700 dark:text-slate-200">Afficher la durée sur le front</span>
+        </label>
       </div>
       <div class="flex justify-end gap-2 pt-2">
         <button class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"

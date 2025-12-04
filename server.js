@@ -69,6 +69,10 @@ const DEFAULT_TENANT_SESSION = {
     running: false,
     elapsedMs: 0,
     startedAt: null
+  },
+  hourglass: {
+    durationSeconds: 60,
+    showTimer: true
   }
 };
 
@@ -252,7 +256,8 @@ function readTenantSession(tenantId) {
     return {
       ...DEFAULT_TENANT_SESSION,
       ...(data || {}),
-      timer: { ...DEFAULT_TENANT_SESSION.timer, ...(data?.timer || {}) }
+      timer: { ...DEFAULT_TENANT_SESSION.timer, ...(data?.timer || {}) },
+      hourglass: { ...DEFAULT_TENANT_SESSION.hourglass, ...(data?.hourglass || {}) }
     };
   } catch {
     return { ...DEFAULT_TENANT_SESSION };
@@ -266,7 +271,8 @@ function writeTenantSession(tenantId, data) {
   const payload = {
     ...DEFAULT_TENANT_SESSION,
     ...(data || {}),
-    timer: { ...DEFAULT_TENANT_SESSION.timer, ...(data?.timer || {}) }
+    timer: { ...DEFAULT_TENANT_SESSION.timer, ...(data?.timer || {}) },
+    hourglass: { ...DEFAULT_TENANT_SESSION.hourglass, ...(data?.hourglass || {}) }
   };
   fs.writeFileSync(file, JSON.stringify(payload, null, 2));
 }
@@ -1093,6 +1099,21 @@ app.put("/api/:tenantId/session/timer", requireLogin, (req, res) => {
   res.json(sessionData.timer);
 });
 
+app.put("/api/:tenantId/session/hourglass", requireLogin, (req, res) => {
+  const { tenantId } = req.params;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const { durationSeconds, showTimer } = req.body || {};
+  const sessionData = readTenantSession(tenantId);
+  sessionData.hourglass = {
+    durationSeconds: typeof durationSeconds === "number" && durationSeconds > 0 ? durationSeconds : sessionData.hourglass.durationSeconds,
+    showTimer: showTimer === undefined ? sessionData.hourglass.showTimer : !!showTimer
+  };
+  writeTenantSession(tenantId, sessionData);
+  res.json(sessionData.hourglass);
+});
+
 //------------------------------------------------------------
 //  GODMODE MODULE
 //------------------------------------------------------------
@@ -1329,6 +1350,7 @@ wss.on("connection", (ws, req) => {
       const payload = { type: "hourglass:command", action: msg.action };
       if (typeof msg.durationSeconds === "number") payload.durationSeconds = msg.durationSeconds;
       if (typeof msg.visible === "boolean") payload.visible = msg.visible;
+      if (typeof msg.show === "boolean") payload.show = msg.show;
       broadcastTenant(ws.meta.tenantId, payload);
     }
   });

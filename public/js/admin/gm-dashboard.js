@@ -29,7 +29,8 @@ export function gmDashboard() {
     hourglassStartedAt: null,
     hourglassRemainingMs: 0,
     _hourglassInterval: null,
-    hourglassVisible: true,
+    hourglassVisible: false,
+    hourglassShowTimer: false,
     socket: null,
     socketTimer: null,
     _tensionAudio: null,
@@ -108,6 +109,16 @@ export function gmDashboard() {
         this.timerRunning = !!timer.running;
         this.timerElapsedMs = typeof timer.elapsedMs === 'number' ? timer.elapsedMs : 0;
         this.timerStartedAt = timer.startedAt ? new Date(timer.startedAt).getTime() : null;
+        if (data.hourglass) {
+          const d = Number(data.hourglass.durationSeconds);
+          if (Number.isFinite(d) && d > 0) {
+            this.hourglassDuration = d;
+            this.hourglassDurationTemp = d;
+          }
+          if (typeof data.hourglass.showTimer === 'boolean') {
+            this.hourglassShowTimer = data.hourglass.showTimer;
+          }
+        }
         if (this.timerRunning && !this.timerStartedAt) {
           this.timerStartedAt = Date.now();
         }
@@ -193,6 +204,13 @@ export function gmDashboard() {
     sendHourglass(action, payload = {}) {
       if (!this.socket || this.socket.readyState !== WebSocket.OPEN) return;
       try {
+        if (action === 'showTimer' && payload.show === undefined) {
+          payload.show = !!this.hourglassShowTimer;
+        }
+        if (action === 'visibility' || action === 'flip' || action === 'play') {
+          payload.durationSeconds = this.normalizeHourglassDuration(this.hourglassDuration);
+          payload.show = !!this.hourglassShowTimer;
+        }
         this.socket.send(JSON.stringify({ type: 'hourglass:command', action, ...payload }));
       } catch (e) {
         // ignore send errors
@@ -201,17 +219,24 @@ export function gmDashboard() {
     toggleHourglassVisibility() {
       this.hourglassVisible = !this.hourglassVisible;
       this.sendHourglass('visibility', { visible: this.hourglassVisible });
+      this.sendHourglass('showTimer', { show: this.hourglassVisible ? !!this.hourglassShowTimer : false });
     },
-    flipHourglass() {
+    playOrResetHourglass() {
       const duration = this.normalizeHourglassDuration(this.hourglassDuration);
       this.hourglassDuration = duration;
-      this.hourglassVisible = true;
-      this.sendHourglass('visibility', { visible: true });
-      this.sendHourglass('flip', { durationSeconds: duration });
-      this.startHourglassLoop(duration * 1000);
+      if (!this.hourglassRunning) {
+        this.hourglassVisible = true;
+        this.sendHourglass('visibility', { visible: true });
+        this.sendHourglass('showTimer', { show: !!this.hourglassShowTimer });
+        this.sendHourglass('play', { durationSeconds: duration });
+        this.startHourglassLoop(duration * 1000);
+      } else {
+        this.stopHourglassLoop();
+        this.sendHourglass('reset', { durationSeconds: duration });
+      }
     },
-    flipButtonLabel() {
-      return this.hourglassRunning ? 'Flip' : 'Lancer';
+    hourglassButtonLabel() {
+      return this.hourglassRunning ? 'Stop' : 'Lancer';
     },
     openHourglassModal() {
       this.hourglassDurationTemp = this.hourglassDuration;
@@ -224,10 +249,24 @@ export function gmDashboard() {
       const duration = this.normalizeHourglassDuration(this.hourglassDurationTemp);
       this.hourglassDuration = duration;
       this.hourglassModalOpen = false;
-      this.hourglassVisible = true;
-      this.sendHourglass('visibility', { visible: true });
       this.sendHourglass('setDuration', { durationSeconds: duration });
+      this.saveHourglassPrefs();
       // Pas de flip auto, juste mise à jour de la durée
+    },
+    async saveHourglassPrefs() {
+      if (!this.tenantId) return;
+      try {
+        await fetch(`${this.API}/api/${this.tenantId}/session/hourglass`, {
+          method: 'PUT',
+          headers: { ...this.headersAuth(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            durationSeconds: this.hourglassDuration,
+            showTimer: !!this.hourglassShowTimer
+          })
+        });
+      } catch (e) {
+        // ignore
+      }
     },
     hourglassDisplay() {
       if (!this.hourglassRunning) return 'Durée';
