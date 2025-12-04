@@ -73,6 +73,10 @@ const DEFAULT_TENANT_SESSION = {
   hourglass: {
     durationSeconds: 60,
     showTimer: true
+  },
+  notes: {
+    noteId: null,
+    history: []
   }
 };
 
@@ -257,7 +261,11 @@ function readTenantSession(tenantId) {
       ...DEFAULT_TENANT_SESSION,
       ...(data || {}),
       timer: { ...DEFAULT_TENANT_SESSION.timer, ...(data?.timer || {}) },
-      hourglass: { ...DEFAULT_TENANT_SESSION.hourglass, ...(data?.hourglass || {}) }
+      hourglass: { ...DEFAULT_TENANT_SESSION.hourglass, ...(data?.hourglass || {}) },
+      notes: {
+        noteId: data?.notes?.noteId || null,
+        history: Array.isArray(data?.notes?.history) ? data.notes.history : []
+      }
     };
   } catch {
     return { ...DEFAULT_TENANT_SESSION };
@@ -272,7 +280,11 @@ function writeTenantSession(tenantId, data) {
     ...DEFAULT_TENANT_SESSION,
     ...(data || {}),
     timer: { ...DEFAULT_TENANT_SESSION.timer, ...(data?.timer || {}) },
-    hourglass: { ...DEFAULT_TENANT_SESSION.hourglass, ...(data?.hourglass || {}) }
+    hourglass: { ...DEFAULT_TENANT_SESSION.hourglass, ...(data?.hourglass || {}) },
+    notes: {
+      noteId: data?.notes?.noteId || null,
+      history: Array.isArray(data?.notes?.history) ? data.notes.history : []
+    }
   };
   fs.writeFileSync(file, JSON.stringify(payload, null, 2));
 }
@@ -1112,6 +1124,45 @@ app.put("/api/:tenantId/session/hourglass", requireLogin, (req, res) => {
   };
   writeTenantSession(tenantId, sessionData);
   res.json(sessionData.hourglass);
+});
+
+// Notes autosave (Markdown)
+app.get("/api/:tenantId/session/notes", requireLogin, (req, res) => {
+  const { tenantId } = req.params;
+  if (tenantId !== req.session.user.tenantId) return res.status(403).send("Forbidden tenant");
+  const sessionData = readTenantSession(tenantId);
+  const notesDir = path.join(TENANTS_DIR, tenantId, "notes");
+  const noteId = sessionData.notes?.noteId || null;
+  let content = "";
+  if (noteId) {
+    const filePath = path.join(notesDir, `${noteId}.md`);
+    if (fs.existsSync(filePath)) {
+      content = fs.readFileSync(filePath, "utf8");
+    }
+  }
+  res.json({
+    id: noteId,
+    history: Array.isArray(sessionData.notes?.history) ? sessionData.notes.history : [],
+    content
+  });
+});
+
+app.put("/api/:tenantId/session/notes", requireLogin, (req, res) => {
+  const { tenantId } = req.params;
+  if (tenantId !== req.session.user.tenantId) return res.status(403).send("Forbidden tenant");
+  const { id, content } = req.body || {};
+  const notesDir = path.join(TENANTS_DIR, tenantId, "notes");
+  if (!fs.existsSync(notesDir)) fs.mkdirSync(notesDir, { recursive: true });
+  const noteId = typeof id === "string" && id.trim() ? id.trim() : `note-${Date.now()}-${crypto.randomBytes(3).toString("hex")}`;
+  const filePath = path.join(notesDir, `${noteId}.md`);
+  fs.writeFileSync(filePath, content || "", "utf8");
+
+  const sessionData = readTenantSession(tenantId);
+  const history = Array.isArray(sessionData.notes?.history) ? sessionData.notes.history : [];
+  if (!history.includes(noteId)) history.push(noteId);
+  sessionData.notes = { noteId, history };
+  writeTenantSession(tenantId, sessionData);
+  res.json({ id: noteId });
 });
 
 //------------------------------------------------------------

@@ -34,6 +34,72 @@ export function gmDashboard() {
     socket: null,
     socketTimer: null,
     _tensionAudio: null,
+    notesEditor: null,
+    notesId: null,
+    notesSaveTimer: null,
+    notesSaving: false,
+    initNotesEditor(el) {
+      if (!el || this.notesEditor || !window.SimpleMDE) return;
+      this.notesEditor = new window.SimpleMDE({
+        element: el,
+        spellChecker: false,
+        status: false,
+        autofocus: false,
+        toolbar: [
+          "bold", "italic", "heading", "strikethrough","|","quote","|",
+          "unordered-list", "ordered-list", "|",
+          "link", "preview", "guide"
+        ]
+      });
+      // Load existing content
+      this.loadNotes();
+      // Autosave on change (debounced)
+      this.notesEditor.codemirror.on("change", () => {
+        this.queueNotesSave();
+      });
+    },
+    queueNotesSave() {
+      if (!this.notesEditor || !this.tenantId) return;
+      if (this.notesSaveTimer) {
+        clearTimeout(this.notesSaveTimer);
+      }
+      this.notesSaveTimer = setTimeout(() => this.saveNotes(), 800);
+    },
+    async loadNotes() {
+      if (!this.tenantId || !this.notesEditor) return;
+      try {
+        const res = await fetch(`${this.API}/api/${this.tenantId}/session/notes`, { headers: this.headersAuth() });
+        if (res.ok) {
+          const data = await res.json();
+          this.notesId = data.id || null;
+          this.notesEditor.value(data.content || "");
+        }
+      } catch (e) {
+        // ignore load errors
+      }
+    },
+    async saveNotes() {
+      if (!this.tenantId || !this.notesEditor) return;
+      this.notesSaveTimer = null;
+      const content = this.notesEditor.value();
+      this.notesSaving = true;
+      try {
+        const body = { content };
+        if (this.notesId) body.id = this.notesId;
+        const res = await fetch(`${this.API}/api/${this.tenantId}/session/notes`, {
+          method: 'PUT',
+          headers: { ...this.headersAuth(), 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.id) this.notesId = data.id;
+        }
+      } catch (e) {
+        // ignore save errors
+      }
+      this.notesSaving = false;
+    },
     changeTension(delta) {
       const target = this.tensionTargetLevel(delta);
       if (target) this.playTension(target.key);
