@@ -1275,6 +1275,45 @@ app.get("/api/godmode/users", requireGodMode, (req, res) => {
   res.json(enriched);
 });
 
+// Promote/demote a user to admin based on Discord info
+app.post("/api/godmode/admin/discord", requireGodMode, (req, res) => {
+  const { username, admin, discordId } = req.body || {};
+  const users = getUsers();
+
+  let target = null;
+  if (discordId) {
+    target = users.find(u => u.discordId === discordId);
+  } else if (typeof username === "string" && username.trim()) {
+    const name = username.trim().toLowerCase();
+    const matches = users.filter(u => (u.displayName || "").toLowerCase() === name);
+    if (matches.length > 1) {
+      return res.status(409).json({
+        error: "Ambiguous username, provide discordId",
+        matches: matches.map(u => ({
+          email: u.email,
+          discordId: u.discordId || null,
+          displayName: u.displayName || null
+        }))
+      });
+    }
+    target = matches[0] || null;
+  } else {
+    return res.status(400).json({ error: "username or discordId is required" });
+  }
+
+  if (!target) return res.status(404).json({ error: "User not found" });
+
+  target.admin = admin === false ? false : true;
+  saveUsers(users);
+  return res.json({
+    success: true,
+    email: target.email,
+    discordId: target.discordId || null,
+    displayName: target.displayName || null,
+    admin: target.admin
+  });
+});
+
 app.get("/api/godmode/global-quota", requireGodMode, (req, res) => {
   const globalConfig = getGlobalConfig();
   res.json({ defaultQuotaMB: globalConfig.defaultQuotaMB });
