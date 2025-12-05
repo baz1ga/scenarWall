@@ -49,6 +49,11 @@ function getCsrfToken() {
   return decodeURIComponent(m.split("=").slice(1).join("="));
 }
 
+function withCsrf(headers = {}) {
+  const csrf = getCsrfToken();
+  return csrf ? { ...headers, "x-csrf-token": csrf } : headers;
+}
+
 // ---------------------------------------------
 // Display name
 // ---------------------------------------------

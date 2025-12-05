@@ -110,18 +110,14 @@ export function coreSection() {
   },
 
   headersAuth() {
-      const csrf = getCsrfToken();
-      return {
-        'Authorization': 'Bearer ' + this.token,
-        ...(csrf ? { 'x-csrf-token': csrf } : {})
-      };
+      return withCsrf({
+        'Authorization': 'Bearer ' + this.token
+      });
   },
   headersGod() {
-      const csrf = getCsrfToken();
-      return {
-        'x-auth-token': this.token,
-        ...(csrf ? { 'x-csrf-token': csrf } : {})
-      };
+      return withCsrf({
+        'x-auth-token': this.token
+      });
   },
 
     toggleTheme() {
