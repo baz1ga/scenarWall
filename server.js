@@ -12,6 +12,7 @@ const multer = require("multer");
 const sharp = require("sharp");
 const session = require("express-session");
 const rateLimit = require("express-rate-limit"); // basic rate limiting for auth/uploads
+const morgan = require("morgan"); // HTTP access logs
 const WebSocket = require("ws");
 
 const app = express();
@@ -23,25 +24,63 @@ const TENANTS_DIR = path.join(DATA_DIR, "tenants");
 const FAVICONS_DIR = path.join(PUBLIC_DIR, "assets", "favicons");
 const FRONT_FILE = path.join(PUBLIC_DIR, "front", "index.html");
 const GLOBAL_FILE = path.join(DATA_DIR, "global.json");
+const LOG_DIR = path.join(DATA_DIR, "logs");
 const CSRF_COOKIE = "XSRF-TOKEN";
+if (!fs.existsSync(LOG_DIR)) fs.mkdirSync(LOG_DIR, { recursive: true });
+const accessLogStream = fs.createWriteStream(path.join(LOG_DIR, "access.log"), { flags: "a" });
+const appLogStream = fs.createWriteStream(path.join(LOG_DIR, "app.log"), { flags: "a" });
+
+function log(level, message, meta = {}) {
+  const payload = {
+    time: new Date().toISOString(),
+    level,
+    message,
+    ...meta
+  };
+  try {
+    appLogStream.write(JSON.stringify(payload) + "\n");
+  } catch (err) {
+    console.error("Log write failed", err);
+  }
+}
+
+const logger = {
+  info: (msg, meta) => log("info", msg, meta),
+  warn: (msg, meta) => log("warn", msg, meta),
+  error: (msg, meta) => log("error", msg, meta)
+};
+
+const requestId = (req, res, next) => {
+  req.id = req.headers["x-request-id"] || crypto.randomBytes(12).toString("hex");
+  res.setHeader("X-Request-Id", req.id);
+  next();
+};
+
+const rateLimitHandler = (name) => (req, res, next, options) => {
+  logger.warn("rate-limit", { reqId: req.id, ip: req.ip, path: req.path, limiter: name, limit: options.limit });
+  res.status(options.statusCode).send(options.message || "Too many requests");
+};
 // Limiteurs globaux/finement ciblés
 const limiterGeneral = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 300,
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  handler: rateLimitHandler("general")
 });
 const limiterAuth = rateLimit({
   windowMs: 5 * 60 * 1000,
   limit: 20,
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  handler: rateLimitHandler("auth")
 });
 const limiterUpload = rateLimit({
   windowMs: 10 * 60 * 1000,
   limit: 50,
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  handler: rateLimitHandler("upload")
 });
 const THUMB_SIZE = 230;
 const DEFAULT_GLOBAL = {
@@ -122,7 +161,7 @@ function assertRequiredEnv() {
   if (!ENV_GLOBAL.discordClientId) missing.push("DISCORD_CLIENT_ID");
   if (!ENV_GLOBAL.discordClientSecret) missing.push("DISCORD_CLIENT_SECRET");
   if (missing.length) {
-    console.error(`Missing required env vars: ${missing.join(", ")}`);
+    logger.error(`Missing required env vars: ${missing.join(", ")}`);
     process.exit(1);
   }
 }
@@ -236,6 +275,10 @@ class FileStore extends session.Store {
 
 app.use(express.json());
 app.set("trust proxy", 1);
+app.use(requestId);
+// Access logs (to file)
+morgan.token("id", (req) => req.id);
+app.use(morgan('[:date[iso]] :id :remote-addr :method :url :status :res[content-length] - :response-time ms', { stream: accessLogStream }));
 const globalConfig = getGlobalConfig();
 app.use(limiterGeneral);
 
@@ -280,7 +323,7 @@ app.get("/logout", (req, res) => {
     req.session.user = null;
     req.session.destroy(err => {
       if (err) {
-        console.error("Session destroy error", err);
+        logger.error("Session destroy error", { err: err?.message, reqId: req.id });
         return clear();
       }
       clear();
@@ -401,7 +444,7 @@ function loadConfig(tenantId) {
       tensionLabels: normalizeTensionLabels(data.tensionLabels)
     };
   } catch (err) {
-    console.error("Failed to read config, using defaults", err);
+    logger.error("Failed to read config, using defaults", { err: err?.message, file });
     return { ...DEFAULT_CONFIG };
   }
 }
@@ -432,7 +475,7 @@ function getGlobalConfig() {
 
     return merged;
   } catch (err) {
-    console.error("Failed to read global config, using defaults", err);
+    logger.error("Failed to read global config, using defaults", { err: err?.message });
     return {
       defaultQuotaMB: DEFAULT_GLOBAL.defaultQuotaMB,
       apiBase: ENV_GLOBAL.apiBase !== null ? ENV_GLOBAL.apiBase : null,
@@ -615,7 +658,7 @@ app.get("/api/auth/discord/callback", async (req, res) => {
     });
     const tokenData = await tokenRes.json();
     if (!tokenRes.ok || !tokenData.access_token) {
-      console.error("Discord token error", tokenData);
+      logger.error("Discord token error", { reqId: req.id, data: tokenData });
       return res.status(400).send("Echec OAuth Discord");
     }
 
@@ -625,7 +668,7 @@ app.get("/api/auth/discord/callback", async (req, res) => {
     });
     const userData = await userRes.json();
     if (!userRes.ok || !userData.id) {
-      console.error("Discord user error", userData);
+      logger.error("Discord user error", { reqId: req.id, data: userData });
       return res.status(400).send("Impossible de récupérer le compte Discord");
     }
 
@@ -693,7 +736,7 @@ app.get("/api/auth/discord/callback", async (req, res) => {
       window.location.href = '/admin/';
     </script></body></html>`);
   } catch (err) {
-    console.error("Discord OAuth error", err);
+    logger.error("Discord OAuth error", { reqId: req.id, err: err?.message, stack: err?.stack });
     res.status(500).send("Erreur OAuth Discord");
   }
 });
@@ -781,7 +824,7 @@ async function ensureThumbnail(tenantId, name) {
       .toFile(dest);
     return dest;
   } catch (err) {
-    console.error("Thumbnail generation failed", { tenantId, name, error: err.message });
+    logger.error("Thumbnail generation failed", { tenantId, name, error: err.message });
     return null;
   }
 }
@@ -794,7 +837,7 @@ async function ensureThumbnails(tenantId, files = []) {
 function removeThumbnail(tenantId, name) {
   const dest = thumbPath(tenantId, name);
   if (fs.existsSync(dest)) {
-    try { fs.unlinkSync(dest); } catch (err) { console.error("Thumbnail delete failed", err); }
+    try { fs.unlinkSync(dest); } catch (err) { logger.error("Thumbnail delete failed", { tenantId, name, error: err?.message }); }
   }
 }
 
@@ -1486,6 +1529,21 @@ app.get("/t/:tenantId/api/config", (req, res) => {
   const config = loadConfig(req.params.tenantId);
   res.json(config);
 });
+
+//------------------------------------------------------------
+//  GLOBAL ERROR HANDLER
+//------------------------------------------------------------
+app.use((err, req, res, next) => {
+  logger.error("Unhandled error", {
+    reqId: req.id,
+    path: req.originalUrl,
+    method: req.method,
+    message: err.message,
+    stack: err.stack
+  });
+  res.status(500).json({ error: "Internal error", requestId: req.id });
+});
+
 //------------------------------------------------------------
 //  WEBSOCKET (tension sync)
 //------------------------------------------------------------
@@ -1533,5 +1591,5 @@ wss.on("connection", (ws, req) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`🚀 ScenarWall API running at http://localhost:${PORT}`);
+  logger.info("Server started", { url: `http://localhost:${PORT}` });
 });
