@@ -63,7 +63,7 @@ export function gallerySection() {
       this.pixabayStatus = 'ok';
       if (tab === 'pixabay' && !this.pixabayInitialized && !this.pixabayLoading) {
         if (!this.pixabayKey) {
-          this.pixabayMessage = 'Clé API Pixabay manquante. Ajoutez-la dans global.json.';
+          this.pixabayMessage = 'Clé API Pixabay manquante. Définissez PIXABAY_KEY dans l’environnement (.env).';
           this.pixabayStatus = 'error';
           return;
         }

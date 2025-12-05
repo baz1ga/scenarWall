@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "dev": "nodemon --ignore users.json --ignore sessions.json --ignore tenants/ server.js",
+    "dev": "nodemon --ignore data/users.json --ignore data/sessions.json --ignore data/tenants/ server.js",
     "tailwind:build": "npx tailwindcss -c tailwind.config.js -i ./src/tailwind.css -o ./public/css/tailwind.css",
     "tailwind:watch": "npx tailwindcss -c tailwind.config.js -i ./src/tailwind.css -o ./public/css/tailwind.css --watch"
   },
@@ -16,6 +16,7 @@
   "type": "commonjs",
   "dependencies": {
     "bcryptjs": "^3.0.3",
+    "dotenv": "^16.4.5",
     "express": "^5.1.0",
     "express-session": "^1.18.2",
     "multer": "^2.0.2",

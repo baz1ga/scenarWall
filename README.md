@@ -12,7 +12,14 @@ Petit guide pour naviguer dans le projet et lancer le serveur.
 - Générer le CSS : `npm run tailwind:build`
 - Démarrer le serveur Node : `npm start` (ou via un process manager type pm2)
 - Servir `http://<host>:3100/index.html`
-Pour un setup plus robuste : mettre un reverse proxy (Nginx) devant, gérer l’environnement (`NODE_ENV=production`, éventuelles vars d’API), et s’assurer que le dossier `data/` et `tenants/` restent en lecture/écriture côté serveur.
+Pour un setup plus robuste : mettre un reverse proxy (Nginx) devant, gérer l’environnement (`NODE_ENV=production`, éventuelles vars d’API), et s’assurer que le dossier `data/` (dont `data/tenants/`) reste en lecture/écriture côté serveur.
+
+### Variables d’environnement (préférées pour les secrets)
+- `API_BASE` : URL publique de l’API.
+- `PIXABAY_KEY` : clé Pixabay (sera servie au front pour l’onglet Pixabay).
+- `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET` : credentials OAuth Discord.
+- `DISCORD_ALLOWED_GUILD_ID` : id de guilde requise (optionnel).
+- `DISCORD_SCOPES` : liste séparée par des virgules (ex: `identify`).
 
 ### Changer le port / l’URL
 - Le port par défaut est fixé dans `server.js` (3100). Modifie la valeur ou exporte `PORT` (`PORT=4000 npm start`).
@@ -29,21 +36,4 @@ Pour un setup plus robuste : mettre un reverse proxy (Nginx) devant, gérer l’
   - `public/js/common/` : `auth.js`, `config.js`, `fragments-loader.js`.
 - `src/tailwind.css` : entrée Tailwind (base/components/utilities).
 - `tailwind.config.js` / `postcss.config.js` : config Tailwind/PostCSS.
-- `data/` : stockage des utilisateurs (`users.json`) et sessions (`sessions.json`, store `express-session`), ainsi que la config globale (`global.json`).
-- `tenants/` : données propres à chaque tenant (images, ordre, config).
-
-> Note : les fichiers du dossier `data/` (ex. `users.json`, `sessions.json`, `global.json`) contiennent des données confidentielles et ne doivent pas être commités.
-
-## Authentification (Discord OAuth)
-- Page d’entrée : `/index.html` (ou `/login`), aucune redirection OAuth automatique ; l’utilisateur clique sur “Se connecter avec Discord”.
-- Si une session existe déjà (`req.session.user`), `/login` renvoie vers `/admin`.
-- La session est gérée par `express-session` (cookie 30 jours, httpOnly, sameSite=lax, store fichier `data/sessions.json`). Déconnexion via `/logout` détruit la session et nettoie le cookie.
-- OAuth Discord : `/api/auth/discord/login` génère l’URL (scope `identify`, state stocké en session), callback `/api/auth/discord/callback` valide le state puis peuple `req.session.user`.
-
-### Exemple de `data/global.json` (non commité)
-```json
-{
-  "defaultQuotaMB": 100,
-  "apiBase": "http://localhost:3100"
-}
-```
+- `data/` : stockage des données

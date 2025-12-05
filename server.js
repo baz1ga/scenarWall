@@ -5,6 +5,7 @@ const express = require("express");
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
+require("dotenv").config();
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const multer = require("multer");
@@ -25,7 +26,6 @@ const THUMB_SIZE = 230;
 const DEFAULT_GLOBAL = {
   defaultQuotaMB: 100,
   apiBase: null,
-  pixabayKey: null,
   discordClientId: null,
   discordClientSecret: null,
   discordRedirectUri: null,
@@ -84,6 +84,54 @@ const DEFAULT_SESSION_COOKIE = {
   secure: true,
   sameSite: "none"
 };
+
+const ENV_GLOBAL = {
+  apiBase: process.env.API_BASE || null,
+  pixabayKey: process.env.PIXABAY_KEY || null,
+  discordClientId: process.env.DISCORD_CLIENT_ID || null,
+  discordClientSecret: process.env.DISCORD_CLIENT_SECRET || null,
+  discordRedirectUri: process.env.DISCORD_REDIRECT_URI || null,
+  allowedGuildId: process.env.DISCORD_ALLOWED_GUILD_ID || null,
+  discordScopes: process.env.DISCORD_SCOPES
+    ? process.env.DISCORD_SCOPES.split(",").map(s => s.trim()).filter(Boolean)
+    : null
+};
+
+const ENV_SESSION_COOKIE = {
+  secure: process.env.SESSION_COOKIE_SECURE,
+  sameSite: process.env.SESSION_COOKIE_SAMESITE
+};
+
+function resolveDiscordRedirectUri(req) {
+  if (ENV_GLOBAL.discordRedirectUri) return ENV_GLOBAL.discordRedirectUri;
+  const host = req.get("host");
+  if (!host) return null;
+  const proto = req.protocol || "http";
+  return `${proto}://${host}/api/auth/discord/callback`;
+}
+
+function resolveSessionCookieConfig() {
+  const parseBool = (val) => {
+    if (val === undefined || val === null || val === "") return null;
+    return String(val).toLowerCase() === "true";
+  };
+  const envSecure = parseBool(ENV_SESSION_COOKIE.secure);
+  const envSameSite = ENV_SESSION_COOKIE.sameSite || null;
+  const isProd = process.env.NODE_ENV === "production";
+
+  // Par défaut : secure en prod, sinon false. On ignore ce qui viendrait de global.json pour éviter les blocages HTTP.
+  let secure = envSecure !== null ? envSecure : isProd;
+
+  // SameSite : env prioritaire, sinon none en prod (si HTTPS), lax en dev.
+  let sameSite = envSameSite || (isProd ? "none" : "lax");
+
+  // sameSite=None requiert secure=true; si on n'est pas en HTTPS, on rétrograde en lax
+  if (!secure && sameSite === "none") {
+    sameSite = "lax";
+  }
+
+  return { secure, sameSite };
+}
 
 function sanitizeFilename(name = "", fallback = "file") {
   const base = name.toString().replace(/[^a-zA-Z0-9._-]/g, "_").replace(/_+/g, "_").replace(/^[_\.-]+|[_\.-]+$/g, "");
@@ -145,8 +193,7 @@ app.use(session({
   saveUninitialized: false,
   store: new FileStore(SESSIONS_FILE),
   cookie: {
-    secure: globalConfig.sessionCookie?.secure ?? DEFAULT_SESSION_COOKIE.secure,
-    sameSite: globalConfig.sessionCookie?.sameSite || DEFAULT_SESSION_COOKIE.sameSite,
+    ...resolveSessionCookieConfig(),
     httpOnly: true,
     maxAge: 30 * 24 * 60 * 60 * 1000
   }
@@ -164,7 +211,7 @@ app.get("/godmode.html", (req, res) => res.redirect("/admin/"));
 app.get("/godmode", (req, res) => res.redirect("/admin/"));
 app.get("/front.html", (req, res) => res.redirect("/front/"));
 app.get("/api/global-config", (req, res) => {
-  res.json(getGlobalConfig());
+  res.json(getPublicGlobalConfig());
 });
 app.get("/session-debug", (req, res) => {
   res.json({
@@ -319,11 +366,32 @@ function getGlobalConfig() {
 
   try {
     const data = JSON.parse(fs.readFileSync(GLOBAL_FILE, "utf8"));
-    return { ...DEFAULT_GLOBAL, ...data };
+    const merged = { ...DEFAULT_GLOBAL, ...data };
+
+    // Les valeurs sensibles ou gérées par l'env sont ignorées depuis le fichier.
+    merged.apiBase = ENV_GLOBAL.apiBase !== null ? ENV_GLOBAL.apiBase : DEFAULT_GLOBAL.apiBase;
+    merged.pixabayKey = ENV_GLOBAL.pixabayKey !== null ? ENV_GLOBAL.pixabayKey : null;
+    merged.discordClientId = ENV_GLOBAL.discordClientId !== null ? ENV_GLOBAL.discordClientId : null;
+    merged.discordClientSecret = ENV_GLOBAL.discordClientSecret !== null ? ENV_GLOBAL.discordClientSecret : null;
+    merged.discordRedirectUri = ENV_GLOBAL.discordRedirectUri !== null ? ENV_GLOBAL.discordRedirectUri : null;
+    merged.allowedGuildId = ENV_GLOBAL.allowedGuildId !== null ? ENV_GLOBAL.allowedGuildId : null;
+    merged.discordScopes = (ENV_GLOBAL.discordScopes && ENV_GLOBAL.discordScopes.length)
+      ? ENV_GLOBAL.discordScopes
+      : DEFAULT_GLOBAL.discordScopes;
+
+    return merged;
   } catch (err) {
     console.error("Failed to read global config, using defaults", err);
     return { ...DEFAULT_GLOBAL };
   }
+}
+
+function getPublicGlobalConfig() {
+  const config = getGlobalConfig();
+  return {
+    apiBase: config.apiBase || null,
+    pixabayKey: ENV_GLOBAL.pixabayKey || null
+  };
 }
 
 function getTenantQuota(tenantId) {
@@ -437,7 +505,8 @@ app.post("/api/login", async (req, res) => {
 app.get("/api/auth/discord/login", (req, res) => {
   if (req.session && req.session.user) return res.redirect("/dashboard");
   const config = getGlobalConfig();
-  const { discordClientId, discordRedirectUri, discordScopes } = config;
+  const { discordClientId, discordScopes } = config;
+  const discordRedirectUri = resolveDiscordRedirectUri(req);
   if (!discordClientId || !discordRedirectUri) {
     return res.status(503).json({ error: "Discord OAuth non configuré" });
   }
@@ -457,7 +526,8 @@ app.get("/api/auth/discord/login", (req, res) => {
 
 app.get("/api/auth/discord/callback", async (req, res) => {
   const config = getGlobalConfig();
-  const { discordClientId, discordClientSecret, discordRedirectUri, allowedGuildId } = config;
+  const { discordClientId, discordClientSecret, allowedGuildId } = config;
+  const discordRedirectUri = resolveDiscordRedirectUri(req);
   const { code, state } = req.query;
 
   if (!discordClientId || !discordClientSecret || !discordRedirectUri) {

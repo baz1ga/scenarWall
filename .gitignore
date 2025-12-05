@@ -8,3 +8,4 @@ data/
 tenants/
 sessions.json
 users.json
+.env
