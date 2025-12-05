@@ -877,9 +877,12 @@ app.put("/api/:tenantId/images/order", requireLogin, (req, res) => {
   if (tenantId !== req.session.user.tenantId)
     return res.status(403).json({ error: "Forbidden tenant" });
 
+  const orderInput = Array.isArray(req.body.order) ? req.body.order : [];
+  const order = orderInput.filter(isSafeName);
+
   fs.writeFileSync(
     path.join(TENANTS_DIR, tenantId, "order.json"),
-    JSON.stringify(req.body.order, null, 2)
+    JSON.stringify(order, null, 2)
   );
 
   res.json({ success: true });
@@ -995,6 +998,7 @@ app.put("/api/:tenantId/images/hide/:name", requireLogin, (req, res) => {
 
   if (tenantId !== req.session.user.tenantId)
     return res.status(403).json({ error: "Forbidden tenant" });
+  if (!isSafeName(name)) return res.status(400).json({ error: "Invalid name" });
 
   const file = path.join(TENANTS_DIR, tenantId, "hidden.json");
   let hidden = JSON.parse(fs.readFileSync(file));
@@ -1012,6 +1016,7 @@ app.put("/api/:tenantId/images/show/:name", requireLogin, (req, res) => {
 
   if (tenantId !== req.session.user.tenantId)
     return res.status(403).json({ error: "Forbidden tenant" });
+  if (!isSafeName(name)) return res.status(400).json({ error: "Invalid name" });
 
   const file = path.join(TENANTS_DIR, tenantId, "hidden.json");
   let hidden = JSON.parse(fs.readFileSync(file));
@@ -1029,6 +1034,7 @@ app.delete("/api/:tenantId/images/:name", requireLogin, (req, res) => {
 
   if (tenantId !== req.session.user.tenantId)
     return res.status(403).json({ error: "Forbidden tenant" });
+  if (!isSafeName(name)) return res.status(400).json({ error: "Invalid name" });
 
   const base = path.join(TENANTS_DIR, tenantId);
   const hiddenFile = path.join(base, "hidden.json");
