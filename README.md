@@ -17,8 +17,9 @@ Pour un setup plus robuste : mettre un reverse proxy (Nginx) devant, gérer l’
 ### Variables d’environnement (préférées pour les secrets)
 - `API_BASE` : URL publique de l’API.
 - `PIXABAY_KEY` : clé Pixabay (sera servie au front pour l’onglet Pixabay).
-- `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET` : credentials OAuth Discord.
+- `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET` : credentials OAuth Discord (requis).
 - `DISCORD_SCOPES` : liste séparée par des virgules (ex: `identify`).
+- `SESSION_SECRET` : secret de session (requis).
 - Si `DISCORD_ALLOWED_GUILD_ID` est défini, ajoute `guilds` dans `DISCORD_SCOPES` (automatique si absent).
 
 ### Changer le port / l’URL
