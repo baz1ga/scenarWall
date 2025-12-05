@@ -11,6 +11,7 @@ const bcrypt = require("bcryptjs");
 const multer = require("multer");
 const sharp = require("sharp");
 const session = require("express-session");
+const rateLimit = require("express-rate-limit"); // basic rate limiting for auth/uploads
 const WebSocket = require("ws");
 
 const app = express();
@@ -23,9 +24,28 @@ const FAVICONS_DIR = path.join(PUBLIC_DIR, "assets", "favicons");
 const FRONT_FILE = path.join(PUBLIC_DIR, "front", "index.html");
 const GLOBAL_FILE = path.join(DATA_DIR, "global.json");
 const CSRF_COOKIE = "XSRF-TOKEN";
+// Limiteurs globaux/finement ciblés
+const limiterGeneral = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 300,
+  standardHeaders: true,
+  legacyHeaders: false
+});
+const limiterAuth = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false
+});
+const limiterUpload = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  limit: 50,
+  standardHeaders: true,
+  legacyHeaders: false
+});
 const THUMB_SIZE = 230;
 const DEFAULT_GLOBAL = {
-  defaultQuotaMB: 100
+  defaultQuotaMB: 100 // seul champ persistant dans global.json
 };
 const DEFAULT_DISCORD_SCOPES = ["identify", "email"];
 const DEFAULT_TENSION_COLORS = {
@@ -115,6 +135,7 @@ function resolveDiscordRedirectUri(req) {
   return `${proto}://${host}/api/auth/discord/callback`;
 }
 
+// Cookie de session : force secure+None en prod, lax en dev HTTP
 function resolveSessionCookieConfig() {
   const parseBool = (val) => {
     if (val === undefined || val === null || val === "") return null;
@@ -180,6 +201,7 @@ function uniqueFilename(dir, baseName, ext) {
 // Session store (file-based)
 const SESSIONS_FILE = path.join(DATA_DIR, "sessions.json");
 class FileStore extends session.Store {
+  // Store ultra simple : lecture/écriture synchrone sur fichier JSON
   constructor(file) {
     super();
     this.file = file;
@@ -215,6 +237,7 @@ class FileStore extends session.Store {
 app.use(express.json());
 app.set("trust proxy", 1);
 const globalConfig = getGlobalConfig();
+app.use(limiterGeneral);
 
 app.use(session({
   secret: process.env.SESSION_SECRET,
@@ -539,7 +562,7 @@ app.post("/api/login", async (req, res) => {
 //------------------------------------------------------------
 //  DISCORD OAUTH2 (login + callback)
 //------------------------------------------------------------
-app.get("/api/auth/discord/login", (req, res) => {
+app.get("/api/auth/discord/login", limiterAuth, (req, res) => {
   if (req.session && req.session.user) return res.redirect("/admin/");
   const config = getGlobalConfig();
   const { discordClientId, discordScopes } = config;
@@ -835,12 +858,13 @@ app.post("/api/:tenantId/images/upload", requireLogin, (req, res) => {
   if (tenantId !== req.session.user.tenantId)
     return res.status(403).json({ error: "Forbidden tenant" });
 
-  upload.single("image")(req, res, async err => {
-    if (err) {
-      if (err.code === "LIMIT_FILE_SIZE") return res.status(400).json({ error: "Image trop volumineuse (6 Mo max)" });
-      if (err.code === "INVALID_IMAGE") return res.status(400).json({ error: "Format d'image non supporté" });
-      return res.status(400).json({ error: "Échec de l'upload image" });
-    }
+  limiterUpload(req, res, () => {
+    upload.single("image")(req, res, async err => {
+      if (err) {
+        if (err.code === "LIMIT_FILE_SIZE") return res.status(400).json({ error: "Image trop volumineuse (6 Mo max)" });
+        if (err.code === "INVALID_IMAGE") return res.status(400).json({ error: "Format d'image non supporté" });
+        return res.status(400).json({ error: "Échec de l'upload image" });
+      }
 
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
@@ -868,6 +892,7 @@ app.post("/api/:tenantId/images/upload", requireLogin, (req, res) => {
     await ensureThumbnail(tenantId, req.file.filename);
 
     res.json({ success: true });
+    });
   });
 });
 
@@ -1104,7 +1129,8 @@ app.post("/api/:tenantId/audio/upload", requireLogin, (req, res) => {
   if (tenantId !== req.session.user.tenantId)
     return res.status(403).json({ error: "Forbidden tenant" });
 
-  audioUpload.single("audio")(req, res, err => {
+  limiterUpload(req, res, () => {
+    audioUpload.single("audio")(req, res, err => {
     if (err) {
       if (err.code === "LIMIT_FILE_SIZE") return res.status(400).json({ error: "Fichier trop volumineux (1 Mo max)" });
       if (err.code === "INVALID_AUDIO") return res.status(400).json({ error: "Format audio non supporté" });
@@ -1127,6 +1153,7 @@ app.post("/api/:tenantId/audio/upload", requireLogin, (req, res) => {
     writeAudioOrder(tenantId, order);
 
     res.json({ success: true, name: req.file.filename, size: fileSize });
+  });
   });
 });
 
