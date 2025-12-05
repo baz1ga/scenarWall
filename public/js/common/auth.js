@@ -41,6 +41,15 @@ function clearAdmin() {
 }
 
 // ---------------------------------------------
+// CSRF token (double-submit cookie)
+// ---------------------------------------------
+function getCsrfToken() {
+  const m = document.cookie.split(";").map(s => s.trim()).find(c => c.startsWith("XSRF-TOKEN="));
+  if (!m) return null;
+  return decodeURIComponent(m.split("=").slice(1).join("="));
+}
+
+// ---------------------------------------------
 // Display name
 // ---------------------------------------------
 function setDisplayName(name) {

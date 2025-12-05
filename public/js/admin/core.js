@@ -107,14 +107,22 @@ export function coreSection() {
         url.searchParams.set('section', target);
         window.history.replaceState({}, '', url.toString());
       } catch (e) {}
-    },
+  },
 
-    headersAuth() {
-      return { 'Authorization': 'Bearer ' + this.token };
-    },
-    headersGod() {
-      return { 'x-auth-token': this.token };
-    },
+  headersAuth() {
+      const csrf = getCsrfToken();
+      return {
+        'Authorization': 'Bearer ' + this.token,
+        ...(csrf ? { 'x-csrf-token': csrf } : {})
+      };
+  },
+  headersGod() {
+      const csrf = getCsrfToken();
+      return {
+        'x-auth-token': this.token,
+        ...(csrf ? { 'x-csrf-token': csrf } : {})
+      };
+  },
 
     toggleTheme() {
       this.theme = this.theme === 'dark' ? 'light' : 'dark';

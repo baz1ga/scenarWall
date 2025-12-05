@@ -22,6 +22,7 @@ const TENANTS_DIR = path.join(DATA_DIR, "tenants");
 const FAVICONS_DIR = path.join(PUBLIC_DIR, "assets", "favicons");
 const FRONT_FILE = path.join(PUBLIC_DIR, "front", "index.html");
 const GLOBAL_FILE = path.join(DATA_DIR, "global.json");
+const CSRF_COOKIE = "XSRF-TOKEN";
 const THUMB_SIZE = 230;
 const DEFAULT_GLOBAL = {
   defaultQuotaMB: 100
@@ -93,6 +94,19 @@ const ENV_SESSION_COOKIE = {
   sameSite: process.env.SESSION_COOKIE_SAMESITE
 };
 
+assertRequiredEnv();
+
+function assertRequiredEnv() {
+  const missing = [];
+  if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET === "change-me") missing.push("SESSION_SECRET");
+  if (!ENV_GLOBAL.discordClientId) missing.push("DISCORD_CLIENT_ID");
+  if (!ENV_GLOBAL.discordClientSecret) missing.push("DISCORD_CLIENT_SECRET");
+  if (missing.length) {
+    console.error(`Missing required env vars: ${missing.join(", ")}`);
+    process.exit(1);
+  }
+}
+
 function resolveDiscordRedirectUri(req) {
   if (ENV_GLOBAL.discordRedirectUri) return ENV_GLOBAL.discordRedirectUri;
   const host = req.get("host");
@@ -122,6 +136,30 @@ function resolveSessionCookieConfig() {
   }
 
   return { secure, sameSite };
+}
+
+function attachCsrfToken(req, res, next) {
+  if (!req.session) return next();
+  if (!req.session.csrfToken) {
+    req.session.csrfToken = crypto.randomBytes(24).toString("hex");
+  }
+  const { secure, sameSite } = resolveSessionCookieConfig();
+  res.cookie(CSRF_COOKIE, req.session.csrfToken, {
+    httpOnly: false,
+    sameSite,
+    secure,
+    path: "/"
+  });
+  next();
+}
+
+function requireCsrf(req, res, next) {
+  if (["GET", "HEAD", "OPTIONS"].includes(req.method)) return next();
+  const token = req.get("x-csrf-token");
+  if (!req.session || !req.session.csrfToken || token !== req.session.csrfToken) {
+    return res.status(403).json({ error: "Invalid CSRF token" });
+  }
+  next();
 }
 
 function sanitizeFilename(name = "", fallback = "file") {
@@ -179,7 +217,7 @@ app.set("trust proxy", 1);
 const globalConfig = getGlobalConfig();
 
 app.use(session({
-  secret: process.env.SESSION_SECRET || "change-me",
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   store: new FileStore(SESSIONS_FILE),
@@ -189,6 +227,8 @@ app.use(session({
     maxAge: 30 * 24 * 60 * 60 * 1000
   }
 }));
+app.use(attachCsrfToken);
+app.use(requireCsrf);
 app.use(express.static(PUBLIC_DIR)); // serve login, signup, front, admin UIs
 app.get("/favicon.ico", (req, res) => {
   res.sendFile(path.join(FAVICONS_DIR, "favicon.ico"));
@@ -203,12 +243,6 @@ app.get("/godmode", (req, res) => res.redirect("/admin/"));
 app.get("/front.html", (req, res) => res.redirect("/front/"));
 app.get("/api/global-config", (req, res) => {
   res.json(getPublicGlobalConfig());
-});
-app.get("/session-debug", (req, res) => {
-  res.json({
-    session: req.session || null,
-    user: (req.session && req.session.user) || null
-  });
 });
 app.get("/login", (req, res) => {
   if (req.session && req.session.user) return res.redirect("/admin");
@@ -506,7 +540,7 @@ app.post("/api/login", async (req, res) => {
 //  DISCORD OAUTH2 (login + callback)
 //------------------------------------------------------------
 app.get("/api/auth/discord/login", (req, res) => {
-  if (req.session && req.session.user) return res.redirect("/dashboard");
+  if (req.session && req.session.user) return res.redirect("/admin/");
   const config = getGlobalConfig();
   const { discordClientId, discordScopes } = config;
   const discordRedirectUri = resolveDiscordRedirectUri(req);
