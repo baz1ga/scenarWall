@@ -18,8 +18,8 @@ Pour un setup plus robuste : mettre un reverse proxy (Nginx) devant, gérer l’
 - `API_BASE` : URL publique de l’API.
 - `PIXABAY_KEY` : clé Pixabay (sera servie au front pour l’onglet Pixabay).
 - `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET` : credentials OAuth Discord.
-- `DISCORD_ALLOWED_GUILD_ID` : id de guilde requise (optionnel).
 - `DISCORD_SCOPES` : liste séparée par des virgules (ex: `identify`).
+- Si `DISCORD_ALLOWED_GUILD_ID` est défini, ajoute `guilds` dans `DISCORD_SCOPES` (automatique si absent).
 
 ### Changer le port / l’URL
 - Le port par défaut est fixé dans `server.js` (3100). Modifie la valeur ou exporte `PORT` (`PORT=4000 npm start`).
@@ -32,8 +32,17 @@ Pour un setup plus robuste : mettre un reverse proxy (Nginx) devant, gérer l’
   - `public/front/` : affichage public tenantisé (front + CSS/JS dédiés).
   - `public/index.html`, `public/signup.html` : pages d’auth.
   - `public/fragments/` : fragments HTML (donation, legal footer) injectés par `public/js/common/fragments-loader.js`.
-  - `public/css/tailwind.css` : build Tailwind généré depuis `src/tailwind.css`.
-  - `public/js/common/` : `auth.js`, `config.js`, `fragments-loader.js`.
+- `public/css/tailwind.css` : build Tailwind généré depuis `src/tailwind.css`.
+- `public/js/common/` : `auth.js`, `config.js`, `fragments-loader.js`.
 - `src/tailwind.css` : entrée Tailwind (base/components/utilities).
 - `tailwind.config.js` / `postcss.config.js` : config Tailwind/PostCSS.
-- `data/` : stockage des données
+- `data/` : stockage des données (utilisateurs, sessions, `data/tenants/`). Le fichier `data/global.json` ne doit contenir que `defaultQuotaMB`.
+
+> Les secrets et configs publiques (`PIXABAY_KEY`, credentials Discord, `API_BASE`, etc.) doivent être fournis via les variables d’environnement et non dans `global.json`.
+
+### Exemple de `data/global.json` (non commité)
+```json
+{
+  "defaultQuotaMB": 100
+}
+```

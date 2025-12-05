@@ -1,7 +1,7 @@
 {
   "name": "ScenarWall",
   "short_name": ".ScenarWall.",
-  "description": ".ScenarWall. : le compagnon du MJ",
+  "description": ".ScenarWall. : la régie du MJ",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

@@ -24,18 +24,9 @@ const FRONT_FILE = path.join(PUBLIC_DIR, "front", "index.html");
 const GLOBAL_FILE = path.join(DATA_DIR, "global.json");
 const THUMB_SIZE = 230;
 const DEFAULT_GLOBAL = {
-  defaultQuotaMB: 100,
-  apiBase: null,
-  discordClientId: null,
-  discordClientSecret: null,
-  discordRedirectUri: null,
-  discordScopes: ["identify", "email"],
-  allowedGuildId: null,
-  sessionCookie: {
-    secure: true,
-    sameSite: "none"
-  }
+  defaultQuotaMB: 100
 };
+const DEFAULT_DISCORD_SCOPES = ["identify", "email"];
 const DEFAULT_TENSION_COLORS = {
   level1: "#37aa32",
   level2: "#f8d718",
@@ -91,7 +82,7 @@ const ENV_GLOBAL = {
   discordClientId: process.env.DISCORD_CLIENT_ID || null,
   discordClientSecret: process.env.DISCORD_CLIENT_SECRET || null,
   discordRedirectUri: process.env.DISCORD_REDIRECT_URI || null,
-  allowedGuildId: process.env.DISCORD_ALLOWED_GUILD_ID || null,
+  allowedGuildId: null,
   discordScopes: process.env.DISCORD_SCOPES
     ? process.env.DISCORD_SCOPES.split(",").map(s => s.trim()).filter(Boolean)
     : null
@@ -249,7 +240,7 @@ const USERS_FILE = path.join(DATA_DIR, "users.json");
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
 if (!fs.existsSync(USERS_FILE)) fs.writeFileSync(USERS_FILE, "[]");
-if (!fs.existsSync(GLOBAL_FILE)) fs.writeFileSync(GLOBAL_FILE, JSON.stringify(DEFAULT_GLOBAL, null, 2));
+if (!fs.existsSync(GLOBAL_FILE)) fs.writeFileSync(GLOBAL_FILE, JSON.stringify({ defaultQuotaMB: DEFAULT_GLOBAL.defaultQuotaMB }, null, 2));
 if (!fs.existsSync(SESSIONS_FILE)) fs.writeFileSync(SESSIONS_FILE, "{}");
 if (!fs.existsSync(TENANTS_DIR)) fs.mkdirSync(TENANTS_DIR);
 
@@ -360,29 +351,41 @@ function loadConfig(tenantId) {
 
 function getGlobalConfig() {
   if (!fs.existsSync(GLOBAL_FILE)) {
-    fs.writeFileSync(GLOBAL_FILE, JSON.stringify(DEFAULT_GLOBAL, null, 2));
+    fs.writeFileSync(GLOBAL_FILE, JSON.stringify({ defaultQuotaMB: DEFAULT_GLOBAL.defaultQuotaMB }, null, 2));
     return { ...DEFAULT_GLOBAL };
   }
 
   try {
-    const data = JSON.parse(fs.readFileSync(GLOBAL_FILE, "utf8"));
-    const merged = { ...DEFAULT_GLOBAL, ...data };
+    const data = JSON.parse(fs.readFileSync(GLOBAL_FILE, "utf8")) || {};
+    const defaultQuotaMB = (typeof data.defaultQuotaMB === "number" && data.defaultQuotaMB > 0)
+      ? data.defaultQuotaMB
+      : DEFAULT_GLOBAL.defaultQuotaMB;
+    const merged = { defaultQuotaMB };
 
     // Les valeurs sensibles ou gérées par l'env sont ignorées depuis le fichier.
-    merged.apiBase = ENV_GLOBAL.apiBase !== null ? ENV_GLOBAL.apiBase : DEFAULT_GLOBAL.apiBase;
+    merged.apiBase = ENV_GLOBAL.apiBase !== null ? ENV_GLOBAL.apiBase : null;
     merged.pixabayKey = ENV_GLOBAL.pixabayKey !== null ? ENV_GLOBAL.pixabayKey : null;
     merged.discordClientId = ENV_GLOBAL.discordClientId !== null ? ENV_GLOBAL.discordClientId : null;
     merged.discordClientSecret = ENV_GLOBAL.discordClientSecret !== null ? ENV_GLOBAL.discordClientSecret : null;
     merged.discordRedirectUri = ENV_GLOBAL.discordRedirectUri !== null ? ENV_GLOBAL.discordRedirectUri : null;
-    merged.allowedGuildId = ENV_GLOBAL.allowedGuildId !== null ? ENV_GLOBAL.allowedGuildId : null;
+    merged.allowedGuildId = null;
     merged.discordScopes = (ENV_GLOBAL.discordScopes && ENV_GLOBAL.discordScopes.length)
       ? ENV_GLOBAL.discordScopes
-      : DEFAULT_GLOBAL.discordScopes;
+      : DEFAULT_DISCORD_SCOPES;
 
     return merged;
   } catch (err) {
     console.error("Failed to read global config, using defaults", err);
-    return { ...DEFAULT_GLOBAL };
+    return {
+      defaultQuotaMB: DEFAULT_GLOBAL.defaultQuotaMB,
+      apiBase: ENV_GLOBAL.apiBase !== null ? ENV_GLOBAL.apiBase : null,
+      pixabayKey: ENV_GLOBAL.pixabayKey !== null ? ENV_GLOBAL.pixabayKey : null,
+      discordClientId: ENV_GLOBAL.discordClientId !== null ? ENV_GLOBAL.discordClientId : null,
+      discordClientSecret: ENV_GLOBAL.discordClientSecret !== null ? ENV_GLOBAL.discordClientSecret : null,
+      discordRedirectUri: ENV_GLOBAL.discordRedirectUri !== null ? ENV_GLOBAL.discordRedirectUri : null,
+      allowedGuildId: null,
+      discordScopes: DEFAULT_DISCORD_SCOPES
+    };
   }
 }
 
@@ -510,7 +513,8 @@ app.get("/api/auth/discord/login", (req, res) => {
   if (!discordClientId || !discordRedirectUri) {
     return res.status(503).json({ error: "Discord OAuth non configuré" });
   }
-  const scope = Array.isArray(discordScopes) && discordScopes.length ? discordScopes.join(" ") : "identify";
+  const scopes = Array.isArray(discordScopes) && discordScopes.length ? [...discordScopes] : [...DEFAULT_DISCORD_SCOPES];
+  const scope = scopes.join(" ");
   const state = crypto.randomBytes(16).toString("hex");
   if (!req.session) req.session = {};
   req.session.oauthState = state;
@@ -526,7 +530,7 @@ app.get("/api/auth/discord/login", (req, res) => {
 
 app.get("/api/auth/discord/callback", async (req, res) => {
   const config = getGlobalConfig();
-  const { discordClientId, discordClientSecret, allowedGuildId } = config;
+  const { discordClientId, discordClientSecret } = config;
   const discordRedirectUri = resolveDiscordRedirectUri(req);
   const { code, state } = req.query;
 
@@ -574,22 +578,6 @@ app.get("/api/auth/discord/callback", async (req, res) => {
     const avatarUrl = userData.avatar
       ? `https://cdn.discordapp.com/avatars/${discordId}/${userData.avatar}.png?size=128`
       : `https://cdn.discordapp.com/embed/avatars/${discNum % 5}.png`;
-
-    // Optional guild check
-    if (allowedGuildId) {
-      const guildRes = await fetch("https://discord.com/api/users/@me/guilds", {
-        headers: { Authorization: `Bearer ${tokenData.access_token}` }
-      });
-      if (guildRes.ok) {
-        const guilds = await guildRes.json();
-        const inGuild = Array.isArray(guilds) && guilds.some(g => g.id === allowedGuildId);
-        if (!inGuild) {
-          return res.status(403).send("Accès réservé (guilde requise)");
-        }
-      } else {
-        console.error("Discord guilds error", await guildRes.text());
-      }
-    }
 
     const email = userData.email || null;
     const users = getUsers();
