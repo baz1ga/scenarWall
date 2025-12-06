@@ -69,7 +69,7 @@ const rateLimitHandler = (name) => (req, res, next, options) => {
 };
 // Limiteurs globaux/finement ciblés
 const limiterGeneral = rateLimit({
-  windowMs: 15 * 60 * 1000,
+  windowMs: 5 * 60 * 1000,
   limit: 5000,
   standardHeaders: true,
   legacyHeaders: false,
@@ -92,7 +92,7 @@ const limiterGeneral = rateLimit({
   }
 });
 const limiterAuth = rateLimit({
-  windowMs: 5 * 60 * 1000,
+  windowMs: 1 * 60 * 1000,
   limit: 300,
   standardHeaders: true,
   legacyHeaders: false,
