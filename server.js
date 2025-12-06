@@ -64,13 +64,13 @@ const rateLimitHandler = (name) => (req, res, next, options) => {
 // Limiteurs globaux/finement ciblés
 const limiterGeneral = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 1000,
+  limit: 5000,
   standardHeaders: true,
   legacyHeaders: false,
   handler: rateLimitHandler("general"),
-  // Ne pas freiner les pages/admin ni les assets statiques
   skip: (req) => {
-    if (["GET", "HEAD", "OPTIONS"].includes(req.method) === false) return false;
+    // On ne limite pas les requêtes lecture (GET/HEAD/OPTIONS) pour éviter les 429 sur l'admin
+    if (["GET", "HEAD", "OPTIONS"].includes(req.method)) return true;
     const p = req.path || "";
     return (
       p.startsWith("/admin") ||
@@ -87,14 +87,14 @@ const limiterGeneral = rateLimit({
 });
 const limiterAuth = rateLimit({
   windowMs: 5 * 60 * 1000,
-  limit: 100,
+  limit: 300,
   standardHeaders: true,
   legacyHeaders: false,
   handler: rateLimitHandler("auth")
 });
 const limiterUpload = rateLimit({
   windowMs: 10 * 60 * 1000,
-  limit: 50,
+  limit: 200,
   standardHeaders: true,
   legacyHeaders: false,
   handler: rateLimitHandler("upload")
