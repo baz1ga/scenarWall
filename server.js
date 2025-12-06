@@ -67,7 +67,23 @@ const limiterGeneral = rateLimit({
   limit: 1000,
   standardHeaders: true,
   legacyHeaders: false,
-  handler: rateLimitHandler("general")
+  handler: rateLimitHandler("general"),
+  // Ne pas freiner les pages/admin ni les assets statiques
+  skip: (req) => {
+    if (["GET", "HEAD", "OPTIONS"].includes(req.method) === false) return false;
+    const p = req.path || "";
+    return (
+      p.startsWith("/admin") ||
+      p.startsWith("/fragments/") ||
+      p.startsWith("/assets/") ||
+      p.startsWith("/css/") ||
+      p.startsWith("/js/") ||
+      p.startsWith("/vendor/") ||
+      p.startsWith("/front/") ||
+      p.startsWith("/t/") ||
+      p.includes(".")
+    );
+  }
 });
 const limiterAuth = rateLimit({
   windowMs: 5 * 60 * 1000,
