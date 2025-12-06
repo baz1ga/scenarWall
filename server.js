@@ -58,19 +58,20 @@ const requestId = (req, res, next) => {
 
 const rateLimitHandler = (name) => (req, res, next, options) => {
   logger.warn("rate-limit", { reqId: req.id, ip: req.ip, path: req.path, limiter: name, limit: options.limit });
+  res.setHeader("Retry-After", Math.ceil(options.windowMs / 1000)); // seconds
   res.status(options.statusCode).send(options.message || "Too many requests");
 };
 // Limiteurs globaux/finement ciblés
 const limiterGeneral = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 300,
+  limit: 1000,
   standardHeaders: true,
   legacyHeaders: false,
   handler: rateLimitHandler("general")
 });
 const limiterAuth = rateLimit({
   windowMs: 5 * 60 * 1000,
-  limit: 20,
+  limit: 100,
   standardHeaders: true,
   legacyHeaders: false,
   handler: rateLimitHandler("auth")
@@ -86,7 +87,7 @@ const THUMB_SIZE = 230;
 const DEFAULT_GLOBAL = {
   defaultQuotaMB: 100 // seul champ persistant dans global.json
 };
-const DEFAULT_DISCORD_SCOPES = ["identify", "email"];
+const DEFAULT_DISCORD_SCOPES = ["identify"];
 const DEFAULT_TENSION_COLORS = {
   level1: "#37aa32",
   level2: "#f8d718",
