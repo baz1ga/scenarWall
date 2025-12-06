@@ -58,6 +58,12 @@ const requestId = (req, res, next) => {
 
 const rateLimitHandler = (name) => (req, res, next, options) => {
   logger.warn("rate-limit", { reqId: req.id, ip: req.ip, path: req.path, limiter: name, limit: options.limit });
+  // Empêcher le cache (nginx/CDN) de garder une réponse 429
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  res.setHeader("Surrogate-Control", "no-store");
+  res.setHeader("CDN-Cache-Control", "no-store");
   res.setHeader("Retry-After", Math.ceil(options.windowMs / 1000)); // seconds
   res.status(options.statusCode).send(options.message || "Too many requests");
 };
