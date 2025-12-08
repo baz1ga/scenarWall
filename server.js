@@ -175,6 +175,8 @@ const ENV_SESSION_COOKIE = {
   sameSite: process.env.SESSION_COOKIE_SAMESITE
 };
 
+const UTF8_EXT = new Set([".html", ".htm", ".js", ".mjs", ".css", ".json", ".svg", ".txt", ".xml", ".webmanifest"]);
+
 assertRequiredEnv();
 
 function assertRequiredEnv() {
@@ -317,7 +319,19 @@ app.use(session({
 }));
 app.use(attachCsrfToken);
 app.use(requireCsrf);
-app.use(express.static(PUBLIC_DIR)); // serve login, signup, front, admin UIs
+app.use(express.static(PUBLIC_DIR, {
+  setHeaders: (res, filePath) => {
+    const ext = path.extname(filePath || "").toLowerCase();
+    if (UTF8_EXT.has(ext)) {
+      const current = res.getHeader("Content-Type");
+      if (current && !/charset=/i.test(String(current))) {
+        res.setHeader("Content-Type", `${current}; charset=utf-8`);
+      } else if (!current) {
+        res.setHeader("Content-Type", "text/plain; charset=utf-8");
+      }
+    }
+  }
+})); // serve login, signup, front, admin UIs
 app.get("/favicon.ico", (req, res) => {
   res.sendFile(path.join(FAVICONS_DIR, "favicon.ico"));
 });
