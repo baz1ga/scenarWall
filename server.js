@@ -80,11 +80,10 @@ const limiterGeneral = rateLimit({
     const p = req.path || "";
     return (
       p.startsWith("/admin") ||
+      p.startsWith("/admin/js/") ||
       p.startsWith("/fragments/") ||
       p.startsWith("/assets/") ||
-      p.startsWith("/css/") ||
       p.startsWith("/js/") ||
-      p.startsWith("/vendor/") ||
       p.startsWith("/front/") ||
       p.startsWith("/t/") ||
       p.includes(".")
