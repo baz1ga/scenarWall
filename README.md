@@ -33,7 +33,7 @@ Pour un setup plus robuste : mettre un reverse proxy (Nginx) devant, gérer l’
   - `public/front/` : affichage public tenantisé (front + CSS/JS dédiés).
   - `public/index.html`, `public/signup.html` : pages d’auth.
   - `public/fragments/` : fragments HTML (donation, legal footer) injectés par `public/js/common/fragments-loader.js`.
-- `public/css/tailwind.css` : build Tailwind généré depuis `src/tailwind.css`.
+- `public/assets/css/tailwind.css` : build Tailwind généré depuis `src/tailwind.css`.
 - `public/js/common/` : `auth.js`, `config.js`, `fragments-loader.js`.
 - `src/tailwind.css` : entrée Tailwind (base/components/utilities).
 - `tailwind.config.js` / `postcss.config.js` : config Tailwind/PostCSS.
