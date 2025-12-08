@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="fr" class="min-h-screen">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScenarWall – Administration</title>
+  <link rel="icon" href="/assets/favicons/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicons/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicons/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="stylesheet" href="/css/tailwind.css">
+  <link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css">
+  <script src="/js/common/config.js"></script>
+  <script src="/js/common/auth.js"></script>
+  <script src="/js/common/fragments-loader.js" defer></script>
+  <script type="module" src="/js/admin/dashboard.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <style>
+    @font-face {
+      font-family: 'Pangolin';
+      src: url('/assets/font/Pangolin-Regular.ttf') format('truetype');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    .font-pangolin { font-family: 'Pangolin', 'Comic Sans MS', cursive; }
+    [x-cloak]{display:none!important}
+  </style>
+</head>
+<body class="min-h-screen flex bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
+  <div class="flex min-h-screen w-full bg-slate-50 dark:bg-slate-900">
+    <div data-include="admin-sidebar"></div>
+    <div class="flex-1 flex flex-col min-h-screen bg-slate-50 dark:bg-slate-900">
+      <div data-include="admin-header"></div>
+      <main class="flex-1 p-6 bg-slate-50 dark:bg-slate-900">
+        {{CONTENT}}
+      </main>
+    </div>
+  </div>
+</body>
+</html>

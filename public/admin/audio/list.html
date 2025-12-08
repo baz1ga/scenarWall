@@ -1,0 +1,131 @@
+<div id="page-content" x-data="audioPage()" x-init="init()" class="space-y-6" x-cloak>
+  <section class="space-y-6 max-w-5xl mx-auto">
+    <div class="flex items-center justify-between gap-3">
+      <h2 class="text-lg font-semibold">Fichiers audio</h2>
+      <div class="flex items-center gap-2">
+        <button
+          class="btn-outline-rose inline-flex h-[34px] items-center gap-2 rounded-lg border border-rose-200 dark:border-rose-900 bg-white dark:bg-slate-950 px-3 py-1.5 text-xs text-rose-700 dark:text-rose-200 hover:bg-rose-50 dark:hover:bg-rose-950 transition disabled:opacity-40 disabled:cursor-not-allowed"
+          @click="deleteSelectedAudio()"
+          :disabled="audioLoading || selectedAudio.length === 0"
+          :title="selectedAudio.length === 0 ? 'Sélectionnez des fichiers' : 'Supprimer la sélection'"
+        >
+          <i class="fa-solid fa-trash"></i> Supprimer
+          <span class="badge-count badge-rose" x-text="selectedAudio.length" x-show="selectedAudio.length > 0"></span>
+        </button>
+        <label class="cursor-pointer inline-flex items-center gap-2 text-sm text-indigo-600 dark:text-indigo-300" x-show="tenantId">
+          <input type="file" class="hidden" multiple accept="audio/*" @change="uploadAudio($event)">
+          <span class="inline-flex items-center gap-2 rounded-lg border border-indigo-500 px-3 py-1.5 text-indigo-800 dark:text-indigo-100 bg-white dark:bg-transparent hover:bg-indigo-500/10"><i class="fa-solid fa-upload"></i> Ajouter (&lt; 1 Mo)</span>
+        </label>
+      </div>
+    </div>
+    <template x-if="audioLoading">
+      <div class="text-sm text-slate-400">Chargement...</div>
+    </template>
+    <template x-if="!audioLoading && audioFiles.length === 0">
+      <div class="text-sm text-slate-600 dark:text-slate-400 border border-dashed border-slate-300 dark:border-slate-800 rounded-lg p-4">Aucun fichier audio.</div>
+    </template>
+    <div class="space-y-2" x-show="!audioLoading && audioFiles.length > 0">
+      <template x-for="(audio, index) in audioFiles" :key="audio.name">
+        <div
+          class="flex items-center gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 transition"
+          draggable="true"
+          @dragstart="startAudioDrag(index)"
+          @dragend="endAudioDrag()"
+          @dragover.prevent="onAudioDragOver(index)"
+          @drop.prevent="onAudioDrop(index)"
+          :class="[
+            audioDragOverIndex === index && audioDragIndex !== null ? 'ring-2 ring-indigo-400 ring-offset-2 ring-offset-slate-50 dark:ring-offset-slate-900 shadow-lg' : '',
+            audioDragIndex === index ? 'opacity-80 scale-[0.99]' : ''
+          ]"
+        >
+          <button
+            class="h-8 w-8 inline-flex items-center justify-center rounded-lg bg-white/90 dark:bg-slate-900/90 text-slate-500 hover:text-indigo-500 border border-slate-200 dark:border-slate-700 cursor-grab select-none"
+            :class="audioDragIndex === index ? 'cursor-grabbing text-indigo-500' : ''"
+            title="Glisser pour réordonner"
+            draggable="true"
+            @dragstart.stop="startAudioDrag(index)"
+            @dragend.stop="endAudioDrag()"
+          >
+            <i class="fa-solid fa-grip-vertical text-sm"></i>
+          </button>
+          <label class="h-8 w-8 flex items-center justify-center rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow cursor-pointer">
+            <input
+              type="checkbox"
+              class="h-4 w-4 rounded border border-slate-400 bg-white text-emerald-500 accent-emerald-500 cursor-pointer"
+              :checked="selectedAudio.includes(audio.name)"
+              @change.stop="toggleSelectAudio(audio.name)"
+              :aria-label="`Sélectionner ${audio.name}`"
+            >
+          </label>
+          <div class="flex-1">
+            <div class="text-sm font-semibold truncate" x-text="audio.name"></div>
+            <div class="text-xs text-slate-500" x-text="formatBytes(audio.size)"></div>
+          </div>
+          <audio :src="audio.url" controls class="w-60 h-10"></audio>
+          <button class="px-2 py-1 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 inline-flex items-center gap-1" @click="openRenameAudioModal(audio.name)">
+            <i class="fa-solid fa-pen"></i>
+          </button>
+        </div>
+      </template>
+    </div>
+    <div class="text-sm" :class="audioStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-300'" x-text="audioMessage"></div>
+  </section>
+
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center px-4"
+    x-show="renameAudioModal.open"
+    x-transition
+    x-cloak
+    @keydown.escape.window="closeRenameAudioModal()"
+  >
+    <div class="absolute inset-0 bg-black/60" @click="closeRenameAudioModal()"></div>
+    <div class="relative w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
+      <div class="flex items-center gap-3">
+        <div class="h-10 w-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xl">
+          <i class="fa-solid fa-pen"></i>
+        </div>
+        <div class="text-lg font-semibold text-slate-900 dark:text-slate-100">Renommer l'audio</div>
+      </div>
+      <p class="text-sm text-slate-600 dark:text-slate-300">Nom actuel: <span class="font-semibold" x-text="renameAudioModal.name"></span></p>
+      <div class="space-y-2">
+        <label class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 font-semibold">Nouveau nom</label>
+        <input
+          type="text"
+          class="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+          x-model="renameAudioModal.newName"
+          placeholder="ex: ambiance.mp3"
+        >
+        <p class="text-xs text-rose-500" x-text="renameAudioModal.error" x-show="renameAudioModal.error"></p>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800" @click="closeRenameAudioModal()">Annuler</button>
+        <button class="px-4 py-2 rounded-lg bg-indigo-500 text-white font-semibold hover:bg-indigo-400" @click="confirmRenameAudio()">Renommer</button>
+      </div>
+    </div>
+  </div>
+
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center px-4"
+    x-show="confirmModal.open"
+    x-transition
+    x-cloak
+    @keydown.escape.window="closeConfirm()"
+  >
+    <div class="absolute inset-0 bg-black/60" @click="closeConfirm()"></div>
+    <div class="relative w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
+      <div class="flex items-center gap-3">
+        <div class="h-10 w-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-xl">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div class="text-lg font-semibold text-slate-900 dark:text-slate-100">Confirmation</div>
+      </div>
+      <p class="text-sm text-slate-600 dark:text-slate-300" x-text="confirmModal.message"></p>
+      <div class="flex justify-end gap-2 pt-2">
+        <button class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800" @click="closeConfirm()">Annuler</button>
+        <button class="px-4 py-2 rounded-lg bg-rose-600 text-white font-semibold hover:bg-rose-500" @click="confirmYes()">Confirmer</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/js/admin/layout-loader.js"></script>
+<script type="module" src="/admin/audio/audio.js" data-page-script></script>

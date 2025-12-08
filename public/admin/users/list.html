@@ -1,0 +1,148 @@
+<div id="page-content" x-data="usersPage()" x-init="init()" class="space-y-6" x-cloak>
+  <section class="space-y-6 max-w-5xl mx-auto">
+    <div class="flex items-center justify-between"></div>
+    <div class="flex flex-col lg:flex-row gap-4">
+      <div class="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 space-y-2 shadow-sm">
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="flex items-center gap-2">
+            <div class="font-semibold whitespace-nowrap">Quota global par défaut (Mo)</div>
+            <div class="text-sm" :class="globalQuotaStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-300'" x-text="globalQuotaMessage"></div>
+          </div>
+          <div class="flex flex-wrap items-center gap-3 ml-auto">
+            <div class="flex items-center gap-3">
+              <input type="number" min="1" step="1" class="w-32 sm:w-40 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100" x-model.number="globalQuotaValue">
+              <button class="rounded-lg border border-emerald-500 bg-emerald-500 text-slate-900 font-semibold px-3 py-2 text-sm hover:bg-emerald-400 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800" @click="saveGlobalQuota">Mettre à jour</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="lg:w-64 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 shadow-sm flex items-center justify-between">
+        <div class="font-semibold text-slate-900 dark:text-slate-100">Total usages</div>
+        <div class="text-sm text-slate-700 dark:text-slate-200" x-text="totalUsageText()"></div>
+      </div>
+    </div>
+    <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm">
+      <table class="min-w-full text-sm">
+        <thead class="bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200">
+          <tr>
+            <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('name')">
+              <div class="inline-flex items-center gap-2">Nom <i :class="sortIcon('name','users')" class="text-xs"></i></div>
+            </th>
+            <th class="px-4 py-2 text-left">Tenant</th>
+            <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('images')">
+              <div class="inline-flex items-center gap-2">Images <i :class="sortIcon('images','users')" class="text-xs"></i></div>
+            </th>
+            <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('audios')">
+              <div class="inline-flex items-center gap-2">Audio <i :class="sortIcon('audios','users')" class="text-xs"></i></div>
+            </th>
+            <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('usage')">
+              <div class="inline-flex items-center gap-2">Usage <i :class="sortIcon('usage','users')" class="text-xs"></i></div>
+            </th>
+            <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('lastLogin')">
+              <div class="inline-flex items-center gap-2">Dernière connexion <i :class="sortIcon('lastLogin','users')" class="text-xs"></i></div>
+            </th>
+            <th class="px-4 py-2 text-left">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <template x-if="usersLoading">
+            <tr><td colspan="7" class="px-4 py-3 text-center text-slate-400">Chargement...</td></tr>
+          </template>
+          <template x-if="!usersLoading && filteredUsers('users').length === 0">
+            <tr><td colspan="7" class="px-4 py-3 text-center text-slate-500">Aucun utilisateur</td></tr>
+          </template>
+          <template x-for="u in filteredUsers('users')" :key="u.email">
+            <tr class="border-t border-slate-200 dark:border-slate-800">
+              <td class="px-4 py-2"><div class="flex items-center gap-2"><template x-if="u.admin"><i class="fa-solid fa-crown text-amber-400"></i></template><span x-text="u.displayName || u.email"></span></div></td>
+              <td class="px-4 py-2" x-text="u.tenantId || '—'"></td>
+              <td class="px-4 py-2" x-text="u.imageCount || 0"></td>
+              <td class="px-4 py-2" x-text="u.audioCount || 0"></td>
+              <td class="px-4 py-2">
+                <div class="w-36 sm:w-44 h-2 rounded-full bg-slate-800 overflow-hidden" :title="usageTitle(u)">
+                  <div class="h-full bg-emerald-500" :style="`width:${usageData(u).percent}%`"></div>
+                </div>
+                <div class="text-xs text-slate-400" x-text="usageData(u).text"></div>
+              </td>
+              <td class="px-4 py-2" x-text="u.lastLogin ? new Date(u.lastLogin).toLocaleString('fr-FR') : '—'"></td>
+              <td class="px-4 py-2">
+                <div class="flex items-center gap-2">
+                  <button class="px-2 py-1 inline-flex items-center rounded border border-emerald-500 bg-emerald-500 text-slate-900 font-semibold hover:bg-emerald-400 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-700" @click="editTenantQuota(u)">
+                    <i class="fa-solid fa-chart-pie"></i>
+                  </button>
+                  <template x-if="!u.admin">
+                    <button class="px-2 py-1 rounded bg-rose-600 text-white hover:bg-rose-500 inline-flex items-center gap-1" @click="deleteUser(u.email)">
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  </template>
+                </div>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center px-4"
+    x-show="tenantQuotaModal.open"
+    x-transition
+    x-cloak
+    @keydown.escape.window="closeTenantQuotaModal()"
+  >
+    <div class="absolute inset-0 bg-black/60" @click="closeTenantQuotaModal()"></div>
+    <div class="relative w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
+      <div class="flex items-center gap-3">
+        <div class="h-10 w-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl">
+          <i class="fa-solid fa-chart-pie"></i>
+        </div>
+        <div class="text-lg font-semibold text-slate-900 dark:text-slate-100">Quota personnalisé</div>
+      </div>
+      <p class="text-sm text-slate-600 dark:text-slate-300">
+        Définissez un quota (Mo) pour <span class="font-semibold" x-text="tenantQuotaModal.user?.displayName || tenantQuotaModal.user?.email || 'cet utilisateur'"></span>.
+        Laisser vide pour appliquer le quota global.
+      </p>
+      <div class="space-y-2">
+        <label class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 font-semibold">Quota (Mo)</label>
+        <input
+          type="number"
+          min="0"
+          step="0.1"
+          class="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-400 focus:outline-none"
+          x-model="tenantQuotaModal.value"
+          placeholder="Quota global"
+        >
+        <p class="text-xs text-rose-500" x-text="tenantQuotaModal.error" x-show="tenantQuotaModal.error"></p>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800" @click="closeTenantQuotaModal()">Annuler</button>
+        <button class="px-4 py-2 rounded-lg bg-emerald-500 text-slate-900 font-semibold hover:bg-emerald-400" @click="saveTenantQuota()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center px-4"
+    x-show="confirmModal.open"
+    x-transition
+    x-cloak
+    @keydown.escape.window="closeConfirm()"
+  >
+    <div class="absolute inset-0 bg-black/60" @click="closeConfirm()"></div>
+    <div class="relative w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
+      <div class="flex items-center gap-3">
+        <div class="h-10 w-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-xl">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div class="text-lg font-semibold text-slate-900 dark:text-slate-100">Confirmation</div>
+      </div>
+      <p class="text-sm text-slate-600 dark:text-slate-300" x-text="confirmModal.message"></p>
+      <div class="flex justify-end gap-2 pt-2">
+        <button class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800" @click="closeConfirm()">Annuler</button>
+        <button class="px-4 py-2 rounded-lg bg-rose-600 text-white font-semibold hover:bg-rose-500" @click="confirmYes()">Confirmer</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/js/admin/layout-loader.js"></script>
+<script type="module" src="/admin/users/users.js" data-page-script></script>

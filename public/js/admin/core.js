@@ -49,13 +49,14 @@ export function coreSection() {
 
       const storedTheme = localStorage.getItem('sw_theme');
       this.theme = storedTheme === 'light' ? 'light' : 'dark';
+      this.applyThemeClass();
       const storedSidebar = localStorage.getItem('sw_admin_sidebar_collapsed');
       this.sidebarCollapsed = storedSidebar === '1';
 
       // section depuis l'URL ?section=...
       const params = new URLSearchParams(window.location.search || '');
       const requested = params.get('section');
-      const allowed = ['galerie', 'audio', 'tension', 'users'];
+      const allowed = ['home', 'galerie', 'audio', 'tension', 'users', 'gm'];
       if (requested && allowed.includes(requested)) {
         this.section = requested;
       }
@@ -120,13 +121,27 @@ export function coreSection() {
       });
   },
 
+  formatBytes(bytes) {
+      const val = Number(bytes) || 0;
+      if (val === 0) return '0 B';
+      const units = ['B','KB','MB','GB','TB'];
+      const i = Math.min(Math.floor(Math.log(val) / Math.log(1024)), units.length - 1);
+      const size = val / Math.pow(1024, i);
+      return `${size.toFixed(size >= 10 ? 0 : 1)} ${units[i]}`;
+  },
+
     toggleTheme() {
       this.theme = this.theme === 'dark' ? 'light' : 'dark';
       localStorage.setItem('sw_theme', this.theme);
+      this.applyThemeClass();
     },
     toggleSidebar() {
       this.sidebarCollapsed = !this.sidebarCollapsed;
       localStorage.setItem('sw_admin_sidebar_collapsed', this.sidebarCollapsed ? '1' : '0');
+    },
+
+    applyThemeClass() {
+      document.documentElement.classList.toggle('dark', this.theme === 'dark');
     },
 
     setBreadcrumb() {
