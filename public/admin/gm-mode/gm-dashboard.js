@@ -1,4 +1,4 @@
-import { coreSection } from '/js/admin/core.js';
+import { coreSection } from '/admin/js/core.js';
 
 export function gmDashboard() {
   const base = coreSection();
