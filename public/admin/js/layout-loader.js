@@ -10,6 +10,11 @@
   } catch (e) {}
 
   document.addEventListener('DOMContentLoaded', async () => {
+    const htmlEl = document.documentElement;
+    const previousVisibility = htmlEl.style.visibility;
+    htmlEl.style.visibility = 'hidden';
+
+    try {
     const contentEl = document.querySelector('#page-content');
     if (!contentEl) return;
     const pageContent = contentEl.outerHTML;
@@ -152,6 +157,9 @@
     } else {
       // fallback: retire x-cloak pour ne pas laisser l'UI vide
       document.querySelectorAll('[x-cloak]').forEach(el => el.removeAttribute('x-cloak'));
+    }
+    } finally {
+      htmlEl.style.visibility = previousVisibility;
     }
   });
 })();
