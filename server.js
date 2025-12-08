@@ -326,8 +326,6 @@ app.use(express.static(PUBLIC_DIR, {
       const current = res.getHeader("Content-Type");
       if (current && !/charset=/i.test(String(current))) {
         res.setHeader("Content-Type", `${current}; charset=utf-8`);
-      } else if (!current) {
-        res.setHeader("Content-Type", "text/plain; charset=utf-8");
       }
     }
   }
