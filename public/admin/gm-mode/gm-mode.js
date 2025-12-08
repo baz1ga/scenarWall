@@ -355,7 +355,11 @@ export function gmDashboard() {
         const res = await fetch(`/t/${this.tenantId}/api/images`);
         if (!res.ok) throw new Error('Impossible de charger les images');
         const data = await res.json();
-        const visible = Array.isArray(data) ? data.filter(img => img.hidden !== true && img.visible !== false) : [];
+        const visible = Array.isArray(data)
+          ? data
+              .filter(img => img.hidden !== true && img.visible !== false)
+              .map(img => ({ ...img, displayUrl: img.thumbUrl || img.url }))
+          : [];
         this.slideshowImages = visible;
         this.slideshowIndex = 0;
         this.sendSlideshow(0);

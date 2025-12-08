@@ -57,14 +57,14 @@
                      @click="prevSlide()"
                      title="Aller à l'image précédente">
                   <template x-if="prevSlideObj()">
-                    <img class="w-full h-full object-cover" :src="prevSlideObj().url" :alt="prevSlideObj().name || 'Image précédente'">
+                    <img class="w-full h-full object-cover" :src="prevSlideObj().displayUrl || prevSlideObj().url" :alt="prevSlideObj().name || 'Image précédente'">
                   </template>
                 </div>
               </div>
               <div class="flex flex-col justify-center transform scale-[1.03]">
                 <div class="rounded-lg border-2 border-emerald-400 dark:border-emerald-500 overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-lg max-h-[120px]">
                   <template x-if="currentSlide()">
-                    <img class="w-full h-full object-cover" :src="currentSlide().url" :alt="currentSlide().name || 'Image actuelle'">
+                    <img class="w-full h-full object-cover" :src="currentSlide().displayUrl || currentSlide().url" :alt="currentSlide().name || 'Image actuelle'">
                   </template>
                 </div>
               </div>
@@ -73,7 +73,7 @@
                      @click="nextSlide()"
                      title="Aller à l'image suivante">
                   <template x-if="nextSlideObj()">
-                    <img class="w-full h-full object-cover" :src="nextSlideObj().url" :alt="nextSlideObj().name || 'Image suivante'">
+                    <img class="w-full h-full object-cover" :src="nextSlideObj().displayUrl || nextSlideObj().url" :alt="nextSlideObj().name || 'Image suivante'">
                   </template>
                 </div>
               </div>
