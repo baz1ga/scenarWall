@@ -17,6 +17,14 @@
     try {
     const contentEl = document.querySelector('#page-content');
     if (!contentEl) return;
+    const contentContainer = document.querySelector('main');
+    let loaderEl = null;
+    if (contentContainer) {
+      loaderEl = document.createElement('div');
+      loaderEl.className = 'flex justify-center py-10';
+      loaderEl.innerHTML = '<div class="animate-spin h-8 w-8 rounded-full border-4 border-emerald-500 border-t-transparent"></div>';
+      contentContainer.appendChild(loaderEl);
+    }
     const pageContent = contentEl.outerHTML;
     const pageScripts = Array.from(document.querySelectorAll('script[data-page-script]'));
 
@@ -157,6 +165,10 @@
     } else {
       // fallback: retire x-cloak pour ne pas laisser l'UI vide
       document.querySelectorAll('[x-cloak]').forEach(el => el.removeAttribute('x-cloak'));
+    }
+
+    if (loaderEl && loaderEl.parentNode) {
+      loaderEl.parentNode.removeChild(loaderEl);
     }
     } finally {
       htmlEl.style.visibility = previousVisibility;
