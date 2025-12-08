@@ -1,0 +1,34 @@
+.CodeMirror{
+  margin-top: 0px !important;
+  height: 490px;
+}
+.dark .editor-toolbar {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+}
+.dark .editor-toolbar a, .dark .editor-toolbar button {
+  color: #e2e8f0 !important;
+}
+.dark .editor-toolbar a:hover, .dark .editor-toolbar button:hover {
+  background: #1e293b !important;
+  color: #fbbf24 !important;
+}
+.dark .editor-toolbar a.active, .dark .editor-toolbar button.active {
+  background: #fbbf24 !important;
+  color: #0f172a !important;
+  border-color: #fbbf24 !important;
+}
+.dark .CodeMirror, .dark .CodeMirror-scroll {
+  background: #0f172a !important;
+  color: #e2e8f0 !important;
+  border-color: #1e293b !important;
+}
+.dark .CodeMirror-gutters {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+}
+.dark .editor-statusbar {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+  color: #94a3b8 !important;
+}

@@ -1,41 +1,6 @@
 <div id="page-content" x-data="gmDashboard()" x-init="init()" class="min-h-screen overflow-hidden" x-cloak>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/simplemde@1.11.2/dist/simplemde.min.css">
-  <style>
-    .CodeMirror{
-      margin-top: 0px !important;
-      height: 490px;
-    }
-    .dark .editor-toolbar {
-      background: #0f172a !important;
-      border-color: #1e293b !important;
-    }
-    .dark .editor-toolbar a, .dark .editor-toolbar button {
-      color: #e2e8f0 !important;
-    }
-    .dark .editor-toolbar a:hover, .dark .editor-toolbar button:hover {
-      background: #1e293b !important;
-      color: #fbbf24 !important;
-    }
-    .dark .editor-toolbar a.active, .dark .editor-toolbar button.active {
-      background: #fbbf24 !important;
-      color: #0f172a !important;
-      border-color: #fbbf24 !important;
-    }
-    .dark .CodeMirror, .dark .CodeMirror-scroll {
-      background: #0f172a !important;
-      color: #e2e8f0 !important;
-      border-color: #1e293b !important;
-    }
-    .dark .CodeMirror-gutters {
-      background: #0f172a !important;
-      border-color: #1e293b !important;
-    }
-    .dark .editor-statusbar {
-      background: #0f172a !important;
-      border-color: #1e293b !important;
-      color: #94a3b8 !important;
-    }
-  </style>
+  <link rel="stylesheet" href="/assets/simplemde/simplemde.min.css">
+  <link rel="stylesheet" href="/admin/gm-mode/gm-mode.css">
 
   <div class="max-w-7xl mx-auto grid gap-4 md:grid-cols-[1fr_260px]">
     <section class="space-y-4">
@@ -284,5 +249,5 @@
   </div>
 </div>
 <script src="/admin/js/layout-loader.js"></script>
-<script data-page-script src="https://cdn.jsdelivr.net/npm/simplemde@1.11.2/dist/simplemde.min.js"></script>
+<script data-page-script src="/assets/simplemde/simplemde.min.js"></script>
 <script type="module" src="/admin/gm-mode/gm-mode.js" data-page-script></script>
