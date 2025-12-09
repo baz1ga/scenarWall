@@ -1,68 +1,69 @@
-<div id="page-content" x-data="sessionsListPage()" x-init="init()" class="space-y-6" x-cloak>
+<div id="page-content" x-data="scenesListPage()" x-init="init()" class="space-y-6" x-cloak>
   <div class="flex items-center justify-between gap-3 mt-2">
     <div>
-      <div class="text-sm text-slate-500 dark:text-slate-400 flex flex-wrap items-center gap-1">
-        <a href="/admin/scenarios/list.html" class="hover:text-emerald-500 transition font-medium inline-flex items-center gap-1">
-          <i class="fa-solid fa-scroll text-[11px]"></i>
-          <span>Scénarios</span>
-        </a>
-        <span class="text-slate-400">›</span>
-        <template x-if="scenarioId">
-          <a :href="scenarioLink" class="hover:text-emerald-500 transition font-medium" x-text="scenarioTitle || scenarioId"></a>
-        </template>
-        <template x-if="!scenarioId">
-          <span class="font-medium" x-text="scenarioTitle || 'Scénario'"></span>
-        </template>
-        <span class="text-slate-400">›</span>
-        <span class="font-medium text-slate-700 dark:text-slate-200">Sessions</span>
-      </div>
-      <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100">Sessions</h1>
-      <p class="text-sm text-slate-600 dark:text-slate-400 mt-1" x-text="parentLabel"></p>
+      <p class="text-xs uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400" x-text="breadcrumb"></p>
+      <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100" x-text="headerTitle"></h1>
+      <p class="text-sm text-slate-600 dark:text-slate-400 mt-1" x-text="headerSubtitle"></p>
     </div>
     <a class="inline-flex items-center gap-2 rounded-lg bg-emerald-500 text-slate-900 font-semibold px-4 py-2 text-sm shadow-sm hover:bg-emerald-400 transition"
-       :href="`/admin/sessions/edit.html?scenario=${encodeURIComponent(parentScenario || '')}`">
-      <i class="fa-solid fa-plus"></i> Nouvelle session
+       :href="`/admin/scenes/edit.html?session=${encodeURIComponent(parentSession || '')}`">
+      <i class="fa-solid fa-plus"></i> Nouvelle scène
     </a>
   </div>
 
   <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm space-y-4">
+    <div class="flex items-center justify-between">
+      <h3 class="text-lg font-semibold">Liste des scènes</h3>
+      <div class="text-xs text-slate-500 dark:text-slate-400" x-text="`${scenes.length} scène${scenes.length > 1 ? 's' : ''}`"></div>
+    </div>
     <template x-if="loading">
       <div class="flex items-center gap-3 text-sm text-slate-500">
         <div class="h-5 w-5 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
-        Chargement des sessions...
+        Chargement des scènes...
       </div>
     </template>
-    <template x-if="!loading && sessions.length === 0">
+    <template x-if="!loading && scenes.length === 0">
       <div class="border border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-6 text-center text-sm text-slate-600 dark:text-slate-400">
-        Aucune session pour ce scénario. Ajoutez-en une.
+        Aucune scène pour cette session. Ajoutez-en une.
       </div>
     </template>
-    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" x-show="!loading && sessions.length > 0">
-      <template x-for="session in sessions" :key="session.id">
-        <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm flex flex-col gap-3 hover:shadow-md transition">
-          <a class="space-y-1 flex-1 block" :href="`/admin/sessions/view.html?id=${encodeURIComponent(session.id)}`">
-            <div class="flex items-center gap-2 justify-between">
-              <span class="inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-100">
-                <i class="fa-solid fa-layer-group"></i>
-                <span>Session</span>
-              </span>
-              <span class="text-[11px] text-slate-500 dark:text-slate-400" x-text="formatDate(session.updatedAt)"></span>
+    <div class="space-y-2" x-show="!loading && scenes.length > 0">
+      <template x-for="(scene, idx) in scenes" :key="scene.id">
+        <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 shadow-sm flex flex-col gap-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-slate-500 dark:text-slate-400">Ordre #<span x-text="scene.order || idx + 1"></span></span>
+            <div class="flex items-center gap-1">
+              <button class="h-8 w-8 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:border-emerald-400 hover:text-emerald-600 transition"
+                      :disabled="idx === 0" @click="moveScene(idx, idx - 1)">
+                <i class="fa-solid fa-arrow-up"></i>
+              </button>
+              <button class="h-8 w-8 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:border-emerald-400 hover:text-emerald-600 transition"
+                      :disabled="idx === scenes.length - 1" @click="moveScene(idx, idx + 1)">
+                <i class="fa-solid fa-arrow-down"></i>
+              </button>
             </div>
-            <div class="text-lg font-semibold text-slate-900 dark:text-slate-100" x-text="session.title || 'Sans titre'"></div>
-            <p class="text-sm text-slate-600 dark:text-slate-400 line-clamp-3" x-text="session.description || '—'"></p>
+          </div>
+          <a class="block" :href="`/admin/sessions/view.html?id=${encodeURIComponent(scene.parentSession || '')}`">
+            <div class="text-base font-semibold text-slate-900 dark:text-slate-100" x-text="scene.title || 'Sans titre'"></div>
           </a>
           <div class="flex items-center justify-end gap-2">
             <a class="h-9 px-3 inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 hover:text-emerald-600 hover:border-emerald-400 transition text-sm"
-               :href="`/admin/sessions/edit.html?id=${encodeURIComponent(session.id)}`">
+               :href="`/admin/scenes/edit.html?id=${encodeURIComponent(scene.id)}`">
               <i class="fa-solid fa-pen"></i><span class="sr-only">Éditer</span>
             </a>
             <button class="h-9 px-3 inline-flex items-center justify-center gap-2 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-900 dark:text-rose-200 dark:hover:bg-rose-900/40 transition text-sm"
-                    @click="deleteSession(session)">
+                    @click="deleteScene(scene)">
               <i class="fa-solid fa-trash"></i><span class="sr-only">Supprimer</span>
             </button>
           </div>
         </div>
       </template>
+      <div class="flex justify-end">
+        <button class="inline-flex items-center gap-2 rounded-lg bg-emerald-500 text-slate-900 font-semibold px-4 py-2 text-sm shadow-sm hover:bg-emerald-400 transition"
+                @click="saveOrder" x-show="dirtyOrder">
+          <i class="fa-solid fa-floppy-disk"></i> Enregistrer l'ordre
+        </button>
+      </div>
     </div>
   </div>
 
@@ -89,4 +90,4 @@
   </template>
 </div>
 <script src="/admin/js/layout-loader.js"></script>
-<script type="module" src="/admin/sessions/list.js" data-page-script></script>
+<script type="module" src="/admin/scenes/list.js" data-page-script></script>

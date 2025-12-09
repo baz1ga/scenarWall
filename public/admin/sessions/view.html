@@ -1,0 +1,506 @@
+<div id="page-content" x-data="sessionViewPage()" x-init="init()" class="space-y-6" x-cloak>
+  <div class="flex flex-wrap items-center justify-between gap-3 mt-2">
+   <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100 flex flex-wrap items-center gap-2">
+      <template x-if="scenarioTitle">
+        <a :href="`/admin/scenarios/list.html`"
+           class="text-emerald-600 hover:text-emerald-500 font-semibold">
+          <span x-text="scenarioTitle"></span>
+        </a>
+      </template>
+      <template x-if="scenarioTitle">
+        <span class="text-slate-400">›</span>
+      </template>
+      <span x-text="sessionTitle || 'Session'"></span>
+   </h1>
+   <div class="flex items-center gap-2">
+      <button x-show="session"
+              class="inline-flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              @click="openEditModal()">
+        <i class="fa-solid fa-pen"></i> Renommer
+      </button>
+      <button x-show="session"
+              class="inline-flex items-center gap-2 rounded-lg border border-rose-300 text-rose-600 px-3 py-2 text-sm hover:bg-rose-50 dark:hover:bg-rose-900/20 transition"
+              @click="deleteSessionConfirm()">
+        <i class="fa-solid fa-trash"></i> Supprimer
+      </button>
+      <button x-show="session && scenes.length <= 1"
+              class="inline-flex items-center gap-2 rounded-lg bg-emerald-500 text-slate-900 font-semibold px-4 py-2 text-sm shadow-sm hover:bg-emerald-400 transition"
+              @click="openSceneModal()">
+        <i class="fa-solid fa-plus"></i> Ajouter une scène
+      </button>
+    </div>
+  </div>
+
+  <template x-if="loading">
+    <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-6 shadow-sm flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+      <div class="h-5 w-5 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
+      Chargement de la session...
+    </div>
+  </template>
+
+  <template x-if="error">
+    <div class="rounded-2xl border border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-900/20 dark:text-rose-100 px-4 py-3 text-sm" x-text="error"></div>
+  </template>
+
+  <template x-if="!loading && session">
+    <div class="space-y-4">
+      <div class="rounded-2xl border border-slate-200 dark-border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm space-y-4" x-show="scenes.length > 1">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Scènes</h3>
+          <span class="text-xs text-slate-500 dark:text-slate-400" x-text="`${scenes.length} scène${scenes.length > 1 ? 's' : ''}`"></span>
+        </div>
+        <template x-if="scenes.length === 0">
+          <div class="border border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-4 text-sm text-slate-600 dark:text-slate-400">
+            Aucune scène disponible pour cette session.
+          </div>
+        </template>
+        <div class="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8" x-show="scenes.length > 0">
+          <template x-for="(scene, index) in scenes" :key="scene.id">
+            <div class="w-full h-[70px] min-h-[70px] max-h-[70px] rounded-lg border px-3 py-2 text-sm transition flex items-center justify-between overflow-hidden cursor-move"
+                 :class="scene.id === currentScene?.id
+                   ? 'border-emerald-400 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-100'
+                   : 'border-slate-200 dark:border-slate-700 hover:border-emerald-300 hover:bg-emerald-50/40 dark:hover:border-emerald-700 dark:hover:bg-emerald-900/20 text-slate-700 dark:text-slate-200'"
+                 draggable="true"
+                 @dragstart="dragStart(index)"
+                 @dragover.prevent="dragOver(index)"
+                 @drop.prevent="dropScene(index)">
+              <button class="flex-1 text-left font-semibold truncate" @click="setCurrentScene(scene.id)">
+                <span x-text="scene.title || 'Scène'"></span>
+              </button>
+              <button class="text-rose-500 hover:text-rose-600 text-xs p-1"
+                      @click.stop="deleteScene(scene)">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+          </template>
+          <template x-if="session && scenes.length > 1">
+            <button class="h-[70px] min-h-[70px] max-h-[70px] w-full inline-flex flex-col items-center justify-center rounded-lg border border-dashed border-emerald-400 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition text-sm font-semibold"
+                    @click="openSceneModal()">
+              <i class="fa-solid fa-plus text-lg"></i>
+              <span class="truncate">Ajouter une scène</span>
+            </button>
+          </template>
+        </div>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm space-y-4">
+        <div class="flex items-center justify-between gap-3">
+          <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100" x-text="currentScene?.title || 'Détails de la scène'"></h3>
+          <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+            <button class="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 hover:text-emerald-600 hover:border-emerald-400 transition"
+                    @click="openSceneEditModal()" :disabled="!currentScene">
+              <i class="fa-solid fa-pen"></i>
+            </button>
+            <button class="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-900 dark:text-rose-200 dark:hover:bg-rose-900/40 transition"
+                    @click="currentScene && deleteScene(currentScene)" :disabled="!currentScene">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex border-b border-slate-200 dark:border-slate-800 text-sm">
+          <template x-for="tab in tabs" :key="tab.id">
+            <button class="px-4 py-2 -mb-px border-b-2 font-medium transition"
+                    :class="tab.id === activeTab ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'"
+                    @click="activeTab = tab.id"
+                    x-text="tab.label"></button>
+          </template>
+        </div>
+
+        <div>
+          <template x-if="activeTab === 'images'">
+            <div class="space-y-6">
+              <div class="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+                <h3 class="text-xs uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Images de la scène</h3>
+                <div class="flex items-center gap-2">
+                  <button class="inline-flex items-center gap-2 rounded-lg border border-emerald-500 text-emerald-600 px-3 py-2 text-sm hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition"
+                          @click="openUploadModal()">
+                    <i class="fa-solid fa-upload"></i> Ajouter
+                  </button>
+                </div>
+              </div>
+              <div class="grid gap-2 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7"
+                   @dragover.prevent
+                   @drop.prevent="tenantDragIndex !== null && handleTenantDrop(tenantDragIndex)">
+                <template x-if="!currentScene?.images || currentScene.images.length === 0">
+                  <div class="col-span-full border border-dashed border-slate-300 dark:border-slate-800 rounded-xl p-4 text-sm text-slate-600 dark:text-slate-400">Aucune image liée.</div>
+                </template>
+                <template x-for="(imgObj, idx) in currentScene?.images || []" :key="`${idx}-${imgObj?.name}`">
+                  <div class="relative rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 overflow-hidden aspect-square group shadow-sm"
+                       draggable="true"
+                       @dragstart="startImageDrag(idx)"
+                       @dragover.prevent="overImageDrag(idx)"
+                       @drop.prevent="dropImage(idx)"
+                       :class="imageDragOver === idx ? 'ring-2 ring-emerald-400 ring-offset-2 ring-offset-slate-50 dark:ring-offset-slate-900' : ''">
+                    <div class="absolute inset-0">
+                      <template x-if="tenantImageFor(imgObj.name)">
+                        <img :src="tenantImageFor(imgObj.name)?.thumbUrl || tenantImageFor(imgObj.name)?.url"
+                             class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105">
+                      </template>
+                      <template x-if="!tenantImageFor(imgObj.name)">
+                        <div class="h-full w-full flex items-center justify-center text-xs text-slate-500">Aperçu indisponible</div>
+                      </template>
+                    </div>
+                    <div class="absolute inset-0 bg-slate-900/10 opacity-0 group-hover:opacity-100 transition"></div>
+                    <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-2 text-white text-[11px] font-semibold truncate" x-text="imgObj.name"></div>
+                    <div class="absolute top-2 right-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
+                      <button class="h-8 w-8 flex items-center justify-center rounded-full bg-white/90 text-emerald-600 hover:text-emerald-700 shadow"
+                              @click.stop="removeImageFromScene(idx)"
+                              aria-label="Retirer l'image de la scène"
+                              title="Retirer l'image de la scène">
+                        <i class="fa-solid fa-arrow-down"></i>
+                      </button>
+                    </div>
+                    <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-[11px] font-semibold text-white pointer-events-none">
+                      Glisser pour déplacer
+                    </div>
+                  </div>
+                </template>
+              </div>
+
+              <div class="space-y-3 pt-4 border-t border-dashed border-slate-300 dark:border-slate-700">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+                  <h3 class="text-xs uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Bibliothèque du tenant</h3>
+                  <a href="/admin/gallery/gallery.html"
+                     class="inline-flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                    <i class="fa-regular fa-image"></i>
+                    Ouvrir la galerie
+                  </a>
+                </div>
+                <template x-if="galleryLoading">
+                  <div class="text-sm text-slate-500">Chargement...</div>
+                </template>
+                <template x-if="!galleryLoading && tenantImages.length === 0">
+                  <div class="border border-dashed border-slate-300 dark:border-slate-800 rounded-xl p-4 text-sm text-slate-600 dark:text-slate-400">Aucune image visible.</div>
+                </template>
+                <div class="grid gap-2 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7" x-show="!galleryLoading && tenantImages.length">
+                  <template x-for="(img, idx) in tenantImages" :key="img.name">
+                    <div class="relative rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 overflow-hidden shadow-sm aspect-square group cursor-pointer"
+                         draggable="true"
+                         @dragstart="handleTenantDragStart(idx)"
+                         @click="addImageToScene(img.name)">
+                      <img :src="img.thumbUrl || img.url" class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105 cursor-pointer">
+                    <div class="absolute inset-0 bg-slate-900/10 opacity-0 group-hover:opacity-100 transition"></div>
+                    <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-2 text-white text-[11px] font-semibold truncate" x-text="img.name"></div>
+                    <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-[11px] font-semibold text-white pointer-events-none">
+                      Cliquer pour associer
+                    </div>
+                    <div class="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+                        <button class="h-8 w-8 flex items-center justify-center rounded-full bg-white/90 text-slate-700 hover:text-emerald-600 shadow"
+                                @click.stop="openZoomFromTenant(img.name)">
+                          <i class="fa-solid fa-magnifying-glass" aria-label="Zoom" title="Zoom"></i>
+                        </button>
+                        <button class="h-8 w-8 flex items-center justify-center rounded-full bg-white/90 text-emerald-600 hover:text-emerald-700 shadow"
+                                @click.stop="addImageToScene(img.name)">
+                          <i class="fa-solid fa-arrow-up" aria-label="Associer" title="Associer"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </template>
+
+          <template x-if="activeTab === 'audio'">
+            <div class="space-y-2">
+              <template x-if="!currentScene?.audio || currentScene.audio.length === 0">
+                <div class="text-sm text-slate-500 dark:text-slate-400">Aucune piste audio liée.</div>
+              </template>
+              <div class="flex flex-col gap-2" x-show="currentScene?.audio && currentScene.audio.length">
+                <template x-for="sound in currentScene.audio" :key="sound">
+                  <div class="rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-music text-emerald-500"></i>
+                    <span x-text="sound"></span>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </template>
+
+          <template x-if="activeTab === 'notes'">
+            <div class="space-y-3">
+              <div>
+                <p class="text-xs uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Notes</p>
+                <div class="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 whitespace-pre-line"
+                     x-text="currentScene?.notes || 'Aucune note.'"></div>
+              </div>
+            </div>
+          </template>
+
+          <template x-if="activeTab === 'tension'">
+            <div class="space-y-3">
+              <div>
+                <p class="text-xs uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Tension</p>
+                <div class="text-sm text-slate-700 dark:text-slate-300" x-text="currentScene?.tension ? JSON.stringify(currentScene.tension) : 'Pas de configuration de tension.'"></div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template x-if="showDeleteSceneModal">
+    <div class="fixed inset-0 z-50 flex items-center justify-center">
+      <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+      <div class="relative w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-6 shadow-2xl space-y-4">
+        <div class="flex items-start gap-3">
+          <div class="h-10 w-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+        <div class="space-y-1">
+          <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Supprimer cette scène ?</h3>
+          <p class="text-sm text-slate-600 dark:text-slate-300">
+            <span x-text="pendingScene?.title || pendingScene?.id"></span> sera définitivement supprimée.
+          </p>
+        </div>
+      </div>
+      <div class="flex flex-wrap justify-end gap-2">
+        <button class="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                @click="cancelDeleteScene()">Annuler</button>
+        <button class="px-4 py-2 rounded-lg bg-rose-200 text-rose-700 text-sm font-semibold hover:bg-rose-100 transition"
+                @click="confirmDeleteSceneOnly()">Supprimer la scène</button>
+        <template x-if="scenes.length <= 1">
+          <button class="px-4 py-2 rounded-lg bg-rose-600 text-white text-sm font-semibold hover:bg-rose-500 transition"
+                  @click="confirmDeleteSceneAndSession()">Supprimer scène + session</button>
+        </template>
+      </div>
+    </div>
+  </div>
+</template>
+
+  <template x-if="editModal.open">
+    <div class="fixed inset-0 z-50 flex items-center justify-center">
+      <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+      <div class="relative w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-6 shadow-2xl space-y-4">
+        <div class="space-y-1">
+          <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Editer la session</h3>
+        </div>
+        <div class="space-y-2">
+          <label class="space-y-1 block">
+            <input type="text" class="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm"
+                   x-model="editModal.title" placeholder="Titre de la session" required>
+          </label>
+          <template x-if="editModal.error">
+            <div class="rounded-lg border border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-900/20 dark:text-rose-100 px-3 py-2 text-sm" x-text="editModal.error"></div>
+          </template>
+        </div>
+        <div class="flex justify-end gap-2">
+          <button class="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                  @click="closeEditModal()" :disabled="editModal.saving">Annuler</button>
+          <button class="px-4 py-2 rounded-lg bg-emerald-500 text-slate-900 text-sm font-semibold hover:bg-emerald-400 transition inline-flex items-center gap-2"
+                  @click="submitEdit()" :disabled="editModal.saving">
+            <span x-show="!editModal.saving">Enregistrer</span>
+            <span class="flex items-center gap-2" x-show="editModal.saving">
+              <span class="h-4 w-4 rounded-full border-2 border-emerald-800 border-t-transparent animate-spin"></span>
+              Sauvegarde...
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template x-if="zoomModal.open">
+    <div class="fixed inset-0 z-50 flex items-center justify-center">
+      <div class="absolute inset-0 bg-slate-900/70 backdrop-blur-sm" @click="closeZoom()"></div>
+      <div class="relative max-w-4xl w-full px-4">
+        <div class="flex justify-end mb-2">
+          <button class="h-10 w-10 inline-flex items-center justify-center rounded-full bg-white text-slate-700 shadow hover:bg-slate-100"
+                  @click="closeZoom()">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="bg-white dark:bg-slate-950 rounded-2xl shadow-2xl overflow-hidden">
+          <img :src="zoomModal.url" class="w-full max-h-[90vh] object-contain bg-black">
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template x-if="sceneEditModal.open">
+    <div class="fixed inset-0 z-50 flex items-center justify-center">
+      <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+      <div class="relative w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-6 shadow-2xl space-y-4">
+        <div class="space-y-1">
+          <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Renommer la scène</h3>
+        </div>
+        <div class="space-y-2">
+          <label class="space-y-1 block">            
+            <input type="text" class="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm"
+                   x-model="sceneEditModal.title" placeholder="Titre de la scène" required>
+          </label>
+          <template x-if="sceneEditModal.error">
+            <div class="rounded-lg border border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-900/20 dark:text-rose-100 px-3 py-2 text-sm" x-text="sceneEditModal.error"></div>
+          </template>
+        </div>
+        <div class="flex justify-end gap-2">
+          <button class="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                  @click="closeSceneEditModal()" :disabled="sceneEditModal.saving">Annuler</button>
+          <button class="px-4 py-2 rounded-lg bg-emerald-500 text-slate-900 text-sm font-semibold hover:bg-emerald-400 transition inline-flex items-center gap-2"
+                  @click="submitSceneEdit()" :disabled="sceneEditModal.saving">
+            <span x-show="!sceneEditModal.saving">Enregistrer</span>
+            <span class="flex items-center gap-2" x-show="sceneEditModal.saving">
+              <span class="h-4 w-4 rounded-full border-2 border-emerald-800 border-t-transparent animate-spin"></span>
+              Sauvegarde...
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template x-if="sceneModal.open">
+    <div class="fixed inset-0 z-50 flex items-center justify-center">
+      <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+      <div class="relative w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-6 shadow-2xl space-y-4">
+        <div class="space-y-1">
+          <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Nouvelle scène</h3>
+          <p class="text-sm text-slate-600 dark:text-slate-400">Une scène sera ajoutée à cette session.</p>
+        </div>
+        <div class="space-y-2">
+          <label class="space-y-1 block">            
+            <input type="text" class="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm"
+                   x-model="sceneModal.title" placeholder="Titre de la scène" required>
+          </label>
+          <template x-if="sceneModal.error">
+            <div class="rounded-lg border border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-900/20 dark:text-rose-100 px-3 py-2 text-sm" x-text="sceneModal.error"></div>
+          </template>
+        </div>
+        <div class="flex justify-end gap-2">
+          <button class="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                  @click="closeSceneModal()" :disabled="sceneModal.saving">Annuler</button>
+          <button class="px-4 py-2 rounded-lg bg-emerald-500 text-slate-900 text-sm font-semibold hover:bg-emerald-400 transition inline-flex items-center gap-2"
+                  @click="submitScene()" :disabled="sceneModal.saving">
+            <span x-show="!sceneModal.saving">Créer</span>
+            <span class="flex items-center gap-2" x-show="sceneModal.saving">
+              <span class="h-4 w-4 rounded-full border-2 border-emerald-800 border-t-transparent animate-spin"></span>
+              Création...
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template x-if="uploadModalOpen">
+    <div class="fixed inset-0 z-50 flex items-center justify-center">
+      <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+      <div class="relative w-full max-w-3xl rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-6 shadow-2xl space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Ajouter des images</h3>
+          <button class="h-9 w-9 inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800" @click="closeUploadModal()">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="flex items-center gap-6 border-b border-slate-200 dark:border-slate-800 text-sm">
+          <button class="pb-2 border-b-2 transition"
+                  :class="uploadTab === 'drop' ? 'text-emerald-600 border-emerald-500' : 'text-slate-500 border-transparent'"
+                  @click="setUploadTab('drop')">
+            Importer (fichiers)
+          </button>
+          <button class="pb-2 border-b-2 transition"
+                  :class="uploadTab === 'url' ? 'text-emerald-600 border-emerald-500' : 'text-slate-500 border-transparent'"
+                  @click="setUploadTab('url')">
+            Via URL
+          </button>
+          <button class="pb-2 border-b-2 transition"
+                  :class="uploadTab === 'pixabay' ? 'text-emerald-600 border-emerald-500' : 'text-slate-500 border-transparent'"
+                  @click="setUploadTab('pixabay')">
+            Pixabay
+          </button>
+        </div>
+
+        <div class="space-y-4" x-show="uploadTab === 'drop'">
+          <div class="border-2 border-dashed rounded-2xl p-6 text-center text-sm text-slate-500 dark:text-slate-300 cursor-pointer transition"
+               :class="uploadDragActive ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-300 dark:border-slate-700'"
+               @dragover.prevent="uploadDragActive = true"
+               @dragleave.prevent="uploadDragActive = false"
+               @drop="handleUploadDrop($event)"
+               @click="$refs.uploadInput.click()">
+            <div class="space-y-2">
+              <i class="fa-solid fa-cloud-arrow-up text-2xl text-emerald-500"></i>
+              <p>Glissez vos images ou cliquez pour sélectionner.</p>
+            </div>
+            <input type="file" multiple accept="image/*" class="hidden" x-ref="uploadInput" @change="uploadFile($event)">
+          </div>
+          <p class="text-xs" :class="uploadStatus === 'error' ? 'text-rose-500' : 'text-emerald-600'" x-text="uploadMessage"></p>
+        </div>
+
+        <div class="space-y-3" x-show="uploadTab === 'url'">
+          <label class="space-y-1 block">
+            <span class="text-sm font-medium text-slate-800 dark:text-slate-200">URL de l'image</span>
+            <input type="url" class="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm"
+                   placeholder="https://exemple.com/image.jpg"
+                   x-model="uploadUrl">
+          </label>
+          <div class="flex items-center gap-2">
+            <button class="px-4 py-2 rounded-lg bg-emerald-500 text-slate-900 font-semibold hover:bg-emerald-400 transition"
+                    @click="uploadFromUrl()"
+                    :disabled="uploadUrlLoading || !uploadUrl">
+              <span x-text="uploadUrlLoading ? 'Chargement...' : 'Importer'"></span>
+            </button>
+            <p class="text-xs" :class="uploadUrlStatus === 'error' ? 'text-rose-500' : 'text-emerald-600'" x-text="uploadUrlMessage"></p>
+          </div>
+        </div>
+
+        <div class="space-y-3" x-show="uploadTab === 'pixabay'">
+          <div class="flex items-center gap-2">
+            <input type="text" class="flex-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm"
+                   placeholder="Rechercher (ex: forest, dragon...)"
+                   x-model="pixabayQuery"
+                   @keydown.enter.prevent="searchPixabay()">
+            <button class="px-4 py-2 rounded-lg border border-emerald-500 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition"
+                    @click="searchPixabay()">
+              <i class="fa-solid fa-magnifying-glass"></i>
+            </button>
+          </div>
+          <template x-if="pixabayLoading">
+            <div class="text-sm text-slate-500">Recherche...</div>
+          </template>
+          <template x-if="!pixabayLoading && pixabayResults.length === 0">
+            <div class="text-sm text-slate-500" x-text="pixabayMessage || 'Aucun résultat'"></div>
+          </template>
+          <div class="grid gap-2 sm:grid-cols-3 lg:grid-cols-4" x-show="!pixabayLoading && pixabayResults.length">
+            <template x-for="hit in pixabayResults" :key="hit.id">
+              <button class="rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 hover:border-emerald-400 transition text-left"
+                      @click="importFromPixabay(hit)">
+                <img :src="hit.previewURL" class="h-24 w-full object-cover">
+                <div class="px-2 py-1 text-[11px] text-slate-600 dark:text-slate-300 truncate" x-text="hit.tags"></div>
+              </button>
+            </template>
+          </div>
+          <p class="text-xs" :class="pixabayStatus === 'error' ? 'text-rose-500' : 'text-emerald-600'" x-text="pixabayMessage"></p>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template x-if="showDeleteSessionModal">
+    <div class="fixed inset-0 z-50 flex items-center justify-center">
+      <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+      <div class="relative w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-6 shadow-2xl space-y-4">
+        <div class="flex items-start gap-3">
+          <div class="h-10 w-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+          <div class="space-y-1">
+            <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Supprimer cette session ?</h3>
+            <p class="text-sm text-slate-600 dark:text-slate-300">
+              <span x-text="sessionTitle || session?.id"></span> et ses scènes seront supprimées.
+            </p>
+          </div>
+        </div>
+        <div class="flex justify-end gap-2">
+          <button class="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                  @click="cancelDeleteSession()">Annuler</button>
+          <button class="px-4 py-2 rounded-lg bg-rose-600 text-white text-sm font-semibold hover:bg-rose-500 transition"
+                  @click="confirmDeleteSession()">Supprimer</button>
+        </div>
+      </div>
+    </div>
+  </template>
+</div>
+<script src="/admin/js/layout-loader.js"></script>
+<script type="module" src="/admin/sessions/view.js" data-page-script></script>

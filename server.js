@@ -550,6 +550,66 @@ function deleteSessionFile(tenantId, id) {
   if (fs.existsSync(file)) fs.unlinkSync(file);
 }
 
+// Scenes storage helpers
+function sceneDir(tenantId) {
+  return path.join(TENANTS_DIR, tenantId, "scenes");
+}
+
+function legacySceneDir(tenantId) {
+  return path.join(TENANTS_DIR, tenantId, "scnes");
+}
+
+function scenePath(tenantId, id) {
+  return path.join(sceneDir(tenantId), `${id}.json`);
+}
+
+function ensureSceneDir(tenantId) {
+  const dir = sceneDir(tenantId);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  return dir;
+}
+
+function listScenes(tenantId) {
+  const dirs = [sceneDir(tenantId), legacySceneDir(tenantId)];
+  const seen = new Set();
+  const entries = [];
+  dirs.forEach(dir => {
+    if (!fs.existsSync(dir)) return;
+    fs.readdirSync(dir).forEach(f => {
+      if (!f.endsWith(".json")) return;
+      const id = f.replace(/\.json$/, "");
+      if (seen.has(id)) return;
+      seen.add(id);
+      entries.push({ dir, file: f });
+    });
+  });
+  return entries.map(({ dir, file }) => {
+    try { return JSON.parse(fs.readFileSync(path.join(dir, file), "utf8")); }
+    catch { return null; }
+  }).filter(Boolean);
+}
+
+function readScene(tenantId, id) {
+  const primary = scenePath(tenantId, id);
+  const legacy = path.join(legacySceneDir(tenantId), `${id}.json`);
+  const file = fs.existsSync(primary) ? primary : legacy;
+  if (!file || !fs.existsSync(file)) return null;
+  try { return JSON.parse(fs.readFileSync(file, "utf8")); }
+  catch { return null; }
+}
+
+function writeScene(tenantId, data) {
+  const dir = ensureSceneDir(tenantId);
+  const file = scenePath(tenantId, data.id);
+  fs.writeFileSync(file, JSON.stringify(data, null, 2));
+  return data;
+}
+
+function deleteScene(tenantId, id) {
+  [scenePath(tenantId, id), path.join(legacySceneDir(tenantId), `${id}.json`)]
+    .forEach(file => { if (fs.existsSync(file)) fs.unlinkSync(file); });
+}
+
 function loadConfig(tenantId) {
   const file = path.join(TENANTS_DIR, tenantId, "config.json");
 
@@ -1465,21 +1525,91 @@ function sanitizeScenarioInput(body = {}, existing = null) {
     id: `sc_${Date.now()}`,
     tenantId: body.tenantId,
     title: "",
-    description: "",
-    format: "campaign",
     sessions: [],
     createdAt: now,
     updatedAt: now
   };
   const payload = { ...base };
   if (typeof body.title === "string") payload.title = body.title.trim().slice(0, 200);
-  if (typeof body.description === "string") payload.description = body.description.trim();
-  if (typeof body.format === "string" && SCENARIO_FORMATS.has(body.format)) {
-    payload.format = body.format;
-  }
   if (Array.isArray(body.sessions)) payload.sessions = body.sessions.map(String);
+  delete payload.description;
+  delete payload.format;
   payload.updatedAt = now;
   return payload;
+}
+
+function ensureDefaultSessionForScenario(tenantId, scenario) {
+  if (!tenantId || !scenario || !scenario.id) return scenario;
+  try {
+    if (Array.isArray(scenario.sessions) && scenario.sessions.length > 0) return scenario;
+    const sessionId = `sess_${Date.now()}`;
+    const now = Math.floor(Date.now() / 1000);
+    const sessionPayload = {
+      id: sessionId,
+      tenantId,
+      title: "Session 0",
+      parentScenario: scenario.id,
+      createdAt: now,
+      updatedAt: now
+    };
+    writeSessionFile(tenantId, sessionPayload);
+    ensureDefaultSceneForSession(tenantId, sessionPayload);
+    const updatedScenario = { ...scenario, sessions: [sessionId], updatedAt: now };
+    writeScenario(tenantId, updatedScenario);
+    return updatedScenario;
+  } catch (err) {
+    logger.error("ensureDefaultSessionForScenario failed", { tenantId, scenarioId: scenario?.id, err: err?.message });
+    return scenario;
+  }
+}
+
+function touchScenarioUpdated(tenantId, scenarioId) {
+  if (!tenantId || !scenarioId) return;
+  const scenario = readScenario(tenantId, scenarioId);
+  if (!scenario) return;
+  scenario.updatedAt = Math.floor(Date.now() / 1000);
+  writeScenario(tenantId, scenario);
+}
+
+function touchScenarioFromSession(tenantId, sessionId) {
+  if (!tenantId || !sessionId) return;
+  const session = readSessionFile(tenantId, sessionId);
+  if (session?.parentScenario) {
+    touchScenarioUpdated(tenantId, session.parentScenario);
+  }
+}
+
+function touchSessionUpdated(tenantId, sessionId) {
+  if (!tenantId || !sessionId) return;
+  const session = readSessionFile(tenantId, sessionId);
+  if (!session) return;
+  session.updatedAt = Math.floor(Date.now() / 1000);
+  writeSessionFile(tenantId, session);
+}
+
+function attachSessionToScenario(tenantId, sessionPayload, previousScenarioId = null) {
+  if (!sessionPayload?.parentScenario) return;
+  const targetId = sessionPayload.parentScenario;
+  try {
+    const scenario = readScenario(tenantId, targetId);
+    if (scenario) {
+      const sessions = Array.isArray(scenario.sessions) ? [...scenario.sessions] : [];
+      if (!sessions.includes(sessionPayload.id)) sessions.push(sessionPayload.id);
+      scenario.sessions = sessions;
+      scenario.updatedAt = Math.floor(Date.now() / 1000);
+      writeScenario(tenantId, scenario);
+    }
+    if (previousScenarioId && previousScenarioId !== targetId) {
+      const prev = readScenario(tenantId, previousScenarioId);
+      if (prev && Array.isArray(prev.sessions)) {
+        prev.sessions = prev.sessions.filter(s => s !== sessionPayload.id);
+        writeScenario(tenantId, prev);
+      }
+    }
+    touchScenarioUpdated(tenantId, targetId);
+  } catch (err) {
+    logger.error("attachSessionToScenario failed", { tenantId, sessionId: sessionPayload?.id, err: err?.message });
+  }
 }
 
 app.get("/api/tenant/:tenant/scenarios", requireLogin, (req, res) => {
@@ -1514,8 +1644,9 @@ app.post("/api/tenant/:tenant/scenarios", requireLogin, (req, res) => {
   }
   const payload = sanitizeScenarioInput({ ...req.body, tenantId });
   if (!payload.title) return res.status(400).json({ error: "Titre requis" });
-  writeScenario(tenantId, payload);
-  res.status(201).json(payload);
+  const stored = ensureDefaultSessionForScenario(tenantId, payload);
+  writeScenario(tenantId, stored);
+  res.status(201).json(stored);
 });
 
 app.put("/api/tenant/:tenant/scenarios/:id", requireLogin, (req, res) => {
@@ -1543,6 +1674,17 @@ app.delete("/api/tenant/:tenant/scenarios/:id", requireLogin, (req, res) => {
   const existing = readScenario(tenantId, id);
   if (!existing) return res.status(404).json({ error: "Scenario not found" });
   deleteScenario(tenantId, id);
+  // cascade delete sessions and scenes linked to this scenario
+  try {
+    const sessions = listSessions(tenantId).filter(s => s.parentScenario === id);
+    sessions.forEach(sess => {
+      const scenes = listScenes(tenantId).filter(sc => sc.parentSession === sess.id);
+      scenes.forEach(sc => deleteScene(tenantId, sc.id));
+      deleteSessionFile(tenantId, sess.id);
+    });
+  } catch (err) {
+    logger.error("Cascade delete for scenario failed", { tenantId, scenarioId: id, err: err?.message });
+  }
   res.json({ success: true });
 });
 
@@ -1555,18 +1697,19 @@ function sanitizeSessionInput(body = {}, existing = null) {
     id: `sess_${Date.now()}`,
     tenantId: body.tenantId,
     title: '',
-    description: '',
     parentScenario: null,
     createdAt: now,
     updatedAt: now
   };
   const payload = { ...base };
   if (typeof body.title === "string") payload.title = body.title.trim().slice(0, 200);
-  if (typeof body.description === "string") payload.description = body.description.trim();
   if (typeof body.parentScenario === "string") {
     const v = body.parentScenario.trim();
     payload.parentScenario = v || null;
   }
+  delete payload.description;
+  delete payload.date;
+  delete payload.format;
   payload.updatedAt = now;
   return payload;
 }
@@ -1604,6 +1747,8 @@ app.post("/api/tenant/:tenant/sessions", requireLogin, (req, res) => {
   const payload = sanitizeSessionInput({ ...req.body, tenantId });
   if (!payload.title) return res.status(400).json({ error: "Titre requis" });
   writeSessionFile(tenantId, payload);
+  attachSessionToScenario(tenantId, payload);
+  ensureDefaultSceneForSession(tenantId, payload);
   res.status(201).json(payload);
 });
 
@@ -1620,6 +1765,7 @@ app.put("/api/tenant/:tenant/sessions/:id", requireLogin, (req, res) => {
   payload.tenantId = tenantId;
   payload.createdAt = existing.createdAt || payload.createdAt;
   writeSessionFile(tenantId, payload);
+  attachSessionToScenario(tenantId, payload, existing.parentScenario);
   res.json(payload);
 });
 
@@ -1632,7 +1778,199 @@ app.delete("/api/tenant/:tenant/sessions/:id", requireLogin, (req, res) => {
   const existing = readSessionFile(tenantId, id);
   if (!existing) return res.status(404).json({ error: "Session not found" });
   deleteSessionFile(tenantId, id);
+  if (existing.parentScenario) {
+    const scenario = readScenario(tenantId, existing.parentScenario);
+    if (scenario && Array.isArray(scenario.sessions)) {
+      scenario.sessions = scenario.sessions.filter(s => s !== id);
+      scenario.updatedAt = Math.floor(Date.now() / 1000);
+      writeScenario(tenantId, scenario);
+    }
+  }
+  try {
+    const scenes = listScenes(tenantId).filter(sc => sc.parentSession === id);
+    scenes.forEach(sc => deleteScene(tenantId, sc.id));
+  } catch (err) {
+    logger.error("Cascade delete scenes for session failed", { tenantId, sessionId: id, err: err?.message });
+  }
+  touchScenarioUpdated(tenantId, existing.parentScenario);
   res.json({ success: true });
+});
+
+//------------------------------------------------------------
+//  SCENES (sessions)
+//------------------------------------------------------------
+
+function sanitizeSceneInput(body = {}, existing = null) {
+  const now = Math.floor(Date.now() / 1000);
+  const base = existing ? { ...existing } : {
+    id: `scene_${Date.now()}`,
+    tenantId: body.tenantId,
+    title: '',
+    parentSession: null,
+    order: 0,
+    images: [],
+    audio: [],
+    tension: null,
+    notes: null,
+    createdAt: now,
+    updatedAt: now
+  };
+  const payload = { ...base };
+  if (typeof body.title === "string") payload.title = body.title.trim().slice(0, 200);
+  if (typeof body.parentSession === "string") {
+    const v = body.parentSession.trim();
+    payload.parentSession = v || null;
+  }
+  if (typeof body.order === "number") payload.order = body.order;
+  if (Array.isArray(body.images)) {
+    payload.images = body.images
+      .map((item, idx) => {
+        if (typeof item === "string") return { name: item, order: idx + 1 };
+        const name = typeof item?.name === "string" ? item.name : "";
+        const order = typeof item?.order === "number" ? item.order : idx + 1;
+        if (!name) return null;
+        return { name, order };
+      })
+      .filter(Boolean);
+  }
+  if (Array.isArray(body.audio)) payload.audio = body.audio.map(String);
+  if (body.tension !== undefined) payload.tension = body.tension;
+  if (typeof body.notes === "string") payload.notes = body.notes;
+  delete payload.description;
+  delete payload.format;
+  payload.updatedAt = now;
+  if (!existing && (!payload.order || payload.order <= 0)) {
+    try {
+      const siblings = listScenes(payload.tenantId).filter(s => s.parentSession === payload.parentSession);
+      payload.order = siblings.length + 1;
+    } catch {}
+  }
+  return payload;
+}
+
+function ensureDefaultSceneForSession(tenantId, sessionPayload) {
+  const parentId = sessionPayload?.id;
+  if (!tenantId || !parentId) return;
+  try {
+    const scenes = listScenes(tenantId).filter(s => s.parentSession === parentId);
+    if (scenes.length > 0) return;
+    const now = Math.floor(Date.now() / 1000);
+    const scene = {
+      id: `scene_${Date.now()}`,
+      tenantId,
+      title: sessionPayload.title || 'Nouvelle scène',
+      parentSession: parentId,
+      order: 1,
+      images: [],
+      audio: [],
+      tension: null,
+      notes: null,
+      createdAt: now,
+      updatedAt: now
+    };
+    writeScene(tenantId, scene);
+  } catch (err) {
+    logger.error("ensureDefaultSceneForSession failed", { tenantId, sessionId: parentId, err: err?.message });
+  }
+}
+
+app.get("/api/tenant/:tenant/scenes", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  try {
+    const list = listScenes(tenantId);
+    res.json(list);
+  } catch (err) {
+    logger.error("List scenes failed", { tenantId, err: err?.message });
+    res.status(500).json({ error: "Impossible de lister les scènes" });
+  }
+});
+
+app.get("/api/tenant/:tenant/scenes/:id", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  const { id } = req.params;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const scene = readScene(tenantId, id);
+  if (!scene) return res.status(404).json({ error: "Scene not found" });
+  res.json(scene);
+});
+
+app.post("/api/tenant/:tenant/scenes", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const payload = sanitizeSceneInput({ ...req.body, tenantId });
+  if (!payload.title) return res.status(400).json({ error: "Titre requis" });
+  writeScene(tenantId, payload);
+  touchSessionUpdated(tenantId, payload.parentSession);
+  touchScenarioFromSession(tenantId, payload.parentSession);
+  res.status(201).json(payload);
+});
+
+app.put("/api/tenant/:tenant/scenes/:id", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  const { id } = req.params;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const existing = readScene(tenantId, id);
+  if (!existing) return res.status(404).json({ error: "Scene not found" });
+  const payload = sanitizeSceneInput({ ...req.body, tenantId }, existing);
+  payload.id = existing.id;
+  payload.tenantId = tenantId;
+  payload.createdAt = existing.createdAt || payload.createdAt;
+  writeScene(tenantId, payload);
+  touchSessionUpdated(tenantId, payload.parentSession);
+  touchScenarioFromSession(tenantId, payload.parentSession);
+  res.json(payload);
+});
+
+app.delete("/api/tenant/:tenant/scenes/:id", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  const { id } = req.params;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const existing = readScene(tenantId, id);
+  if (!existing) return res.status(404).json({ error: "Scene not found" });
+  deleteScene(tenantId, id);
+  touchSessionUpdated(tenantId, existing.parentSession);
+  touchScenarioFromSession(tenantId, existing.parentSession);
+  res.json({ success: true });
+});
+
+app.put("/api/tenant/:tenant/scenes/reorder", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const orderArr = Array.isArray(req.body.order) ? req.body.order.map(String) : [];
+  try {
+    const list = listScenes(tenantId);
+    const indexMap = new Map(orderArr.map((id, idx) => [id, idx + 1]));
+    const touchedSessions = new Set();
+    const updated = list.map(scene => {
+      if (indexMap.has(scene.id)) {
+        scene.order = indexMap.get(scene.id);
+        if (scene.parentSession) touchedSessions.add(scene.parentSession);
+      }
+      return scene;
+    });
+    updated.forEach(scene => writeScene(tenantId, scene));
+    touchedSessions.forEach(sessionId => {
+      touchSessionUpdated(tenantId, sessionId);
+    });
+    touchedSessions.forEach(sessionId => touchScenarioFromSession(tenantId, sessionId));
+    res.json({ success: true });
+  } catch (err) {
+    logger.error("Reorder scenes failed", { tenantId, err: err?.message });
+    res.status(500).json({ error: "Impossible de réordonner les scènes" });
+  }
 });
 
 //------------------------------------------------------------

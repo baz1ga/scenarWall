@@ -1,0 +1,178 @@
+<div id="page-content" x-data="scenariosListPage()" x-init="init()" class="space-y-6" x-cloak>
+  <div class="flex items-center justify-between gap-3 mt-2">
+    <div>
+      <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100">Scénarios</h1>
+    </div>
+    <button type="button" @click="openCreateModal()"
+            class="inline-flex items-center gap-2 rounded-lg bg-emerald-500 text-slate-900 font-semibold px-4 py-2 text-sm shadow-sm hover:bg-emerald-400 transition">
+      <i class="fa-solid fa-plus"></i> Nouveau
+    </button>
+  </div>
+
+  <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm space-y-4">
+    <template x-if="loading">
+      <div class="flex items-center gap-3 text-sm text-slate-500">
+        <div class="h-5 w-5 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
+        Chargement des scénarios...
+      </div>
+    </template>
+    <template x-if="!loading && scenarios.length === 0">
+      <div class="border border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-6 text-center text-sm text-slate-600 dark:text-slate-400">
+        Aucun scénario pour le moment. Cliquez sur “Nouveau” pour commencer.
+      </div>
+    </template>
+    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" x-show="!loading && scenarios.length > 0">
+      <template x-for="scenario in scenarios" :key="scenario.id">
+        <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm flex flex-col gap-3 hover:shadow-md transition">
+          <div class="space-y-2 flex-1 block">
+            <div class="flex items-center justify-between gap-2">
+              <div class="text-lg font-semibold text-slate-900 dark:text-slate-100 truncate" x-text="scenario.title || 'Sans titre'"></div>
+              <div class="flex items-center gap-2 shrink-0">
+                <button class="h-9 w-9 inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 hover:text-emerald-600 hover:border-emerald-400 transition text-sm"
+                        @click="openEditModal(scenario)">
+                  <i class="fa-solid fa-pen"></i><span class="sr-only">Éditer</span>
+                </button>
+                <button class="h-9 w-9 inline-flex items-center justify-center rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-900 dark:text-rose-200 dark:hover:bg-rose-900/40 transition text-sm"
+                        @click="deleteScenario(scenario)">
+                  <i class="fa-solid fa-trash"></i><span class="sr-only">Supprimer</span>
+                </button>
+              </div>
+            </div>
+            <div class="space-y-1">
+              <template x-for="sess in sessionsFor(scenario.id)" :key="sess.id">
+                <a class="block rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition"
+                   :href="`/admin/sessions/view.html?id=${encodeURIComponent(sess.id)}`">
+                  <div class="flex items-center justify-between">
+                    <span class="font-semibold truncate" x-text="sess.title || sess.id"></span>
+                  </div>
+                </a>
+              </template>
+              <button type="button"
+                      class="w-full text-center rounded-lg border border-dashed border-emerald-400 text-emerald-600 px-3 py-2 text-sm hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition"
+                      @click="openSessionModal(scenario.id)">
+                + Nouvelle session
+              </button>
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <template x-if="confirmModal.open">
+    <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center px-4">
+      <div class="bg-white dark:bg-slate-950 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-800">
+        <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-start gap-3">
+          <div class="h-9 w-9 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-200 flex items-center justify-center">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+          <div class="space-y-1">
+            <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Confirmation</h3>
+            <p class="text-sm text-slate-600 dark:text-slate-400" x-text="confirmModal.message"></p>
+          </div>
+        </div>
+        <div class="px-5 py-4 flex items-center justify-end gap-3">
+          <button class="px-4 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                  @click="closeConfirm()">Annuler</button>
+          <button class="px-4 py-2 text-sm rounded-lg bg-rose-500 text-white font-semibold hover:bg-rose-400 transition"
+                  @click="confirmDelete()">Supprimer</button>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template x-if="createModal.open">
+    <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center px-4">
+      <div class="bg-white dark:bg-slate-950 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-800 p-5 space-y-4">
+        <div class="space-y-1">
+          <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Nouveau scénario</h3>          
+        </div>
+        <div class="space-y-2">
+          <label class="space-y-1 block">            
+            <input type="text" class="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm"
+                   x-model="createModal.title" placeholder="Titre du scénario" required>
+          </label>
+          <template x-if="createModal.error">
+            <div class="rounded-lg border border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-900/20 dark:text-rose-100 px-3 py-2 text-sm" x-text="createModal.error"></div>
+          </template>
+        </div>
+        <div class="flex items-center justify-end gap-2">
+          <button class="px-4 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                  @click="closeCreateModal()" :disabled="createModal.saving">Annuler</button>
+          <button class="px-4 py-2 text-sm rounded-lg bg-emerald-500 text-slate-900 font-semibold hover:bg-emerald-400 transition inline-flex items-center gap-2"
+                  @click="submitCreate()" :disabled="createModal.saving">
+            <span x-show="!createModal.saving">Créer</span>
+            <span class="flex items-center gap-2" x-show="createModal.saving">
+              <span class="h-4 w-4 rounded-full border-2 border-emerald-800 border-t-transparent animate-spin"></span>
+              Création...
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template x-if="editModal.open">
+    <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center px-4">
+      <div class="bg-white dark:bg-slate-950 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-800 p-5 space-y-4">
+        <div class="space-y-1">
+          <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Éditer le scénario</h3>
+        </div>
+        <div class="space-y-2">
+          <label class="space-y-1 block">            
+            <input type="text" class="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm"
+                   x-model="editModal.title" placeholder="Titre du scénario" required>
+          </label>
+          <template x-if="editModal.error">
+            <div class="rounded-lg border border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-900/20 dark:text-rose-100 px-3 py-2 text-sm" x-text="editModal.error"></div>
+          </template>
+        </div>
+        <div class="flex items-center justify-end gap-2">
+          <button class="px-4 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                  @click="closeEditModal()" :disabled="editModal.saving">Annuler</button>
+          <button class="px-4 py-2 text-sm rounded-lg bg-emerald-500 text-slate-900 font-semibold hover:bg-emerald-400 transition inline-flex items-center gap-2"
+                  @click="submitEdit()" :disabled="editModal.saving">
+            <span x-show="!editModal.saving">Enregistrer</span>
+            <span class="flex items-center gap-2" x-show="editModal.saving">
+              <span class="h-4 w-4 rounded-full border-2 border-emerald-800 border-t-transparent animate-spin"></span>
+              Sauvegarde...
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template x-if="sessionModal.open">
+    <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center px-4">
+      <div class="bg-white dark:bg-slate-950 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-800 p-5 space-y-4">
+        <div class="space-y-1">
+          <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Nouvelle session</h3>          
+        </div>
+        <div class="space-y-2">
+          <label class="space-y-1 block">            
+            <input type="text" class="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm"
+                   x-model="sessionModal.title" placeholder="Titre de la session" required>
+          </label>
+          <template x-if="sessionModal.error">
+            <div class="rounded-lg border border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-900/20 dark:text-rose-100 px-3 py-2 text-sm" x-text="sessionModal.error"></div>
+          </template>
+        </div>
+        <div class="flex items-center justify-end gap-2">
+          <button class="px-4 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                  @click="closeSessionModal()" :disabled="sessionModal.saving">Annuler</button>
+          <button class="px-4 py-2 text-sm rounded-lg bg-emerald-500 text-slate-900 font-semibold hover:bg-emerald-400 transition inline-flex items-center gap-2"
+                  @click="submitSession()" :disabled="sessionModal.saving">
+            <span x-show="!sessionModal.saving">Créer</span>
+            <span class="flex items-center gap-2" x-show="sessionModal.saving">
+              <span class="h-4 w-4 rounded-full border-2 border-emerald-800 border-t-transparent animate-spin"></span>
+              Création...
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </template>
+</div>
+<script src="/admin/js/layout-loader.js"></script>
+<script type="module" src="/admin/scenarios/list.js" data-page-script></script>
