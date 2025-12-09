@@ -176,6 +176,7 @@ const ENV_SESSION_COOKIE = {
 };
 
 const UTF8_EXT = new Set([".html", ".htm", ".js", ".mjs", ".css", ".json", ".svg", ".txt", ".xml", ".webmanifest"]);
+const SCENARIO_FORMATS = new Set(["campaign", "oneshot"]);
 
 assertRequiredEnv();
 
@@ -459,6 +460,94 @@ function writeTenantSession(tenantId, data) {
     }
   };
   fs.writeFileSync(file, JSON.stringify(payload, null, 2));
+}
+
+// Scénarios storage helpers
+function scenarioDir(tenantId) {
+  return path.join(TENANTS_DIR, tenantId, "scenario");
+}
+
+function scenarioPath(tenantId, id) {
+  return path.join(scenarioDir(tenantId), `${id}.json`);
+}
+
+function ensureScenarioDir(tenantId) {
+  const dir = scenarioDir(tenantId);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  return dir;
+}
+
+function listScenarios(tenantId) {
+  const dir = scenarioDir(tenantId);
+  if (!fs.existsSync(dir)) return [];
+  const files = fs.readdirSync(dir).filter(f => f.endsWith(".json"));
+  return files.map(f => {
+    try { return JSON.parse(fs.readFileSync(path.join(dir, f), "utf8")); }
+    catch { return null; }
+  }).filter(Boolean);
+}
+
+function readScenario(tenantId, id) {
+  const file = scenarioPath(tenantId, id);
+  if (!fs.existsSync(file)) return null;
+  try { return JSON.parse(fs.readFileSync(file, "utf8")); }
+  catch { return null; }
+}
+
+function writeScenario(tenantId, data) {
+  const dir = ensureScenarioDir(tenantId);
+  const file = scenarioPath(tenantId, data.id);
+  fs.writeFileSync(file, JSON.stringify(data, null, 2));
+  return data;
+}
+
+function deleteScenario(tenantId, id) {
+  const file = scenarioPath(tenantId, id);
+  if (fs.existsSync(file)) fs.unlinkSync(file);
+}
+
+// Sessions storage helpers
+function sessionDir(tenantId) {
+  return path.join(TENANTS_DIR, tenantId, "sessions");
+}
+
+function sessionPath(tenantId, id) {
+  return path.join(sessionDir(tenantId), `${id}.json`);
+}
+
+function ensureSessionDir(tenantId) {
+  const dir = sessionDir(tenantId);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  return dir;
+}
+
+function listSessions(tenantId) {
+  const dir = sessionDir(tenantId);
+  if (!fs.existsSync(dir)) return [];
+  const files = fs.readdirSync(dir).filter(f => f.endsWith(".json"));
+  return files.map(f => {
+    try { return JSON.parse(fs.readFileSync(path.join(dir, f), "utf8")); }
+    catch { return null; }
+  }).filter(Boolean);
+}
+
+function readSessionFile(tenantId, id) {
+  const file = sessionPath(tenantId, id);
+  if (!fs.existsSync(file)) return null;
+  try { return JSON.parse(fs.readFileSync(file, "utf8")); }
+  catch { return null; }
+}
+
+function writeSessionFile(tenantId, data) {
+  const dir = ensureSessionDir(tenantId);
+  const file = sessionPath(tenantId, data.id);
+  fs.writeFileSync(file, JSON.stringify(data, null, 2));
+  return data;
+}
+
+function deleteSessionFile(tenantId, id) {
+  const file = sessionPath(tenantId, id);
+  if (fs.existsSync(file)) fs.unlinkSync(file);
 }
 
 function loadConfig(tenantId) {
@@ -1365,6 +1454,185 @@ app.put("/api/:tenantId/session/notes", requireLogin, (req, res) => {
   sessionData.notes = { noteId, history };
   writeTenantSession(tenantId, sessionData);
   res.json({ id: noteId });
+});
+
+//------------------------------------------------------------
+//  SCENARIOS
+//------------------------------------------------------------
+function sanitizeScenarioInput(body = {}, existing = null) {
+  const now = Math.floor(Date.now() / 1000);
+  const base = existing ? { ...existing } : {
+    id: `sc_${Date.now()}`,
+    tenantId: body.tenantId,
+    title: "",
+    description: "",
+    format: "campaign",
+    sessions: [],
+    createdAt: now,
+    updatedAt: now
+  };
+  const payload = { ...base };
+  if (typeof body.title === "string") payload.title = body.title.trim().slice(0, 200);
+  if (typeof body.description === "string") payload.description = body.description.trim();
+  if (typeof body.format === "string" && SCENARIO_FORMATS.has(body.format)) {
+    payload.format = body.format;
+  }
+  if (Array.isArray(body.sessions)) payload.sessions = body.sessions.map(String);
+  payload.updatedAt = now;
+  return payload;
+}
+
+app.get("/api/tenant/:tenant/scenarios", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  try {
+    const list = listScenarios(tenantId);
+    res.json(list);
+  } catch (err) {
+    logger.error("List scenarios failed", { tenantId, err: err?.message });
+    res.status(500).json({ error: "Impossible de lister les scénarios" });
+  }
+});
+
+app.get("/api/tenant/:tenant/scenarios/:id", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  const { id } = req.params;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const scenario = readScenario(tenantId, id);
+  if (!scenario) return res.status(404).json({ error: "Scenario not found" });
+  res.json(scenario);
+});
+
+app.post("/api/tenant/:tenant/scenarios", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const payload = sanitizeScenarioInput({ ...req.body, tenantId });
+  if (!payload.title) return res.status(400).json({ error: "Titre requis" });
+  writeScenario(tenantId, payload);
+  res.status(201).json(payload);
+});
+
+app.put("/api/tenant/:tenant/scenarios/:id", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  const { id } = req.params;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const existing = readScenario(tenantId, id);
+  if (!existing) return res.status(404).json({ error: "Scenario not found" });
+  const payload = sanitizeScenarioInput({ ...req.body, tenantId }, existing);
+  payload.id = existing.id;
+  payload.tenantId = tenantId;
+  payload.createdAt = existing.createdAt || payload.createdAt;
+  writeScenario(tenantId, payload);
+  res.json(payload);
+});
+
+app.delete("/api/tenant/:tenant/scenarios/:id", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  const { id } = req.params;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const existing = readScenario(tenantId, id);
+  if (!existing) return res.status(404).json({ error: "Scenario not found" });
+  deleteScenario(tenantId, id);
+  res.json({ success: true });
+});
+
+//------------------------------------------------------------
+//  SESSIONS (scénarios)
+//------------------------------------------------------------
+function sanitizeSessionInput(body = {}, existing = null) {
+  const now = Math.floor(Date.now() / 1000);
+  const base = existing ? { ...existing } : {
+    id: `sess_${Date.now()}`,
+    tenantId: body.tenantId,
+    title: '',
+    description: '',
+    parentScenario: null,
+    createdAt: now,
+    updatedAt: now
+  };
+  const payload = { ...base };
+  if (typeof body.title === "string") payload.title = body.title.trim().slice(0, 200);
+  if (typeof body.description === "string") payload.description = body.description.trim();
+  if (typeof body.parentScenario === "string") {
+    const v = body.parentScenario.trim();
+    payload.parentScenario = v || null;
+  }
+  payload.updatedAt = now;
+  return payload;
+}
+
+app.get("/api/tenant/:tenant/sessions", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  try {
+    const list = listSessions(tenantId);
+    res.json(list);
+  } catch (err) {
+    logger.error("List sessions failed", { tenantId, err: err?.message });
+    res.status(500).json({ error: "Impossible de lister les sessions" });
+  }
+});
+
+app.get("/api/tenant/:tenant/sessions/:id", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  const { id } = req.params;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const session = readSessionFile(tenantId, id);
+  if (!session) return res.status(404).json({ error: "Session not found" });
+  res.json(session);
+});
+
+app.post("/api/tenant/:tenant/sessions", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const payload = sanitizeSessionInput({ ...req.body, tenantId });
+  if (!payload.title) return res.status(400).json({ error: "Titre requis" });
+  writeSessionFile(tenantId, payload);
+  res.status(201).json(payload);
+});
+
+app.put("/api/tenant/:tenant/sessions/:id", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  const { id } = req.params;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const existing = readSessionFile(tenantId, id);
+  if (!existing) return res.status(404).json({ error: "Session not found" });
+  const payload = sanitizeSessionInput({ ...req.body, tenantId }, existing);
+  payload.id = existing.id;
+  payload.tenantId = tenantId;
+  payload.createdAt = existing.createdAt || payload.createdAt;
+  writeSessionFile(tenantId, payload);
+  res.json(payload);
+});
+
+app.delete("/api/tenant/:tenant/sessions/:id", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  const { id } = req.params;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const existing = readSessionFile(tenantId, id);
+  if (!existing) return res.status(404).json({ error: "Session not found" });
+  deleteSessionFile(tenantId, id);
+  res.json({ success: true });
 });
 
 //------------------------------------------------------------

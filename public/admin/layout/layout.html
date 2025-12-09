@@ -34,49 +34,36 @@
         <div class="text-3xl font-semibold text-emerald-500 font-pangolin text-center" x-show="!sidebarCollapsed">.ScenarWall.</div>
         <div class="text-xl font-semibold text-emerald-500 font-pangolin" x-show="sidebarCollapsed">.SW.</div>
       </div>
-      <nav class="flex-1 space-y-1" :class="sidebarCollapsed ? 'px-1' : 'px-3'">
-        <a href="/admin/" :class="[
+      <nav class="flex-1 space-y-2" :class="sidebarCollapsed ? 'px-1' : 'px-3'">
+        <a href="/admin/scenarios/list.html" :class="[
           sidebarCollapsed ? 'justify-center gap-0 px-0' : 'justify-start gap-3 px-3',
-          section === 'home' ? 'bg-slate-800 text-emerald-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'
+          section === 'scenarios' ? 'bg-slate-800 text-amber-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'
         ]" class="w-full flex items-center py-2 rounded-lg text-sm font-medium text-left transition">
-          <i class="fa-solid fa-gauge text-base"></i>
-          <span x-show="!sidebarCollapsed">Accueil</span>
+          <i class="fa-solid fa-scroll text-base"></i>
+          <span x-show="!sidebarCollapsed">Scénarios</span>
         </a>
-        <a href="/admin/gallery/gallery.html" :class="[
-          sidebarCollapsed ? 'justify-center gap-0 px-0' : 'justify-start gap-3 px-3',
-          section === 'galerie' ? 'bg-slate-800 text-emerald-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'
-        ]" class="w-full flex items-center py-2 rounded-lg text-sm font-medium text-left transition">
-          <i class="fa-regular fa-image text-base"></i>
-          <span x-show="!sidebarCollapsed">Galerie</span>
-        </a>
-        <a href="/admin/audio/audio.html" :class="[
-          sidebarCollapsed ? 'justify-center gap-0 px-0' : 'justify-start gap-3 px-3',
-          section === 'audio' ? 'bg-slate-800 text-indigo-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'
-        ]" class="w-full flex items-center py-2 rounded-lg text-sm font-medium text-left transition">
-          <i class="fa-solid fa-music text-base"></i>
-          <span x-show="!sidebarCollapsed">Audio</span>
-        </a>
-        <a href="/admin/tension/tension.html" :class="[
-          sidebarCollapsed ? 'justify-center gap-0 px-0' : 'justify-start gap-3 px-3',
-          section === 'tension' ? 'bg-slate-800 text-amber-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'
-        ]" class="w-full flex items-center py-2 rounded-lg text-sm font-medium text-left transition">
-          <i class="fa-solid fa-bolt text-base"></i>
-          <span x-show="!sidebarCollapsed">Tension</span>
-        </a>
-        <a href="/admin/users/users.html" :class="[
-          sidebarCollapsed ? 'justify-center gap-0 px-0' : 'justify-start gap-3 px-3',
-          section === 'users' ? 'bg-slate-800 text-sky-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'
-        ]" class="w-full flex items-center py-2 rounded-lg text-sm font-medium text-left transition" x-show="isSuperAdmin">
-          <i class="fa-solid fa-users text-base"></i>
-          <span x-show="!sidebarCollapsed">Utilisateurs</span>
-        </a>
-        <a href="/admin/gm-mode/gm-mode.html" :class="[
-          sidebarCollapsed ? 'justify-center gap-0 px-0' : 'justify-start gap-3 px-3',
-          section === 'gm' ? 'bg-slate-800 text-emerald-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'
-        ]" class="w-full flex items-center py-2 rounded-lg text-sm font-medium text-left transition">
-          <i class="fa-solid fa-hat-wizard text-base"></i>
-          <span x-show="!sidebarCollapsed">Game Master</span>
-        </a>
+        <div class="space-y-1" x-show="!sidebarCollapsed">
+          <template x-if="recentScenarios.length === 0">
+            <div class="text-xs text-slate-400 px-2">—</div>
+          </template>
+          <template x-for="sc in recentScenarios" :key="sc.id">
+            <div class="block px-2 py-1 rounded-md text-xs text-slate-700 dark:text-slate-200 space-y-1">
+              <div class="font-semibold" x-text="sc.title || sc.id"></div>
+              <template x-if="Array.isArray(sc.sessions) && sc.sessions.length">
+                <div class="space-y-0.5">
+                  <template x-for="sessId in sc.sessions.slice(0,3)" :key="sessId">
+                    <div class="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400">
+                      <i class="fa-regular fa-circle-dot text-[10px]"></i>
+                      <span x-text="lookupSessionTitle(sessId)"></span>
+                    </div>
+                  </template>
+                </div>
+              </template>
+            </div>
+          </template>
+        </div>
+        <div class="px-2 pt-2" x-show="sidebarCollapsed">
+        </div>
       </nav>
       <div class="px-4 py-4 text-xs text-slate-500 space-y-3" x-show="!sidebarCollapsed">
         <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 text-center shadow-sm text-sm">

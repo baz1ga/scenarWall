@@ -1,0 +1,92 @@
+<div id="page-content" x-data="sessionsListPage()" x-init="init()" class="space-y-6" x-cloak>
+  <div class="flex items-center justify-between gap-3 mt-2">
+    <div>
+      <div class="text-sm text-slate-500 dark:text-slate-400 flex flex-wrap items-center gap-1">
+        <a href="/admin/scenarios/list.html" class="hover:text-emerald-500 transition font-medium inline-flex items-center gap-1">
+          <i class="fa-solid fa-scroll text-[11px]"></i>
+          <span>Scénarios</span>
+        </a>
+        <span class="text-slate-400">›</span>
+        <template x-if="scenarioId">
+          <a :href="scenarioLink" class="hover:text-emerald-500 transition font-medium" x-text="scenarioTitle || scenarioId"></a>
+        </template>
+        <template x-if="!scenarioId">
+          <span class="font-medium" x-text="scenarioTitle || 'Scénario'"></span>
+        </template>
+        <span class="text-slate-400">›</span>
+        <span class="font-medium text-slate-700 dark:text-slate-200">Sessions</span>
+      </div>
+      <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100">Sessions</h1>
+      <p class="text-sm text-slate-600 dark:text-slate-400 mt-1" x-text="parentLabel"></p>
+    </div>
+    <a class="inline-flex items-center gap-2 rounded-lg bg-emerald-500 text-slate-900 font-semibold px-4 py-2 text-sm shadow-sm hover:bg-emerald-400 transition"
+       :href="`/admin/sessions/edit.html?scenario=${encodeURIComponent(parentScenario || '')}`">
+      <i class="fa-solid fa-plus"></i> Nouvelle session
+    </a>
+  </div>
+
+  <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm space-y-4">
+    <template x-if="loading">
+      <div class="flex items-center gap-3 text-sm text-slate-500">
+        <div class="h-5 w-5 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
+        Chargement des sessions...
+      </div>
+    </template>
+    <template x-if="!loading && sessions.length === 0">
+      <div class="border border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-6 text-center text-sm text-slate-600 dark:text-slate-400">
+        Aucune session pour ce scénario. Ajoutez-en une.
+      </div>
+    </template>
+    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" x-show="!loading && sessions.length > 0">
+      <template x-for="session in sessions" :key="session.id">
+        <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm flex flex-col gap-3 hover:shadow-md transition">
+          <a class="space-y-1 flex-1 block" :href="`/admin/sessions/view.html?id=${encodeURIComponent(session.id)}`">
+            <div class="flex items-center gap-2 justify-between">
+              <span class="inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-100">
+                <i class="fa-solid fa-layer-group"></i>
+                <span>Session</span>
+              </span>
+              <span class="text-[11px] text-slate-500 dark:text-slate-400" x-text="formatDate(session.updatedAt)"></span>
+            </div>
+            <div class="text-lg font-semibold text-slate-900 dark:text-slate-100" x-text="session.title || 'Sans titre'"></div>
+            <p class="text-sm text-slate-600 dark:text-slate-400 line-clamp-3" x-text="session.description || '—'"></p>
+          </a>
+          <div class="flex items-center justify-end gap-2">
+            <a class="h-9 px-3 inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 hover:text-emerald-600 hover:border-emerald-400 transition text-sm"
+               :href="`/admin/sessions/edit.html?id=${encodeURIComponent(session.id)}`">
+              <i class="fa-solid fa-pen"></i><span class="sr-only">Éditer</span>
+            </a>
+            <button class="h-9 px-3 inline-flex items-center justify-center gap-2 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-900 dark:text-rose-200 dark:hover:bg-rose-900/40 transition text-sm"
+                    @click="deleteSession(session)">
+              <i class="fa-solid fa-trash"></i><span class="sr-only">Supprimer</span>
+            </button>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <template x-if="confirmModal.open">
+    <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center px-4">
+      <div class="bg-white dark:bg-slate-950 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-800">
+        <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-start gap-3">
+          <div class="h-9 w-9 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-200 flex items-center justify-center">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+          <div class="space-y-1">
+            <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Confirmation</h3>
+            <p class="text-sm text-slate-600 dark:text-slate-400" x-text="confirmModal.message"></p>
+          </div>
+        </div>
+        <div class="px-5 py-4 flex items-center justify-end gap-3">
+          <button class="px-4 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                  @click="closeConfirm()">Annuler</button>
+          <button class="px-4 py-2 text-sm rounded-lg bg-rose-500 text-white font-semibold hover:bg-rose-400 transition"
+                  @click="confirmDelete()">Supprimer</button>
+        </div>
+      </div>
+    </div>
+  </template>
+</div>
+<script src="/admin/js/layout-loader.js"></script>
+<script type="module" src="/admin/sessions/list.js" data-page-script></script>
