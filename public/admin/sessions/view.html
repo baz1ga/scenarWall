@@ -123,7 +123,7 @@
                    @dragover.prevent
                    @drop.prevent="tenantDragIndex !== null && handleTenantDrop(tenantDragIndex)">
                 <template x-if="!currentScene?.images || currentScene.images.length === 0">
-                  <div class="col-span-full border border-dashed border-slate-300 dark:border-slate-800 rounded-xl p-4 text-sm text-slate-600 dark:text-slate-400">Aucune image liée.</div>
+                  <div class="col-span-full border border-dashed border-slate-300 dark:border-slate-800 rounded-xl p-4 text-sm text-slate-600 dark:text-slate-400">Aucune image.</div>
                 </template>
                 <template x-for="(imgObj, idx) in currentScene?.images || []" :key="`${idx}-${imgObj?.name}`">
                   <div class="relative rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 overflow-hidden aspect-square group shadow-sm"
@@ -171,7 +171,7 @@
                   <div class="text-sm text-slate-500">Chargement...</div>
                 </template>
                 <template x-if="!galleryLoading && tenantImages.length === 0">
-                  <div class="border border-dashed border-slate-300 dark:border-slate-800 rounded-xl p-4 text-sm text-slate-600 dark:text-slate-400">Aucune image visible.</div>
+                  <div class="border border-dashed border-slate-300 dark:border-slate-800 rounded-xl p-4 text-sm text-slate-600 dark:text-slate-400">Aucune image.</div>
                 </template>
                 <div class="grid gap-2 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7" x-show="!galleryLoading && tenantImages.length">
                   <template x-for="(img, idx) in tenantImages" :key="img.name">

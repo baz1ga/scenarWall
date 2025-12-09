@@ -1,4 +1,5 @@
 import { coreSection } from '/admin/js/core.js';
+import { pixabayMixin } from '/admin/js/pixabay.js';
 
 export function sessionViewSection(baseInit) {
   return {
@@ -51,13 +52,7 @@ export function sessionViewSection(baseInit) {
     uploadUrlMessage: '',
     uploadUrlStatus: 'ok',
     uploadUrlLoading: false,
-    pixabayKey: window.PIXABAY_KEY || '',
-    pixabayQuery: '',
-    pixabayLoading: false,
-    pixabayResults: [],
-    pixabayMessage: '',
-    pixabayStatus: 'ok',
-    pixabayInitialized: false,
+    ...pixabayMixin(),
     imageDragIndex: null,
     imageDragOver: null,
     editModal: {
@@ -491,7 +486,7 @@ export function sessionViewSection(baseInit) {
           this.pixabayStatus = 'error';
           return;
         }
-        this.searchPixabay(true);
+        this.searchPixabay({ allowEmpty: true });
       }
     },
     handleUploadDrop(event) {
@@ -571,49 +566,6 @@ export function sessionViewSection(baseInit) {
         this.uploadUrlStatus = 'error';
       }
       this.uploadUrlLoading = false;
-    },
-    async searchPixabay(initial = false) {
-      if (!this.pixabayKey) {
-        this.pixabayMessage = 'Clé API Pixabay manquante.';
-        this.pixabayStatus = 'error';
-        return;
-      }
-      if (!initial && !this.pixabayQuery) return;
-      this.pixabayLoading = true;
-      this.pixabayInitialized = true;
-      this.pixabayMessage = '';
-      this.pixabayStatus = 'ok';
-      try {
-        const query = encodeURIComponent(this.pixabayQuery || 'fantasy');
-        const res = await fetch(`https://pixabay.com/api/?key=${this.pixabayKey}&q=${query}&image_type=photo&per_page=24&orientation=horizontal`);
-        if (!res.ok) throw new Error('Pixabay');
-        const data = await res.json();
-        this.pixabayResults = Array.isArray(data.hits) ? data.hits : [];
-        if (this.pixabayResults.length === 0) {
-          this.pixabayMessage = 'Aucun résultat.';
-          this.pixabayStatus = 'ok';
-        }
-      } catch (err) {
-        this.pixabayMessage = 'Recherche impossible.';
-        this.pixabayStatus = 'error';
-      }
-      this.pixabayLoading = false;
-    },
-    async importFromPixabay(hit) {
-      if (!hit?.largeImageURL) return;
-      try {
-        await this.uploadFromUrl(hit.largeImageURL);
-        if (this.uploadUrlStatus === 'ok') {
-          this.pixabayMessage = 'Import réussi.';
-          this.pixabayStatus = 'ok';
-        } else {
-          this.pixabayMessage = this.uploadUrlMessage || 'Import impossible.';
-          this.pixabayStatus = 'error';
-        }
-      } catch (err) {
-        this.pixabayMessage = 'Import impossible.';
-        this.pixabayStatus = 'error';
-      }
     },
     setUpload(msg, status = 'ok') {
       this.uploadMessage = msg;

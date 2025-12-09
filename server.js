@@ -1024,6 +1024,26 @@ function removeThumbnail(tenantId, name) {
   }
 }
 
+function removeImageFromScenes(tenantId, imageName) {
+  const scenes = listScenes(tenantId);
+  let updated = 0;
+  scenes.forEach(scene => {
+    if (!Array.isArray(scene.images) || scene.images.length === 0) return;
+    const filtered = scene.images.filter(img => img?.name !== imageName);
+    if (filtered.length === scene.images.length) return;
+    // réindexation simple pour conserver un ordre cohérent
+    scene.images = filtered.map((img, idx) => ({ ...img, order: idx + 1 }));
+    scene.updatedAt = Math.floor(Date.now() / 1000);
+    try {
+      writeScene(tenantId, scene);
+      updated++;
+    } catch (err) {
+      logger.error("Failed to update scene after image delete", { tenantId, sceneId: scene.id, imageName, err: err?.message });
+    }
+  });
+  return updated;
+}
+
 function audioOrderFile(tenantId) {
   return path.join(TENANTS_DIR, tenantId, "audio-order.json");
 }
@@ -1307,7 +1327,9 @@ app.delete("/api/:tenantId/images/:name", requireLogin, (req, res) => {
   order = order.filter(o => o !== name);
   fs.writeFileSync(orderFile, JSON.stringify(order, null, 2));
 
-  res.json({ success: true });
+  const scenesUpdated = removeImageFromScenes(tenantId, name);
+
+  res.json({ success: true, scenesUpdated });
 });
 
 //------------------------------------------------------------

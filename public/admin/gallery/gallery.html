@@ -1,98 +1,107 @@
 <div id="page-content" x-data="galleryPage()" x-init="init()" class="space-y-6" x-cloak>
-  <section class="space-y-6 max-w-5xl mx-auto mt-6">
-    <div class="flex items-center justify-between gap-3">
-      <h2 class="text-lg font-semibold">Images visibles</h2>
-      <div class="flex items-center gap-2">
-        <button
-          class="btn-ghost inline-flex h-[34px] items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition disabled:opacity-40 disabled:cursor-not-allowed"
-          @click="hideSelectedVisible()"
-          :disabled="galleryLoading || selectedVisible.length === 0"
-          :title="selectedVisible.length === 0 ? 'Sélectionnez des images' : 'Cacher la sélection'"
-        >
-          <i class="fa-solid fa-eye-slash"></i> Cacher
-          <span class="badge-count" x-text="selectedVisible.length" x-show="selectedVisible.length > 0"></span>
-        </button>
-        <button
-          class="btn-outline-emerald inline-flex h-[34px] items-center gap-2 rounded-lg border border-emerald-500 px-3 py-1.5 text-sm text-emerald-800 dark:text-emerald-100 bg-white dark:bg-transparent hover:bg-emerald-500/10 transition"
-          x-show="tenantId"
-          @click="openUploadModal()"
-        >
-          <i class="fa-solid fa-upload"></i> Ajouter
-        </button>
-      </div>
-    </div>
-    <div class="space-y-2">
-      <template x-if="galleryLoading">
-        <div class="text-sm text-slate-400">Chargement...</div>
-      </template>
-      <template x-if="!galleryLoading && visible.length === 0">
-        <div class="text-sm text-slate-600 dark:text-slate-400 border border-dashed border-slate-300 dark:border-slate-800 rounded-lg p-4">Aucune image visible.</div>
-      </template>
-      <p class="text-xs text-slate-500 dark:text-slate-400" x-show="!galleryLoading && visible.length > 0">L'ordre des images ici sera repris en mode <strong>Présentateur</strong></p>
-      <div class="grid gap-1.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-        <template x-for="(img, index) in visible" :key="img.name">
-          <div
-            class="relative rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 overflow-hidden aspect-square transition-all group hover:-translate-y-0.5"
-            draggable="true"
-            @dragstart="startDrag(index)"
-            @dragend="endDrag()"
-            @dragover.prevent="onDragOver(index)"
-            @drop.prevent="onDrop(index)"
-            :class="[
-              'shadow-sm hover:shadow-md',
-              dragOverIndex === index ? 'ring-2 ring-emerald-400 ring-offset-2 ring-offset-slate-50 dark:ring-offset-slate-900 shadow-lg' : '',
-              dragIndex === index ? 'opacity-80 scale-[0.98]' : ''
-            ]"
-          >
-            <div class="absolute top-2 right-2 z-20 flex items-center gap-2">
-              <label class="h-8 w-8 flex items-center justify-center rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow cursor-pointer">
-                <input
-                  type="checkbox"
-                  class="h-4 w-4 rounded border border-slate-400 bg-white text-emerald-500 accent-emerald-500 cursor-pointer"
-                  :checked="selectedVisible.includes(img.name)"
-                  @change.stop="toggleSelectVisible(img.name)"
-                  :aria-label="`Sélectionner ${img.name}`"
-                >
-              </label>
-            </div>
-            <button
-              class="absolute top-2 left-2 h-7 w-7 flex items-center justify-center rounded-full bg-white/90 dark:bg-slate-900/90 text-slate-500 hover:text-emerald-500 cursor-grab select-none border border-slate-200 dark:border-slate-700 text-xs"
-              :class="dragIndex === index ? 'cursor-grabbing text-emerald-500' : ''"
-              title="Glisser pour réordonner"
-              @mousedown.prevent
-            >
-              <i class="fa-solid fa-grip-vertical"></i>
-            </button>
-            <div class="absolute bottom-2 left-2 px-2 py-1 rounded-full bg-slate-900/80 text-white text-[11px] font-semibold shadow-sm">#<span x-text="index + 1"></span></div>
-            <div class="absolute inset-0">
-              <img :src="img.thumbUrl || img.url" class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105 group-active:scale-[1.02]" @click="zoom(img.url)">
-            </div>
-            <div class="absolute inset-0 bg-slate-900/15 dark:bg-slate-100/10 opacity-0 group-hover:opacity-100 transition flex items-center justify-center pointer-events-none text-[10px] font-semibold tracking-wide text-white">Glisser pour déplacer</div>
-            <div
-              class="absolute inset-0 flex items-center justify-center bg-emerald-600/15 text-emerald-900 dark:text-emerald-100 text-xs font-semibold tracking-wide uppercase"
-              x-show="dragIndex !== null && dragOverIndex === index"
-              x-transition
-            >
-              Déposer ici
-            </div>
-            <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/40 to-transparent p-2 text-white space-y-1.5">
-              <div class="text-[12px] font-semibold truncate" x-text="img.name"></div>
-            </div>
-          </div>
-        </template>
-      </div>
-    </div>
-    <div class="space-y-4">
+    <div id="visiblePictures" class="space-y-2">
       <div class="flex items-center justify-between gap-3">
-        <h2 class="text-lg font-semibold">Images cachées</h2>
+        <div>
+          <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100 flex flex-wrap items-center gap-2">Votre bibliothèque</h1>
+          <p class="text-sm text-slate-500 dark:text-slate-400">Images disponibles pour vos scènes</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button
+            class="btn-ghost inline-flex h-[34px] items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition disabled:opacity-40 disabled:cursor-not-allowed"
+            @click="hideSelectedVisible()"
+            :disabled="galleryLoading || selectedVisible.length === 0"
+            :title="selectedVisible.length === 0 ? 'Sélectionnez des images' : 'Mettre de coté'"
+          >
+            <i class="fa-solid fa-eye-slash"></i> Mettre de coté
+            <span class="badge-count" x-text="selectedVisible.length" x-show="selectedVisible.length > 0"></span>
+          </button>
+          <button
+            class="btn-outline-emerald inline-flex h-[34px] items-center gap-2 rounded-lg border border-emerald-500 px-3 py-1.5 text-sm text-emerald-800 dark:text-emerald-100 bg-white dark:bg-transparent hover:bg-emerald-500/10 transition"
+            x-show="tenantId"
+            @click="openUploadModal()"
+          >
+            <i class="fa-solid fa-upload"></i> Ajouter
+          </button>
+        </div>
+      </div>
+      <div class="space-y-2">
+          <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/40 p-4">
+            <template x-if="galleryLoading">
+              <div class="text-sm text-slate-400">Chargement...</div>
+            </template>
+            <template x-if="!galleryLoading && visible.length === 0">
+              <div class="text-sm text-slate-600 dark:text-slate-400 border border-dashed border-slate-300 dark:border-slate-800 rounded-lg p-4">Aucune image.</div>
+            </template>
+
+              <div class="grid gap-2 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7">
+                <template x-for="(img, index) in visible" :key="img.name">
+                  <div
+                    class="relative rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 overflow-hidden aspect-square transition-all group hover:-translate-y-0.5"
+                    draggable="true"
+                    @dragstart="startDrag(index)"
+                    @dragend="endDrag()"
+                    @dragover.prevent="onDragOver(index)"
+                    @drop.prevent="onDrop(index)"
+                    :class="[
+                      'shadow-sm hover:shadow-md',
+                      dragOverIndex === index ? 'ring-2 ring-emerald-400 ring-offset-2 ring-offset-slate-50 dark:ring-offset-slate-900 shadow-lg' : '',
+                      dragIndex === index ? 'opacity-80 scale-[0.98]' : ''
+                    ]"
+                  >
+                    <div class="absolute top-2 right-2 z-20 flex items-center gap-2">
+                      <label class="h-8 w-8 flex items-center justify-center rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow cursor-pointer">
+                        <input
+                          type="checkbox"
+                          class="h-4 w-4 rounded border border-slate-400 bg-white text-emerald-500 accent-emerald-500 cursor-pointer"
+                          :checked="selectedVisible.includes(img.name)"
+                          @change.stop="toggleSelectVisible(img.name)"
+                          :aria-label="`Sélectionner ${img.name}`"
+                        >
+                      </label>
+                    </div>
+                    <button
+                      class="absolute top-2 left-2 h-7 w-7 flex items-center justify-center rounded-full bg-white/90 dark:bg-slate-900/90 text-slate-500 hover:text-emerald-500 cursor-grab select-none border border-slate-200 dark:border-slate-700 text-xs"
+                      :class="dragIndex === index ? 'cursor-grabbing text-emerald-500' : ''"
+                      title="Glisser pour réordonner"
+                      @mousedown.prevent
+                    >
+                      <i class="fa-solid fa-grip-vertical"></i>
+                    </button>
+                    <div class="absolute bottom-2 left-2 px-2 py-1 rounded-full bg-slate-900/80 text-white text-[11px] font-semibold shadow-sm">#<span x-text="index + 1"></span></div>
+                    <div class="absolute inset-0">
+                      <img :src="img.thumbUrl || img.url" class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105 group-active:scale-[1.02]" @click="zoom(img.url)">
+                    </div>
+                    <div class="absolute inset-0 bg-slate-900/15 dark:bg-slate-100/10 opacity-0 group-hover:opacity-100 transition flex items-center justify-center pointer-events-none text-[10px] font-semibold tracking-wide text-white">Glisser pour déplacer</div>
+                    <div
+                      class="absolute inset-0 flex items-center justify-center bg-emerald-600/15 text-emerald-900 dark:text-emerald-100 text-xs font-semibold tracking-wide uppercase"
+                      x-show="dragIndex !== null && dragOverIndex === index"
+                      x-transition
+                    >
+                      Déposer ici
+                    </div>
+                    <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/40 to-transparent p-2 text-white space-y-1.5">
+                      <div class="text-[12px] font-semibold truncate" x-text="img.name"></div>
+                    </div>
+                  </div>
+                </template>
+              </div>
+          </div>
+      </div>
+    </div>
+    <div id="hiddenPictures" class="space-y-4 mt-6">
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100 flex flex-wrap items-center gap-2">Vos images mises de coté</h1>
+          <p class="text-sm text-slate-500 dark:text-slate-400">N'impact pas vos scènes existantes</p>
+        </div>
         <div class="flex items-center gap-2">
           <button
             class="btn-ghost inline-flex h-[34px] items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition disabled:opacity-40 disabled:cursor-not-allowed"
             @click="showSelectedHidden()"
             :disabled="galleryLoading || selectedHidden.length === 0"
-            :title="selectedHidden.length === 0 ? 'Sélectionnez des images' : 'Rendre visibles la sélection'"
+            :title="selectedHidden.length === 0 ? 'Sélectionnez des images' : 'Ajouter à la bibliothèque'"
           >
-            <i class="fa-regular fa-eye"></i> Afficher
+            <i class="fa-regular fa-eye"></i> Ajouter à la bibliothèque
             <span class="badge-count" x-text="selectedHidden.length" x-show="selectedHidden.length > 0"></span>
           </button>
           <button
@@ -107,36 +116,43 @@
         </div>
       </div>
       <div class="space-y-2">
+        <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/40 p-4">
         <template x-if="galleryLoading">
           <div class="text-sm text-slate-400">Chargement...</div>
         </template>
         <template x-if="!galleryLoading && hidden.length === 0">
-          <div class="text-sm text-slate-600 dark:text-slate-400 border border-dashed border-slate-300 dark:border-slate-800 rounded-lg p-4">Aucune image cachée.</div>
+          <div class="text-sm text-slate-600 dark:text-slate-400 border border-dashed border-slate-300 dark:border-slate-800 rounded-lg p-4">Aucune image.</div>
         </template>
-        <template x-for="img in hidden" :key="img.name">
-          <div class="flex items-center gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3">
-            <label class="h-8 w-8 flex items-center justify-center rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow cursor-pointer">
-              <input
-                type="checkbox"
-                class="h-4 w-4 rounded border border-slate-400 bg-white text-emerald-500 accent-emerald-500 cursor-pointer"
-                :checked="selectedHidden.includes(img.name)"
-                @change.stop="toggleSelectHidden(img.name)"
-                :aria-label="`Sélectionner ${img.name}`"
-              >
-            </label>
-            <img :src="img.thumbUrl || img.url" class="h-16 w-16 object-cover rounded-lg border border-slate-800" @click="zoom(img.url)">
-            <div class="flex-1 min-w-0">
-              <div class="text-sm font-semibold truncate" :title="img.name" x-text="img.name"></div>
-            </div>
-            <div class="flex items-center gap-2 text-sm">
-              <button class="px-2 py-1 rounded bg-emerald-500 text-slate-900 font-semibold hover:bg-emerald-400" @click="showImage(img.name)"><i class="fa-regular fa-eye mr-1"></i>Afficher</button>
-            </div>
+
+          <div class="grid gap-2 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7">
+            <template x-for="(img, index) in hidden" :key="img.name">
+              <div class="relative rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 overflow-hidden aspect-square transition-all group hover:-translate-y-0.5 shadow-sm hover:shadow-md">
+                <div class="absolute top-2 right-2 z-20 flex items-center gap-2">
+                  <label class="h-8 w-8 flex items-center justify-center rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow cursor-pointer">
+                    <input
+                      type="checkbox"
+                      class="h-4 w-4 rounded border border-slate-400 bg-white text-emerald-500 accent-emerald-500 cursor-pointer"
+                      :checked="selectedHidden.includes(img.name)"
+                      @change.stop="toggleSelectHidden(img.name)"
+                      :aria-label="`Sélectionner ${img.name}`"
+                    >
+                  </label>
+                </div>
+                <div class="absolute top-2 left-2 px-2 py-1 rounded-full bg-amber-500 text-slate-900 text-[11px] font-semibold shadow-sm">Cachée</div>
+                <div class="absolute inset-0">
+                  <img :src="img.thumbUrl || img.url" class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105 group-active:scale-[1.02]" @click="zoom(img.url)">
+                </div>
+                <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/40 to-transparent p-2 text-white space-y-1.5">
+                  <div class="text-[12px] font-semibold truncate" x-text="img.name"></div>
+                </div>
+              </div>
+            </template>
           </div>
-        </template>
+        </div>
       </div>
       <div class="text-sm" :class="uploadStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-300'" x-text="uploadMessage"></div>
     </div>
-  </section>
+
 
   <div
     class="fixed inset-0 z-50 flex items-center justify-center px-3"
@@ -237,7 +253,7 @@
                 <div class="text-xs text-slate-500 truncate" x-text="img.user || 'Pixabay'"></div>
                 <button
                   class="inline-flex items-center gap-1 rounded-lg bg-emerald-500 text-slate-900 px-2 py-1 text-xs font-semibold hover:bg-emerald-400"
-                  @click="importPixabay(img.largeImageURL || img.webformatURL)"
+                  @click="importFromPixabay(img.largeImageURL || img.webformatURL)"
                   :disabled="uploadUrlLoading"
                 >
                   <i class="fa-solid fa-cloud-arrow-down"></i> Importer
