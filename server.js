@@ -1569,7 +1569,7 @@ function ensureDefaultSessionForScenario(tenantId, scenario) {
     const sessionPayload = {
       id: sessionId,
       tenantId,
-      title: "Session 0",
+      title: "Session 1",
       parentScenario: scenario.id,
       createdAt: now,
       updatedAt: now

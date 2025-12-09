@@ -33,6 +33,8 @@ export function sessionViewSection(baseInit) {
       saving: false,
       error: ''
     },
+    sceneSelectionLoading: false,
+    sceneSelectionTimer: null,
     zoomModal: {
       open: false,
       url: '',
@@ -175,36 +177,14 @@ export function sessionViewSection(baseInit) {
       if (index === this.dragIndex || this.dragIndex === null) return;
     },
     async dropScene(index) {
-      if (this.dragIndex === null || index === this.dragIndex) {
-        this.dragIndex = null;
-        return;
-      }
-      const arr = [...this.scenes];
-      const [item] = arr.splice(this.dragIndex, 1);
-      arr.splice(index, 0, item);
-      this.scenes = arr.map((scene, i) => ({ ...scene, order: i + 1 }));
-      this.dragIndex = null;
-      this.setCurrentScene(item.id);
-      await this.saveSceneOrder();
+      // drag & drop désactivé (remplacé par navigation via flèches)
     },
 
     async saveSceneOrder() {
       if (!this.tenantId || !this.scenes.length) return;
       this.savingOrder = true;
       try {
-        const order = this.scenes.map(s => s.id);
-        const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/scenes/reorder`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json', ...this.headersAuth() },
-          body: JSON.stringify({ order })
-        });
-        if (!res.ok) {
-          if (res.status === 404) {
-            await this.saveSceneOrderFallback();
-          } else {
-            throw new Error('Réordonnancement impossible');
-          }
-        }
+        await this.saveSceneOrderFallback();
       } catch (err) {
         this.error = err?.message || 'Erreur lors du réordonnancement';
       } finally {
@@ -229,11 +209,17 @@ export function sessionViewSection(baseInit) {
 
    setCurrentScene(id) {
       const found = this.scenes.find(s => s.id === id);
-      if (found) {
-        this.currentScene = found;
-        this.activeTab = 'images';
-        this.updateBreadcrumb();
-      }
+      if (!found) return;
+      if (this.currentScene?.id === found.id && !this.sceneSelectionLoading) return;
+      this.currentScene = found;
+      this.activeTab = 'images';
+      this.updateBreadcrumb();
+      this.sceneSelectionLoading = true;
+      if (this.sceneSelectionTimer) clearTimeout(this.sceneSelectionTimer);
+      this.sceneSelectionTimer = setTimeout(() => {
+        this.sceneSelectionLoading = false;
+        this.sceneSelectionTimer = null;
+      }, 1000);
     },
 
     openEditModal() {
@@ -398,6 +384,16 @@ export function sessionViewSection(baseInit) {
     handleTenantDragOver(index) {
       this.tenantDragOver = index;
     },
+    moveScene(index, dir) {
+      const target = index + dir;
+      if (target < 0 || target >= this.scenes.length) return;
+      const arr = [...this.scenes];
+      const [item] = arr.splice(index, 1);
+      arr.splice(target, 0, item);
+      this.scenes = arr.map((scene, i) => ({ ...scene, order: i + 1 }));
+      this.setCurrentScene(item.id);
+      this.saveSceneOrder();
+    },
     handleTenantDrop(index) {
       if (this.tenantDragIndex === null) return;
       const img = this.tenantImages[this.tenantDragIndex];
@@ -439,6 +435,31 @@ export function sessionViewSection(baseInit) {
       const reordered = imgs.map((img, idx) => ({ ...img, order: idx + 1 }));
       this.currentScene = { ...this.currentScene, images: reordered };
       await this.updateSceneImages(reordered);
+    },
+    async duplicateScene(scene) {
+      if (!scene || !this.session?.id || !this.tenantId) return;
+      try {
+        const titleBase = scene.title || 'Scène';
+        const payload = {
+          title: `${titleBase} (copie)`,
+          parentSession: this.session.id,
+          images: this.normalizeImages(scene.images),
+          audio: Array.isArray(scene.audio) ? [...scene.audio] : [],
+          tension: scene.tension || null,
+          notes: scene.notes || null
+        };
+        const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/scenes`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...this.headersAuth() },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error('Duplication impossible');
+        const created = await res.json();
+        await this.fetchScenes(this.session.id);
+        if (created?.id) this.setCurrentScene(created.id);
+      } catch (err) {
+        this.error = err?.message || 'Erreur lors de la duplication';
+      }
     },
 
     openZoom(name) {
