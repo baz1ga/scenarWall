@@ -181,7 +181,7 @@
 
               <div class="space-y-3 pt-4 border-t border-dashed border-slate-300 dark:border-slate-700">
                 <div class="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
-                  <h3 class="text-xs uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Bibliothèque du tenant</h3>
+                  <h3 class="text-xs uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Toutes vos images</h3>
                   <a href="/admin/gallery/gallery.html"
                      class="inline-flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                     <i class="fa-regular fa-image"></i>
@@ -224,17 +224,86 @@
           </template>
 
           <template x-if="activeTab === 'audio'">
-            <div class="space-y-2">
-              <template x-if="!currentScene?.audio || currentScene.audio.length === 0">
-                <div class="text-sm text-slate-500 dark:text-slate-400">Aucune piste audio liée.</div>
-              </template>
-              <div class="flex flex-col gap-2" x-show="currentScene?.audio && currentScene.audio.length">
-                <template x-for="sound in currentScene.audio" :key="sound">
-                  <div class="rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm flex items-center gap-2">
-                    <i class="fa-solid fa-music text-emerald-500"></i>
-                    <span x-text="sound"></span>
-                  </div>
+            <div class="space-y-6">
+              <div class="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+                <h3 class="text-xs uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Audio de la scène</h3>
+                <label class="cursor-pointer inline-flex items-center gap-2 text-sm text-indigo-600 dark:text-indigo-300" x-show="tenantId">
+                  <input type="file" class="hidden" multiple accept="audio/*" @change="uploadSceneAudio($event)">
+                  <span class="inline-flex items-center gap-2 rounded-lg border border-indigo-500 px-3 py-1.5 text-indigo-800 dark:text-indigo-100 bg-white dark:bg-transparent hover:bg-indigo-500/10">
+                    <i class="fa-solid fa-upload"></i> Ajouter (&lt; 1 Mo)
+                  </span>
+                </label>
+              </div>
+              <div class="space-y-3"
+                   @dragover.prevent
+                   @drop.prevent="tenantAudioDragIndex !== null && handleTenantAudioDrop()">
+                <template x-if="!currentScene?.audio || currentScene.audio.length === 0">
+                  <div class="max-w-5xl mx-auto border border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-4 text-sm text-slate-600 dark:text-slate-400">Aucun audio.</div>
                 </template>
+                <div class="flex flex-col gap-2  max-w-5xl mx-auto" x-show="currentScene?.audio && currentScene.audio.length">
+                  <template x-for="(sound, idx) in currentScene?.audio || []" :key="`${idx}-${sound?.name || sound}`">
+                    <div class="group flex items-center gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 shadow-sm cursor-grab"
+                         draggable="true"
+                         @dragstart="startSceneAudioDrag(idx)"
+                         @dragover.prevent="overSceneAudioDrag(idx)"
+                         @dragend="endSceneAudioDrag()"
+                         @drop.prevent="dropSceneAudio(idx)"
+                         :class="sceneAudioDragOver === idx ? 'ring-2 ring-emerald-400 ring-offset-2 ring-offset-slate-50 dark:ring-offset-slate-900' : ''">
+                      <div class="h-8 w-8 inline-flex items-center justify-center rounded-lg bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 text-slate-500 group-hover:text-emerald-600 transition">
+                        <i class="fa-solid fa-grip-vertical text-sm"></i>
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <div class="text-sm font-semibold truncate" x-text="sound?.name || sound"></div>
+                        <div class="text-xs text-slate-500" x-text="tenantAudioFor(sound?.name || sound)?.size ? formatBytes(tenantAudioFor(sound?.name || sound)?.size) : '—'"></div>
+                      </div>
+                      <audio :src="tenantAudioFor(sound?.name || sound)?.url" controls class="w-80 h-9" x-show="tenantAudioFor(sound?.name || sound)?.url"></audio>
+                      <button class="h-9 w-9 inline-flex items-center justify-center rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-rose-600 hover:border-rose-400 hover:text-rose-500 transition"
+                              @click.stop="removeAudioFromScene(idx)"
+                              aria-label="Retirer l'audio de la scène"
+                              title="Retirer l'audio de la scène">
+                        <i class="fa-solid fa-arrow-down"></i>
+                      </button>
+                    </div>
+                  </template>
+                </div>
+              </div>
+
+              <div class="space-y-3 pt-4 border-t border-dashed border-slate-300 dark:border-slate-700">
+                <div class="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+                  <h3 class="text-xs uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Tous vos audios</h3>
+                  <a href="/admin/audio/audio.html"
+                     class="inline-flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                    <i class="fa-solid fa-music text-base"></i>
+                    Ouvrir les audios
+                  </a>
+                </div>
+                <template x-if="tenantAudioLoading">
+                  <div class="text-sm text-slate-500">Chargement...</div>
+                </template>
+                <template x-if="!tenantAudioLoading && tenantAudio.length === 0">
+                  <div class="max-w-5xl mx-auto border border-dashed border-slate-300 dark:border-slate-800 rounded-xl p-4 text-sm text-slate-600 dark:text-slate-400">Aucun fichier audio.</div>
+                </template>
+                <div class="flex flex-col gap-2 max-w-5xl mx-auto " x-show="!tenantAudioLoading && tenantAudio.length">
+                  <template x-for="(audio, idx) in tenantAudio" :key="audio.name">
+                    <div class="group flex items-center gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 shadow-sm">
+                      <div class="h-9 w-9 inline-flex items-center justify-center rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-500">
+                        <i class="fa-solid fa-music"></i>
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <div class="text-sm font-semibold truncate" x-text="audio.name"></div>
+                        <div class="text-xs text-slate-500" x-text="formatBytes(audio.size)"></div>
+                      </div>
+                      <audio :src="audio.url" controls class="w-80 h-9 mt-2"></audio>
+                      <button class="h-9 w-9 inline-flex items-center justify-center rounded-full bg-white dark:bg-slate-900 border border-emerald-500 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20  transition"
+                              @click.stop="addAudioToScene(audio.name)"
+                              aria-label="Associer l'audio de la scène"
+                              title="Associer l'audio de la scène">
+                        <i class="fa-solid fa-arrow-up"></i>
+                      </button>                      
+                    </div>
+                  </template>
+                  <div class="text-xs max-w-5xl mx-auto" :class="audioUploadStatus === 'error' ? 'text-rose-500' : 'text-emerald-600'" x-text="audioUploadMessage"></div>
+                </div>
               </div>
             </div>
           </template>

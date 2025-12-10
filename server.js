@@ -1044,6 +1044,31 @@ function removeImageFromScenes(tenantId, imageName) {
   return updated;
 }
 
+function removeAudioFromScenes(tenantId, audioName) {
+  const scenes = listScenes(tenantId);
+  let updated = 0;
+  scenes.forEach(scene => {
+    if (!Array.isArray(scene.audio) || scene.audio.length === 0) return;
+    const filtered = scene.audio.filter(a => {
+      const name = typeof a === "string" ? a : a?.name;
+      return name !== audioName;
+    });
+    if (filtered.length === scene.audio.length) return;
+    scene.audio = filtered.map((item, idx) => {
+      if (typeof item === "string") return { name: item, order: idx + 1 };
+      return { ...item, order: idx + 1 };
+    });
+    scene.updatedAt = Math.floor(Date.now() / 1000);
+    try {
+      writeScene(tenantId, scene);
+      updated++;
+    } catch (err) {
+      logger.error("Failed to update scene after audio delete", { tenantId, sceneId: scene.id, audioName, err: err?.message });
+    }
+  });
+  return updated;
+}
+
 function audioOrderFile(tenantId) {
   return path.join(TENANTS_DIR, tenantId, "audio-order.json");
 }
@@ -1417,7 +1442,8 @@ app.delete("/api/:tenantId/audio/:name", requireLogin, (req, res) => {
   }
   const order = readAudioOrder(tenantId).filter(n => n !== name);
   writeAudioOrder(tenantId, order);
-  return res.json({ success: true });
+  const scenesUpdated = removeAudioFromScenes(tenantId, name);
+  return res.json({ success: true, scenesUpdated });
 });
 
 app.put("/api/:tenantId/audio/order", requireLogin, (req, res) => {
@@ -1855,7 +1881,18 @@ function sanitizeSceneInput(body = {}, existing = null) {
       })
       .filter(Boolean);
   }
-  if (Array.isArray(body.audio)) payload.audio = body.audio.map(String);
+  if (Array.isArray(body.audio)) {
+    payload.audio = body.audio
+      .map((item, idx) => {
+        if (typeof item === "string") return { name: item, order: idx + 1 };
+        const name = typeof item?.name === "string" ? item.name : "";
+        if (!name) return null;
+        const order = typeof item?.order === "number" ? item.order : idx + 1;
+        return { name, order };
+      })
+      .filter(Boolean)
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+  }
   if (body.tension !== undefined) payload.tension = body.tension;
   if (typeof body.notes === "string") payload.notes = body.notes;
   delete payload.description;

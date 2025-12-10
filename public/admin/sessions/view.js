@@ -60,6 +60,16 @@ export function sessionViewSection(baseInit) {
     tenantDragIndex: null,
     tenantDragOver: null,
     galleryLoading: false,
+    // audio tenant
+    tenantAudio: [],
+    tenantAudioLoading: false,
+    tenantAudioDragIndex: null,
+    tenantAudioDragOver: null,
+    sceneAudioDragIndex: null,
+    sceneAudioDragOver: null,
+    audioUploadStatus: 'ok',
+    audioUploadMessage: '',
+    audioUploading: false,
     uploadMessage: '',
     uploadStatus: 'ok',
     uploadModalOpen: false,
@@ -101,6 +111,7 @@ export function sessionViewSection(baseInit) {
         await this.fetchSession(sessionId);
         await this.fetchScenes(sessionId);
         await this.refreshTenantImages();
+        await this.refreshTenantAudio();
       } catch (err) {
         this.error = err?.message || 'Impossible de charger la session';
       } finally {
@@ -180,7 +191,11 @@ export function sessionViewSection(baseInit) {
         if (orderDiff !== 0) return orderDiff;
         return (b.updatedAt || 0) - (a.updatedAt || 0);
       });
-      this.scenes = list.map(sc => ({ ...sc, images: this.normalizeImages(sc.images) }));
+      this.scenes = list.map(sc => ({
+        ...sc,
+        images: this.normalizeImages(sc.images),
+        audio: this.normalizeAudio(sc.audio)
+      }));
       const stored = this.readStoredScene();
       if (stored && this.scenes.find(s => s.id === stored)) {
         this.setCurrentScene(stored, false);
@@ -488,7 +503,7 @@ export function sessionViewSection(baseInit) {
           title: `${titleBase} (copie)`,
           parentSession: this.session.id,
           images: this.normalizeImages(scene.images),
-          audio: Array.isArray(scene.audio) ? [...scene.audio] : [],
+          audio: this.normalizeAudio(scene.audio),
           tension: scene.tension || null,
           notes: scene.notes || null
         };
@@ -647,8 +662,185 @@ export function sessionViewSection(baseInit) {
       const url = img?.url || img?.thumbUrl;
       if (url) this.zoomModal = { open: true, url, name: name || '' };
     },
+    // audio - scene side
+    startSceneAudioDrag(idx) {
+      this.sceneAudioDragIndex = idx;
+      this.sceneAudioDragOver = idx;
+    },
+    overSceneAudioDrag(idx) {
+      this.sceneAudioDragOver = idx;
+    },
+    endSceneAudioDrag() {
+      this.sceneAudioDragIndex = null;
+      this.sceneAudioDragOver = null;
+    },
+    async dropSceneAudio(idx) {
+      if (this.sceneAudioDragIndex === null || idx === this.sceneAudioDragIndex) {
+        this.sceneAudioDragIndex = null;
+        this.sceneAudioDragOver = null;
+        return;
+      }
+      const items = this.normalizeAudio(this.currentScene?.audio);
+      if (!items.length) {
+        this.sceneAudioDragIndex = null;
+        this.sceneAudioDragOver = null;
+        return;
+      }
+      const arr = [...items];
+      const [item] = arr.splice(this.sceneAudioDragIndex, 1);
+      arr.splice(idx, 0, item);
+      const reordered = arr.map((audio, i) => ({ ...audio, order: i + 1 }));
+      this.currentScene = { ...this.currentScene, audio: reordered };
+      await this.updateSceneAudio(reordered);
+      this.sceneAudioDragIndex = null;
+      this.sceneAudioDragOver = null;
+    },
+    async removeAudioFromScene(index) {
+      const sceneId = this.selectedSceneId || this.currentScene?.id;
+      if (index === undefined || index === null || !sceneId) return;
+      const scene = this.scenes.find(s => s.id === sceneId) || this.currentScene;
+      const list = this.normalizeAudio(scene?.audio);
+      if (index < 0 || index >= list.length) return;
+      list.splice(index, 1);
+      const reordered = list.map((item, i) => ({ ...item, order: i + 1 }));
+      this.currentScene = { ...scene, audio: reordered };
+      this.selectedSceneId = sceneId;
+      this.activeTab = 'audio';
+      await this.updateSceneAudio(reordered, sceneId);
+    },
+    addAudioToScene(name, persist = true) {
+      const sceneId = this.selectedSceneId || this.currentScene?.id;
+      if (!name || !sceneId) return;
+      const scene = this.scenes.find(s => s.id === sceneId) || this.currentScene;
+      if (!scene) return;
+      const list = this.normalizeAudio(scene.audio);
+      const nextOrder = list.length + 1;
+      list.push({ name, order: nextOrder });
+      this.currentScene = { ...scene, audio: list };
+      this.selectedSceneId = sceneId;
+      this.activeTab = 'audio';
+      if (persist) this.updateSceneAudio(list, sceneId);
+    },
+    async updateSceneAudio(audioList, sceneIdOverride = '') {
+      const sceneId = sceneIdOverride || this.selectedSceneId || this.currentScene?.id;
+      if (!this.tenantId || !sceneId) return;
+      const normalized = this.normalizeAudio(audioList);
+      try {
+        await fetch(`${this.API}/api/tenant/${this.tenantId}/scenes/${encodeURIComponent(sceneId)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', ...this.headersAuth() },
+          body: JSON.stringify({ ...this.currentScene, id: sceneId, audio: normalized })
+        });
+        await this.fetchScenes(this.session?.id);
+        this.setCurrentScene(sceneId, false);
+        this.activeTab = 'audio';
+      } catch (err) {
+        this.error = err?.message || 'Erreur lors de la mise à jour de l\'audio';
+      }
+    },
+    async uploadSceneAudio(event) {
+      const files = Array.from(event?.target?.files || []);
+      if (event?.target) event.target.value = '';
+      if (!files.length || !this.tenantId) return;
+      let success = 0;
+      const errors = [];
+      const uploaded = [];
+      this.audioUploading = true;
+      for (const file of files) {
+        if (file.size > 1 * 1024 * 1024) {
+          errors.push(`${file.name} dépasse 1 Mo`);
+          continue;
+        }
+        const form = new FormData();
+        form.append('audio', file);
+        try {
+          const res = await fetch(`${this.API}/api/${this.tenantId}/audio/upload`, {
+            method: 'POST',
+            headers: this.headersAuth(),
+            body: form
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            errors.push(data.error || `Échec pour ${file.name}`);
+          } else {
+            success++;
+            uploaded.push(data.name || file.name);
+          }
+        } catch (err) {
+          errors.push(`Réseau: ${file.name}`);
+        }
+      }
+      if (success > 0) {
+        await this.refreshTenantAudio();
+        await this.fetchQuota?.();
+        uploaded.forEach(name => this.addAudioToScene(name));
+      } else {
+        await this.fetchQuota?.();
+      }
+      this.audioUploadStatus = errors.length ? 'error' : 'ok';
+      if (errors.length === 0) {
+        this.audioUploadMessage = `${success} fichier${success > 1 ? 's' : ''} ajouté${success > 1 ? 's' : ''}.`;
+      } else {
+        const msg = [
+          success > 0 ? `${success} fichier${success > 1 ? 's' : ''} ok.` : 'Aucun fichier ajouté.',
+          errors.join(' | ')
+        ].join(' ');
+        this.audioUploadMessage = msg;
+      }
+      this.audioUploading = false;
+    },
+    // tenant audio
+    async refreshTenantAudio() {
+      if (!this.tenantId) return;
+      this.tenantAudioLoading = true;
+      try {
+        const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/audio`, { headers: this.headersAuth() });
+        if (!res.ok) throw new Error('Audio');
+        this.tenantAudio = await res.json();
+      } catch (e) {
+        this.tenantAudio = [];
+      }
+      this.tenantAudioLoading = false;
+    },
+    handleTenantAudioDragStart(index) {
+      this.tenantAudioDragIndex = index;
+      this.tenantAudioDragOver = index;
+    },
+    handleTenantAudioDragOver(index) {
+      this.tenantAudioDragOver = index;
+    },
+    handleTenantAudioDragEnd() {
+      this.tenantAudioDragIndex = null;
+      this.tenantAudioDragOver = null;
+    },
+    handleTenantAudioDrop() {
+      if (this.tenantAudioDragIndex === null) return;
+      const audio = this.tenantAudio[this.tenantAudioDragIndex];
+      if (audio?.name) {
+        this.addAudioToScene(audio.name);
+      }
+      this.tenantAudioDragIndex = null;
+      this.tenantAudioDragOver = null;
+    },
+    tenantAudioFor(name) {
+      if (!name) return null;
+      return this.tenantAudio.find(a => a.name === name) || null;
+    },
 
     normalizeImages(arr) {
+      if (!Array.isArray(arr)) return [];
+      return arr
+        .map((item, idx) => {
+          if (typeof item === 'string') return { name: item, order: idx + 1 };
+          const name = typeof item?.name === 'string' ? item.name : '';
+          if (!name) return null;
+          const order = typeof item?.order === 'number' ? item.order : idx + 1;
+          return { name, order };
+        })
+        .filter(Boolean)
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
+    },
+    normalizeAudio(arr) {
       if (!Array.isArray(arr)) return [];
       return arr
         .map((item, idx) => {
