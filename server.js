@@ -521,6 +521,21 @@ function ensureSessionDir(tenantId) {
   return dir;
 }
 
+function applySessionRuntimeDefaults(session) {
+  if (!session || typeof session !== "object") return session;
+  return {
+    ...session,
+    timer: {
+      ...DEFAULT_TENANT_SESSION.timer,
+      ...(session.timer || {})
+    },
+    hourglass: {
+      ...DEFAULT_TENANT_SESSION.hourglass,
+      ...(session.hourglass || {})
+    }
+  };
+}
+
 function listSessions(tenantId) {
   const dir = sessionDir(tenantId);
   if (!fs.existsSync(dir)) return [];
@@ -528,20 +543,24 @@ function listSessions(tenantId) {
   return files.map(f => {
     try { return JSON.parse(fs.readFileSync(path.join(dir, f), "utf8")); }
     catch { return null; }
-  }).filter(Boolean);
+  }).filter(Boolean).map(applySessionRuntimeDefaults);
 }
 
 function readSessionFile(tenantId, id) {
   const file = sessionPath(tenantId, id);
   if (!fs.existsSync(file)) return null;
-  try { return JSON.parse(fs.readFileSync(file, "utf8")); }
+  try {
+    const data = JSON.parse(fs.readFileSync(file, "utf8"));
+    return applySessionRuntimeDefaults(data);
+  }
   catch { return null; }
 }
 
 function writeSessionFile(tenantId, data) {
   const dir = ensureSessionDir(tenantId);
   const file = sessionPath(tenantId, data.id);
-  fs.writeFileSync(file, JSON.stringify(data, null, 2));
+  const payload = applySessionRuntimeDefaults(data);
+  fs.writeFileSync(file, JSON.stringify(payload, null, 2));
   return data;
 }
 
@@ -1533,6 +1552,59 @@ app.put("/api/:tenantId/session/hourglass", requireLogin, (req, res) => {
   res.json(sessionData.hourglass);
 });
 
+// Session-scoped GM state (timer / hourglass) --------------------------------
+app.get("/api/tenant/:tenant/sessions/:id/gm-state", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  const { id } = req.params;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const session = readSessionFile(tenantId, id);
+  if (!session) return res.status(404).json({ error: "Session not found" });
+  return res.json({
+    timer: { ...DEFAULT_TENANT_SESSION.timer, ...(session.timer || {}) },
+    hourglass: { ...DEFAULT_TENANT_SESSION.hourglass, ...(session.hourglass || {}) }
+  });
+});
+
+app.put("/api/tenant/:tenant/sessions/:id/timer", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  const { id } = req.params;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const session = readSessionFile(tenantId, id);
+  if (!session) return res.status(404).json({ error: "Session not found" });
+  const { running, elapsedMs, startedAt } = req.body || {};
+  session.timer = {
+    running: !!running,
+    elapsedMs: typeof elapsedMs === "number" && elapsedMs >= 0 ? elapsedMs : 0,
+    startedAt: startedAt || null
+  };
+  session.updatedAt = Math.floor(Date.now() / 1000);
+  writeSessionFile(tenantId, session);
+  res.json(session.timer);
+});
+
+app.put("/api/tenant/:tenant/sessions/:id/hourglass", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  const { id } = req.params;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const session = readSessionFile(tenantId, id);
+  if (!session) return res.status(404).json({ error: "Session not found" });
+  const { durationSeconds, showTimer } = req.body || {};
+  const current = session.hourglass || { ...DEFAULT_TENANT_SESSION.hourglass };
+  session.hourglass = {
+    durationSeconds: typeof durationSeconds === "number" && durationSeconds > 0 ? durationSeconds : current.durationSeconds,
+    showTimer: showTimer === undefined ? current.showTimer : !!showTimer
+  };
+  session.updatedAt = Math.floor(Date.now() / 1000);
+  writeSessionFile(tenantId, session);
+  res.json(session.hourglass);
+});
+
 // Notes autosave (Markdown)
 app.get("/api/:tenantId/session/notes", requireLogin, (req, res) => {
   const { tenantId } = req.params;
@@ -1756,6 +1828,8 @@ function sanitizeSessionInput(body = {}, existing = null) {
     parentScenario: null,
     createdAt: now,
     updatedAt: now,
+    timer: { ...DEFAULT_TENANT_SESSION.timer },
+    hourglass: { ...DEFAULT_TENANT_SESSION.hourglass },
     tensionEnabled: true,
     tensionFont: 'Audiowide',
     tensionColors: {
@@ -1840,6 +1914,8 @@ function sanitizeSessionInput(body = {}, existing = null) {
   delete payload.date;
   delete payload.format;
   payload.updatedAt = now;
+  if (!payload.timer) payload.timer = { ...DEFAULT_TENANT_SESSION.timer };
+  if (!payload.hourglass) payload.hourglass = { ...DEFAULT_TENANT_SESSION.hourglass };
   return payload;
 }
 

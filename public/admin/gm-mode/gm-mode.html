@@ -1,13 +1,84 @@
 <div id="page-content" x-data="gmDashboard()" x-init="init()" class="min-h-screen overflow-hidden" x-cloak>
   <link rel="stylesheet" href="/admin/gm-mode/gm-mode.css">
 
-  <div class="max-w-7xl mx-auto grid gap-4 md:grid-cols-[1fr_260px]">
+  <div class="max-w-7xl mx-auto space-y-4">
+    <div class="flex items-center gap-3 mt-1">
+      <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100 inline-flex items-center gap-2">
+        <template x-if="scenarioTitle">
+          <a href="/admin/scenarios/list.html"
+             class="text-emerald-600 hover:text-emerald-500 font-semibold">
+            <span x-text="scenarioTitle"></span>
+          </a>
+        </template>
+        <template x-if="scenarioTitle">
+          <span class="text-slate-400">›</span>
+        </template>
+        <span x-text="currentSession?.title || selectedSessionId || 'Session'"></span>
+      </h1>
+    </div>
+
+    <template x-if="scenes.length > 1">
+      <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm space-y-3">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-clapperboard text-emerald-500"></i>
+          <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100 leading-none mt-1">Scènes</h3>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="h-9 w-9 inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-emerald-600 hover:border-emerald-400 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                  :disabled="sceneCarouselIndex === 0"
+                  @click="carouselPrev()">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+          <div class="overflow-hidden flex-1">
+            <div class="flex items-center gap-3"
+                 :style="`transform: translateX(-${sceneCarouselIndex * 290}px); transition: transform 200ms ease;`">
+              <template x-for="(scene, index) in scenes" :key="scene.id">
+                <div class="flex items-center gap-2 shrink-0">
+                  <div class="relative w-[200px] min-h-[90px] rounded-lg border px-2 py-2 text-sm transition flex flex-col gap-2 overflow-hidden cursor-pointer"
+                       :class="scene.id === selectedSceneId
+                         ? 'border-emerald-400 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-100 shadow-md ring-1 ring-emerald-300/60'
+                         : 'border-slate-200 dark:border-slate-700 hover:border-emerald-300 hover:bg-emerald-50/40 dark:hover:border-emerald-700 dark:hover:bg-emerald-900/20 text-slate-700 dark:text-slate-200'"
+                       role="button"
+                       tabindex="0"
+                       @click="selectScene(scene.id)"
+                       @keydown.enter.prevent="selectScene(scene.id)"
+                       @keydown.space.prevent="selectScene(scene.id)">
+                    <div class="min-h-[48px]">
+                      <div class="flex min-w-0 gap-2 items-start">
+                        <div class="px-2 py-0.5 rounded-bl-lg bg-slate-900/80 text-white text-[11px] font-semibold shadow-sm pointer-events-none leading-none absolute top-0 right-0">#<span x-text="scene.order || index + 1"></span></div>
+                        <div class="flex-1 pr-9">
+                          <div class="w-full text-left font-semibold leading-tight whitespace-normal">
+                            <span class="block" x-text="scene.title || 'Scène'"></span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <template x-if="index < scenes.length - 1">
+                    <div class="text-slate-400 dark:text-slate-600 px-1 shrink-0">
+                      <i class="fa-solid fa-angles-right text-xl"></i>
+                    </div>
+                  </template>
+                </div>
+              </template>
+            </div>
+          </div>
+          <button class="h-9 w-9 inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-emerald-600 hover:border-emerald-400 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                  :disabled="sceneCarouselIndex >= Math.max(0, scenes.length - 5)"
+                  @click="carouselNext()">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </template>
+
+    <div class="grid gap-4 md:grid-cols-[1fr_260px]">
     <section class="space-y-4">
       <div class="grid gap-4 md:grid-cols-[1fr_500px]">
         <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 shadow-sm space-y-3 notes-editor"
              x-init="initNotesEditor($refs.notesEditor)">
-          <h2 class="text-xl font-semibold inline-flex items-center gap-2 pl-2 inline"><i class="fa-solid fa-note-sticky"></i> Notes</h2>
-          <textarea x-ref="notesEditor" placeholder="Vos notes de session..." class="w-full"></textarea>
+          <h2 class="text-xl font-semibold inline-flex items-center gap-2 pl-2 inline"><i class="fa-solid fa-note-sticky"></i> Notes de la scène</h2>
+          <textarea x-ref="notesEditor" placeholder="Vos notes pour cette scène..." class="w-full"></textarea>
         </div>
         <div>
           <template x-if="tensionEnabled">
@@ -31,12 +102,6 @@
               </div>
             </div>
           </template>
-          <template x-if="!tensionEnabled">
-            <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 py-2 shadow-sm transition h-[62px] flex items-center">
-              <h3 class="text-lg font-semibold inline-flex items-center gap-2 text-slate-400 dark:text-slate-500"><i class="fa-solid fa-bolt"></i> Tension</h3>
-              <p class="text-sm text-slate-500 dark:text-slate-400 ml-3">Tension désactivée.</p>
-            </div>
-          </template>
           <div class="mt-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm space-y-2 h-[195px] overflow-hidden">
             <div class="flex items-center justify-between gap-2">
               <h3 class="text-lg font-semibold inline-flex items-center gap-2"><i class="fa-solid fa-image"></i> Diaporama</h3>
@@ -47,37 +112,73 @@
             <template x-if="slideshowError">
               <p class="text-sm text-rose-500" x-text="slideshowError"></p>
             </template>
-            <template x-if="!slideshowLoading && slideshowImages.length === 0 && !slideshowError">
+            <template x-if="!slideshowLoading && slideshowImages.length === 0 && !slideshowError && !hasNextScene">
               <p class="text-sm text-slate-500 dark:text-slate-400">Aucune image disponible.</p>
+            </template>
+            <template x-if="!slideshowLoading && slideshowImages.length === 0 && hasNextScene && !slideshowError">
+              <div class="grid grid-cols-3 gap-3 items-center h-[120px]">
+                <div></div>
+                <div class="flex flex-col justify-center">
+                  <div class="relative rounded-lg border border-emerald-400 dark:border-emerald-500 overflow-hidden bg-gradient-to-br from-emerald-600 to-emerald-700 text-white cursor-pointer max-h-[90px] min-h-[90px] px-3"
+                       @click="nextSlide()"
+                       title="Passer à la scène suivante">
+                    <div class="h-full w-full flex flex-col items-center justify-center text-center leading-tight font-semibold">
+                      <div class="text-[17px] pt-[23px]">Passer à la scène suivante</div>
+                    </div>
+                  </div>
+                </div>
+                <div></div>
+              </div>
             </template>
             <div class="grid grid-cols-3 gap-3 items-center h-[120px]" x-show="!slideshowLoading && slideshowImages.length > 0">
               <div class="flex flex-col justify-center">
-                <div class="rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden bg-slate-100 dark:bg-slate-800 opacity-80 cursor-pointer max-h-[90px]"
-                     @click="prevSlide()"
-                     title="Aller à l'image précédente">
-                  <template x-if="prevSlideObj()">
+                <template x-if="prevSlideObj()">
+                  <div class="relative rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden bg-slate-100 dark:bg-slate-800 opacity-80 cursor-pointer max-h-[90px]"
+                       @click="prevSlide()"
+                       title="Aller à l'image précédente">
                     <img class="w-full h-full object-cover" :src="prevSlideObj().displayUrl || prevSlideObj().url" :alt="prevSlideObj().name || 'Image précédente'">
-                  </template>
-                </div>
+                    <template x-if="prevSlideObj()?.order">
+                      <div class="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-white/80 text-[11px] font-semibold text-slate-700 shadow-sm">#<span x-text="prevSlideObj().order"></span></div>
+                    </template>
+                  </div>
+                </template>
               </div>
               <div class="flex flex-col justify-center transform scale-[1.03]">
-                <div class="rounded-lg border-2 border-emerald-400 dark:border-emerald-500 overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-lg max-h-[120px]">
-                  <template x-if="currentSlide()">
+                <template x-if="currentSlide()">
+                  <div class="relative rounded-lg border-2 border-emerald-400 dark:border-emerald-500 overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-lg max-h-[120px]">
                     <img class="w-full h-full object-cover" :src="currentSlide().displayUrl || currentSlide().url" :alt="currentSlide().name || 'Image actuelle'">
-                  </template>
-                </div>
+                    <template x-if="currentSlide()?.order">
+                      <div class="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-white/80 text-[11px] font-semibold text-slate-700 shadow-sm">#<span x-text="currentSlide().order"></span></div>
+                    </template>
+                  </div>
+                </template>
               </div>
               <div class="flex flex-col justify-center">
-                <div class="rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden bg-slate-100 dark:bg-slate-800 opacity-80 cursor-pointer max-h-[90px]"
-                     @click="nextSlide()"
-                     title="Aller à l'image suivante">
-                  <template x-if="nextSlideObj()">
+                <template x-if="nextSlideObj()">
+                  <div class="relative rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden bg-slate-100 dark:bg-slate-800 opacity-80 cursor-pointer max-h-[90px]"
+                       @click="nextSlide()"
+                       title="Aller à l'image suivante">
                     <img class="w-full h-full object-cover" :src="nextSlideObj().displayUrl || nextSlideObj().url" :alt="nextSlideObj().name || 'Image suivante'">
-                  </template>
-                </div>
+                    <template x-if="nextSlideObj()?.order">
+                      <div class="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-white/80 text-[11px] font-semibold text-slate-700 shadow-sm">#<span x-text="nextSlideObj().order"></span></div>
+                    </template>
+                  </div>
+                </template>
+                <template x-if="!nextSlideObj() && hasNextScene">
+                  <div class="relative rounded-lg border border-emerald-400 dark:border-emerald-500 overflow-hidden bg-gradient-to-br from-emerald-600 to-emerald-700 text-white opacity-90 cursor-pointer max-h-[90px] min-h-[90px] px-3"
+                       @click="nextSlide()"
+                       title="Passer à la scène suivante">
+                    <div class="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-white/90 text-[11px] font-semibold text-emerald-700 shadow-sm">#<span x-text="(slideshowImages?.length || 0) + 1"></span></div>
+                    <div class=" h-full w-full flex flex-col items-center justify-center text-center leading-tight font-semibold">
+                      <div class="text-[17px] pt-[23px]">Passer à la scène suivante</div>
+                    </div>
+                  </div>
+                </template>
               </div>
             </div>
           </div>
+
+
           <div class="mt-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 pt-4 pb-2 shadow-sm h-[325px]">
             <h3 class="text-lg font-semibold mb-1 inline-flex items-center gap-2"><i class="fa-solid fa-music"></i> Playlist</h3>
             <template x-if="playlistLoading">

@@ -6,13 +6,28 @@ export function gmDashboard() {
   return {
     ...base,
     section: 'gm',
+    scenarioId: '',
+    scenarioTitle: '',
+    sessions: [],
+    sessionLoading: false,
+    sessionError: '',
+    selectedSessionId: '',
+    currentSession: null,
+    scenes: [],
+    sceneLoading: false,
+    sceneError: '',
+    selectedSceneId: '',
+    currentScene: null,
+    sceneCarouselIndex: 0,
     playlist: [],
     playlistLoading: false,
     playlistError: '',
     slideshowImages: [],
     slideshowIndex: 0,
+    slideshowCarouselEnabled: true,
     slideshowLoading: false,
     slideshowError: '',
+    hasNextScene: false,
     timerRunning: false,
     timerElapsedMs: 0,
     timerStartedAt: null,
@@ -34,7 +49,8 @@ export function gmDashboard() {
     socket: null,
     socketTimer: null,
     _tensionAudio: null,
-    notesId: null,
+    tenantImages: [],
+    tenantAudio: [],
     notesContent: '',
     notesSaving: false,
     notesLoading: false,
@@ -46,19 +62,23 @@ export function gmDashboard() {
       this.notesTextarea = el;
       this.noteInputBound = true;
       this.notesTextarea.value = this.notesContent || '';
-      this.notesTextarea.addEventListener('input', () => this.queueNotesSave());
-      this.loadNotes();
+      this.notesTextarea.addEventListener('input', () => this.queueSceneNoteSave());
     },
-    async loadNotes() {
-      if (!this.tenantId) return;
+    async loadSceneNote() {
+      if (!this.tenantId || !this.selectedSceneId) {
+        this.notesContent = '';
+        if (this.notesTextarea) this.notesTextarea.value = '';
+        return;
+      }
       this.notesLoading = true;
       try {
-        const res = await fetch(`${this.API}/api/${this.tenantId}/session/notes`, { headers: this.headersAuth() });
-        if (!res.ok) throw new Error('Notes');
-        const data = await res.json();
-        this.notesId = data.id || null;
-        this.notesContent = data.content || '';
-        if (this.notesTextarea) this.notesTextarea.value = this.notesContent;
+        const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/scenes/${encodeURIComponent(this.selectedSceneId)}/note`, {
+          headers: this.headersAuth()
+        });
+        const data = res.ok ? await res.json() : {};
+        const content = data?.content || '';
+        this.notesContent = content;
+        if (this.notesTextarea) this.notesTextarea.value = content;
       } catch (e) {
         this.notesContent = '';
         if (this.notesTextarea) this.notesTextarea.value = '';
@@ -66,32 +86,328 @@ export function gmDashboard() {
         this.notesLoading = false;
       }
     },
-    queueNotesSave() {
-      if (!this.tenantId) return;
+    queueSceneNoteSave() {
+      if (!this.tenantId || !this.selectedSceneId) return;
       if (this.notesSaveTimer) clearTimeout(this.notesSaveTimer);
-      this.notesSaveTimer = setTimeout(() => this.saveNotes(), 700);
+      this.notesSaveTimer = setTimeout(() => this.saveSceneNote(), 700);
     },
-    async saveNotes() {
-      if (!this.tenantId) return;
+    async saveSceneNote() {
+      if (!this.tenantId || !this.selectedSceneId) return;
       this.notesSaveTimer = null;
       this.notesSaving = true;
       const content = this.notesTextarea ? this.notesTextarea.value : this.notesContent;
       try {
-        const body = { content };
-        if (this.notesId) body.id = this.notesId;
-        const res = await fetch(`${this.API}/api/${this.tenantId}/session/notes`, {
+        await fetch(`${this.API}/api/tenant/${this.tenantId}/scenes/${encodeURIComponent(this.selectedSceneId)}/note`, {
           method: 'PUT',
           headers: { ...this.headersAuth(), 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
+          body: JSON.stringify({ content })
         });
-        const data = await res.json().catch(() => ({}));
-        if (res.ok && data?.id) this.notesId = data.id;
         this.notesContent = content;
       } catch (_) {
         // silent failure to keep UX responsive
       } finally {
         this.notesSaving = false;
       }
+    },
+    async loadTenantImages() {
+      if (!this.tenantId) return;
+      try {
+        const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/images`, { headers: this.headersAuth() });
+        if (!res.ok) throw new Error('Images');
+        const data = await res.json();
+        this.tenantImages = Array.isArray(data) ? data : [];
+      } catch (_) {
+        this.tenantImages = [];
+      }
+    },
+    async loadTenantAudio() {
+      if (!this.tenantId) return;
+      try {
+        const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/audio`, { headers: this.headersAuth() });
+        if (!res.ok) throw new Error('Audio');
+        this.tenantAudio = await res.json();
+      } catch (_) {
+        this.tenantAudio = [];
+      }
+    },
+    async fetchSessionsAndSelect() {
+      if (!this.tenantId) return;
+      this.sessionLoading = true;
+      this.sessionError = '';
+      try {
+        const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/sessions`, { headers: this.headersAuth() });
+        if (!res.ok) throw new Error('Sessions');
+        const list = await res.json();
+        this.sessions = Array.isArray(list) ? list : [];
+        const params = new URLSearchParams(window.location.search);
+        const sessionParam = params.get('session');
+        const sceneParam = params.get('scene');
+        const picked = this.sessions.find(s => s.id === sessionParam) || this.sessions[0] || null;
+        if (picked) {
+          await this.selectSession(picked.id, { preferredScene: sceneParam });
+        }
+      } catch (e) {
+        this.sessionError = e?.message || 'Impossible de charger les sessions';
+        this.sessions = [];
+      } finally {
+        this.sessionLoading = false;
+      }
+    },
+    async selectSession(id, { preferredScene } = {}) {
+      if (!id || !this.tenantId) return;
+      this.selectedSessionId = id;
+      this.selectedTension = '';
+      this.currentSession = this.sessions.find(s => s.id === id) || null;
+      this.scenarioId = this.currentSession?.parentScenario || '';
+      this.scenarioTitle = '';
+      this.selectedSceneId = '';
+      this.currentScene = null;
+      this.slideshowImages = [];
+      this.playlist = [];
+      await this.loadSessionData();
+      await this.loadScenesForSession(id, preferredScene);
+    },
+    async loadSessionData() {
+      if (!this.tenantId || !this.selectedSessionId) return;
+      try {
+        const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/sessions/${encodeURIComponent(this.selectedSessionId)}`, {
+          headers: this.headersAuth()
+        });
+        if (res.ok) {
+          const data = await res.json();
+          this.currentSession = data;
+          this.scenarioId = data.parentScenario || '';
+          if (this.scenarioId) {
+            await this.fetchScenarioTitle(this.scenarioId);
+          } else {
+            this.scenarioTitle = '';
+          }
+          this.applySessionTension(data);
+        } else {
+          this.currentSession = null;
+          this.tensionEnabled = false;
+          this.tensionLevels = [];
+          this.tensionAudio = {};
+        }
+      } catch (_) {
+        this.currentSession = null;
+        this.tensionEnabled = false;
+        this.tensionLevels = [];
+        this.tensionAudio = {};
+      }
+      await this.loadTimer();
+    },
+    async fetchScenarioTitle(id) {
+      if (!id || !this.tenantId) {
+        this.scenarioTitle = '';
+        return;
+      }
+      try {
+        const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/scenarios/${encodeURIComponent(id)}`, {
+          headers: this.headersAuth()
+        });
+        if (!res.ok) throw new Error('scenario');
+        const data = await res.json();
+        this.scenarioTitle = data.title || id;
+      } catch (_) {
+        this.scenarioTitle = '';
+      }
+    },
+    sanitizeColor(hex) {
+      const h = (hex || '').toString().trim().toLowerCase();
+      const normalized = h.startsWith('#') ? h : `#${h}`;
+      const short = normalized.match(/^#([0-9a-f]{3})$/i);
+      if (short) {
+        const c = short[1];
+        return `#${c[0]}${c[0]}${c[1]}${c[1]}${c[2]}${c[2]}`.toLowerCase();
+      }
+      return /^#([0-9a-f]{6})$/i.test(normalized) ? normalized : null;
+    },
+    applySessionTension(session) {
+      const defaults = {
+        level1: '#37aa32',
+        level2: '#f8d718',
+        level3: '#f39100',
+        level4: '#e63027',
+        level5: '#3a3a39'
+      };
+      const colors = session?.tensionColors || {};
+      const labels = session?.tensionLabels || {};
+      const normalizeLabel = (val, fb) => {
+        if (typeof val !== 'string') return fb;
+        const s = val.trim().slice(0, 4);
+        return s.length ? s : fb;
+      };
+      const names = ['level1','level2','level3','level4','level5'];
+      const pickTextColor = (hex = '') => {
+        const clean = hex.replace('#','');
+        const full = clean.length === 3 ? clean.split('').map(c => c+c).join('') : clean.padEnd(6,'0');
+        const num = parseInt(full, 16);
+        const r = (num >> 16) & 255;
+        const g = (num >> 8) & 255;
+        const b = num & 255;
+        const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+        return luminance > 186 ? '#0f172a' : '#ffffff';
+      };
+      this.tensionEnabled = session?.tensionEnabled !== false;
+      this.tensionAudio = session?.tensionAudio || {};
+      this.tensionLevels = names.map((key, idx) => {
+        const color = this.sanitizeColor(colors[key]) || defaults[key];
+        return {
+          key,
+          label: normalizeLabel(labels[key], `L${idx+1}`),
+          color,
+          textColor: pickTextColor(color)
+        };
+      });
+    },
+    async loadScenesForSession(sessionId, preferredScene) {
+      if (!this.tenantId || !sessionId) return;
+      this.sceneLoading = true;
+      this.sceneError = '';
+      try {
+        const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/scenes`, { headers: this.headersAuth() });
+        if (!res.ok) throw new Error('Scènes');
+        const all = await res.json();
+        const filtered = Array.isArray(all)
+          ? all.filter(sc => sc.parentSession === sessionId)
+              .sort((a, b) => (a.order || 0) - (b.order || 0) || (a.updatedAt || 0) - (b.updatedAt || 0))
+          : [];
+        this.scenes = filtered;
+        const target = filtered.find(sc => sc.id === preferredScene) || filtered[0] || null;
+        if (target) {
+          await this.selectScene(target.id);
+        } else {
+          this.selectedSceneId = '';
+          this.currentScene = null;
+          this.sceneCarouselIndex = 0;
+          this.slideshowImages = [];
+          this.playlist = [];
+          this.notesContent = '';
+          if (this.notesTextarea) this.notesTextarea.value = '';
+        }
+      } catch (e) {
+        this.sceneError = e?.message || 'Impossible de charger les scènes';
+        this.scenes = [];
+        this.selectedSceneId = '';
+        this.currentScene = null;
+        this.sceneCarouselIndex = 0;
+        this.notesContent = '';
+        if (this.notesTextarea) this.notesTextarea.value = '';
+      } finally {
+        this.sceneLoading = false;
+      }
+    },
+    async selectScene(id) {
+      this.selectedSceneId = id;
+      this.currentScene = this.scenes.find(sc => sc.id === id) || null;
+      this.ensureSceneVisible(id);
+      this.slideshowLoading = true;
+      this.playlistLoading = true;
+      this.slideshowError = '';
+      this.playlistError = '';
+      try {
+        if (!this.tenantImages.length) {
+          await this.loadTenantImages();
+        }
+        this.buildSlideshowFromScene();
+      } catch (e) {
+        this.slideshowError = e?.message || 'Erreur diaporama';
+        this.slideshowImages = [];
+      } finally {
+        this.slideshowLoading = false;
+      }
+
+      try {
+        if (!this.tenantAudio.length) {
+          await this.loadTenantAudio();
+        }
+        this.buildPlaylistFromScene();
+      } catch (e) {
+        this.playlistError = e?.message || 'Erreur playlist';
+        this.playlist = [];
+      } finally {
+        this.playlistLoading = false;
+      }
+
+      await this.loadSceneNote();
+    },
+    ensureSceneVisible(sceneId) {
+      if (!this.scenes.length) return;
+      const idx = this.scenes.findIndex(sc => sc.id === sceneId);
+      if (idx === -1) return;
+      const maxStart = Math.max(0, this.scenes.length - 5);
+      const target = Math.min(Math.max(idx - 2, 0), maxStart);
+      this.sceneCarouselIndex = target;
+    },
+    carouselPrev() {
+      this.sceneCarouselIndex = Math.max(0, this.sceneCarouselIndex - 1);
+    },
+    carouselNext() {
+      const maxStart = Math.max(0, this.scenes.length - 5);
+      this.sceneCarouselIndex = Math.min(maxStart, this.sceneCarouselIndex + 1);
+    },
+    buildSlideshowFromScene() {
+      if (!this.currentScene) {
+        this.slideshowImages = [];
+        this.slideshowIndex = 0;
+        this.slideshowCarouselEnabled = true;
+        this.hasNextScene = false;
+        return;
+      }
+      const mapped = (this.currentScene.images || [])
+        .map((img, idx) => {
+          const name = typeof img === 'string' ? img : img?.name;
+          if (!name) return null;
+          const ref = this.tenantImages.find(i => i.name === name) || {};
+          const fallbackUrl = this.tenantId ? `/t/${this.tenantId}/images/${encodeURIComponent(name)}` : '';
+          const url = ref.thumbUrl || ref.url || img?.url || fallbackUrl;
+          if (!url) return null;
+          return {
+            name,
+            url,
+            displayUrl: url,
+            order: typeof img?.order === 'number' ? img.order : idx + 1
+          };
+        })
+        .filter(Boolean)
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+      const currentIdx = this.scenes.findIndex(sc => sc.id === this.selectedSceneId);
+      this.hasNextScene = currentIdx !== -1 && currentIdx < this.scenes.length - 1;
+
+      const virtualLength = mapped.length + (this.hasNextScene ? 1 : 0);
+      this.slideshowCarouselEnabled = virtualLength > 2;
+      this.slideshowImages = mapped;
+      this.slideshowIndex = mapped.length ? 0 : 0;
+      console.log('[GM][Diaporama] build', {
+        scene: this.currentScene?.id,
+        imagesScene: mapped.length,
+        carousel: this.slideshowCarouselEnabled
+      });
+      if (mapped.length) {
+        this.setSlide(0);
+      } else {
+        this.sendSlideshow(0);
+      }
+    },
+    buildPlaylistFromScene() {
+      if (!this.currentScene) {
+        this.playlist = [];
+        return;
+      }
+      const mapped = (this.currentScene.audio || [])
+        .map((item, idx) => {
+          const name = typeof item === 'string' ? item : item?.name;
+          if (!name) return null;
+          const ref = this.tenantAudio.find(a => a.name === name);
+          if (!ref) return null;
+          const order = typeof item?.order === 'number' ? item.order : idx + 1;
+          return { ...ref, order };
+        })
+        .filter(Boolean)
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
+      this.playlist = mapped;
     },
     changeTension(delta) {
       const target = this.tensionTargetLevel(delta);
@@ -159,9 +475,17 @@ export function gmDashboard() {
       }
     },
     async loadTimer() {
-      if (!this.tenantId) return;
+      if (!this.tenantId || !this.selectedSessionId) {
+        this.timerRunning = false;
+        this.timerElapsedMs = 0;
+        this.timerStartedAt = null;
+        this.stopTimerLoop();
+        return;
+      }
       try {
-        const res = await fetch(`${this.API}/api/${this.tenantId}/session`, { headers: this.headersAuth() });
+        const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/sessions/${encodeURIComponent(this.selectedSessionId)}/gm-state`, {
+          headers: this.headersAuth()
+        });
         if (!res.ok) throw new Error('timer');
         const data = await res.json();
         const timer = data.timer || {};
@@ -194,9 +518,9 @@ export function gmDashboard() {
       }
     },
     async saveTimer() {
-      if (!this.tenantId) return;
+      if (!this.tenantId || !this.selectedSessionId) return;
       try {
-        await fetch(`${this.API}/api/${this.tenantId}/session/timer`, {
+        await fetch(`${this.API}/api/tenant/${this.tenantId}/sessions/${encodeURIComponent(this.selectedSessionId)}/timer`, {
           method: 'PUT',
           headers: { ...this.headersAuth(), 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -210,6 +534,7 @@ export function gmDashboard() {
       }
     },
     async resetTimer() {
+      if (!this.selectedSessionId) return;
       this.timerRunning = false;
       this.timerElapsedMs = 0;
       this.timerStartedAt = null;
@@ -217,6 +542,7 @@ export function gmDashboard() {
       await this.saveTimer();
     },
     async toggleTimer() {
+      if (!this.selectedSessionId) return;
       if (!this.timerRunning) {
         this.timerStartedAt = Date.now();
         this.timerRunning = true;
@@ -313,9 +639,9 @@ export function gmDashboard() {
       // Pas de flip auto, juste mise à jour de la durée
     },
     async saveHourglassPrefs() {
-      if (!this.tenantId) return;
+      if (!this.tenantId || !this.selectedSessionId) return;
       try {
-        await fetch(`${this.API}/api/${this.tenantId}/session/hourglass`, {
+        await fetch(`${this.API}/api/tenant/${this.tenantId}/sessions/${encodeURIComponent(this.selectedSessionId)}/hourglass`, {
           method: 'PUT',
           headers: { ...this.headersAuth(), 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -338,27 +664,16 @@ export function gmDashboard() {
     },
 
     async loadSlideshow() {
-      if (!this.tenantId) {
-        this.slideshowImages = [];
-        return;
-      }
       this.slideshowLoading = true;
       this.slideshowError = '';
       try {
-        const res = await fetch(`/t/${this.tenantId}/api/images`);
-        if (!res.ok) throw new Error('Impossible de charger les images');
-        const data = await res.json();
-        const visible = Array.isArray(data)
-          ? data
-              .filter(img => img.hidden !== true && img.visible !== false)
-              .map(img => ({ ...img, displayUrl: img.thumbUrl || img.url }))
-          : [];
-        this.slideshowImages = visible;
-        this.slideshowIndex = 0;
-        this.sendSlideshow(0);
+        if (!this.tenantImages.length) {
+          await this.loadTenantImages();
+        }
+        this.buildSlideshowFromScene();
       } catch (e) {
         this.slideshowImages = [];
-        this.slideshowError = e.message || 'Erreur de chargement';
+        this.slideshowError = e?.message || 'Erreur de chargement';
       }
       this.slideshowLoading = false;
     },
@@ -368,87 +683,80 @@ export function gmDashboard() {
     },
     prevSlideObj() {
       if (!this.slideshowImages.length) return null;
-      const idx = (this.slideshowIndex - 1 + this.slideshowImages.length) % this.slideshowImages.length;
+      const idx = this.slideshowIndex - 1;
+      if (idx < 0) return null;
       return this.slideshowImages[idx] || null;
     },
     nextSlideObj() {
       if (!this.slideshowImages.length) return null;
-      const idx = (this.slideshowIndex + 1) % this.slideshowImages.length;
+      const idx = this.slideshowIndex + 1;
+      if (idx >= this.slideshowImages.length) return null;
       return this.slideshowImages[idx] || null;
     },
     setSlide(index) {
       if (!this.slideshowImages.length) return;
       const len = this.slideshowImages.length;
-      const safeIndex = ((index % len) + len) % len;
+      const safeIndex = Math.min(Math.max(index, 0), len - 1);
       this.slideshowIndex = safeIndex;
-      this.sendSlideshow(safeIndex);
+      const slide = this.slideshowImages[safeIndex];
+      console.log('[GM][Diaporama] setSlide', {
+        requested: index,
+        applied: safeIndex,
+        name: slide?.name
+      });
+      const broadcastIndex = slide?.name
+        ? this.tenantImages.findIndex(img => img.name === slide.name)
+        : safeIndex;
+      this.sendSlideshow(broadcastIndex >= 0 ? broadcastIndex : safeIndex);
     },
     prevSlide() {
-      this.setSlide(this.slideshowIndex - 1);
+      if (this.slideshowIndex > 0) {
+        this.setSlide(this.slideshowIndex - 1);
+      }
     },
     nextSlide() {
-      this.setSlide(this.slideshowIndex + 1);
+      if (!this.slideshowImages.length) {
+        if (this.hasNextScene) {
+          const currentIdx = this.scenes.findIndex(sc => sc.id === this.selectedSceneId);
+          const nextScene = currentIdx >= 0 && currentIdx < this.scenes.length - 1 ? this.scenes[currentIdx + 1] : null;
+          if (nextScene) this.selectScene(nextScene.id);
+        }
+        return;
+      }
+      const nextIdx = this.slideshowIndex + 1;
+      if (nextIdx < this.slideshowImages.length) {
+        this.setSlide(nextIdx);
+      } else if (this.hasNextScene) {
+        const currentIdx = this.scenes.findIndex(sc => sc.id === this.selectedSceneId);
+        const nextScene = currentIdx >= 0 && currentIdx < this.scenes.length - 1 ? this.scenes[currentIdx + 1] : null;
+        if (nextScene) this.selectScene(nextScene.id);
+      }
     },
 
     async loadTensionConfig() {
-      if (!this.tenantId) {
+      if (!this.tenantId || !this.selectedSessionId) {
         this.tensionEnabled = false;
         this.tensionLevels = [];
         return;
       }
-      try {
-        const res = await fetch(`${this.API}/api/${this.tenantId}/config`, { headers: this.headersAuth() });
-        if (!res.ok) throw new Error('Config');
-        const data = await res.json();
-        this.tensionEnabled = !!data.tensionEnabled;
-        const colors = data.tensionColors || {};
-        const labels = data.tensionLabels || {};
-        this.tensionAudio = data.tensionAudio || {};
-        const defaults = {
-          level1: '#37aa32',
-          level2: '#f8d718',
-          level3: '#f39100',
-          level4: '#e63027',
-          level5: '#3a3a39'
-        };
-        const names = ['level1','level2','level3','level4','level5'];
-        const pickTextColor = (hex = '') => {
-          const clean = hex.replace('#','');
-          const full = clean.length === 3 ? clean.split('').map(c => c+c).join('') : clean.padEnd(6,'0');
-          const num = parseInt(full, 16);
-          const r = (num >> 16) & 255;
-          const g = (num >> 8) & 255;
-          const b = num & 255;
-          const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
-          return luminance > 186 ? '#0f172a' : '#ffffff';
-        };
-        this.tensionLevels = names.map((key, idx) => ({
-          key,
-          label: labels[key] || `L${idx+1}`,
-          color: colors[key] || defaults[key],
-          textColor: pickTextColor(colors[key] || defaults[key])
-        }));
-      } catch (e) {
-        this.tensionEnabled = false;
-        this.tensionLevels = [];
-        this.tensionAudio = {};
+      if (!this.currentSession || this.currentSession.id !== this.selectedSessionId) {
+        await this.loadSessionData();
+        return;
       }
+      this.applySessionTension(this.currentSession);
     },
 
     async loadPlaylist() {
-      if (!this.tenantId) {
-        this.playlist = [];
-        return;
-      }
       this.playlistLoading = true;
       this.playlistError = '';
       try {
-        const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/audio`, { headers: this.headersAuth() });
-        if (!res.ok) throw new Error('Impossible de charger la playlist');
-        this.playlist = await res.json();
+        if (!this.tenantAudio.length) {
+          await this.loadTenantAudio();
+        }
+        this.buildPlaylistFromScene();
       } catch (e) {
         this.playlist = [];
-        this.playlistError = e.message || 'Erreur de chargement';
+        this.playlistError = e?.message || 'Erreur de chargement';
       }
       this.playlistLoading = false;
     },
@@ -460,10 +768,8 @@ export function gmDashboard() {
       this.section = 'gm';
       this.breadcrumb = 'Game Master';
       this.connectSocket();
-      await this.loadTensionConfig();
-      await this.loadPlaylist();
-      await this.loadSlideshow();
-      await this.loadTimer();
+      await Promise.all([this.loadTenantImages(), this.loadTenantAudio()]);
+      await this.fetchSessionsAndSelect();
     },
 
     connectSocket() {
@@ -512,10 +818,10 @@ export function gmDashboard() {
        this.sendTension(levelKey);
       const name = this.tensionAudio[levelKey];
       if (!name) return;
-      if (!this.playlist.length) {
-        await this.loadPlaylist();
+      if (!this.tenantAudio.length) {
+        await this.loadTenantAudio();
       }
-      const track = this.playlist.find(a => a.name === name);
+      const track = this.tenantAudio.find(a => a.name === name);
       if (!track) return;
       try {
         if (this._tensionAudio) {

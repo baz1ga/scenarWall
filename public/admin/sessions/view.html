@@ -247,7 +247,7 @@
         </div>
         
         <div class="flex items-center gap-3 flex-wrap border-b border-slate-200 dark:border-slate-800">
-          
+          <template x-if="scenes.length > 1">
           <div class="flex items-center flex-wrap gap-2">
             <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100"
                 x-text="currentScene?.title || (scenes.length === 1 ? (scenes[0]?.title || 'Scène') : 'Détails de la scène')"></h3>
@@ -256,7 +256,7 @@
               <i class="fa-solid fa-pen"></i>
             </button>
           </div>
-          
+          </template>
 
           <div class="flex-1 flex justify-center">
             <div class="grid grid-cols-3 text-sm w-full max-w-xl">
