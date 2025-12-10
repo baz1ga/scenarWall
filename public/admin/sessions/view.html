@@ -1,4 +1,4 @@
-<div id="page-content" x-data="sessionViewPage()" x-init="init()" class="space-y-6" x-cloak>
+<div id="page-content" x-data="sessionViewPage()" x-init="init()" class="space-y-0 pt-2" x-cloak>
   <style>
     /* Notes textarea styling */
     .notes-editor textarea {
@@ -26,7 +26,7 @@
       box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.2);
     }
   </style>
-  <div class="flex flex-wrap items-center justify-between gap-3 mt-2">
+  <div class="flex flex-wrap items-center justify-between gap-3">
    <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100 flex flex-wrap items-center gap-2">
       <template x-if="scenarioTitle">
         <a :href="`/admin/scenarios/list.html`"
@@ -71,65 +71,85 @@
 
   <template x-if="!loading && session">
     <div class="space-y-4">
-      <div class="rounded-2xl border border-slate-200 dark-border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm space-y-4" x-show="scenes.length > 1">
-        <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Scènes</h3>
-        <template x-if="scenes.length === 0">
-          <div class="border border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-4 text-sm text-slate-600 dark:text-slate-400">
-            Aucune scène disponible pour cette session.
-          </div>
-        </template>
-        <div class="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8" x-show="scenes.length > 0">
-          <template x-for="(scene, index) in scenes" :key="scene.id">
-            <div class="relative w-full min-h-[90px] rounded-lg border px-2 py-2 text-sm transition flex flex-col gap-2 overflow-hidden cursor-pointer"
-                 :class="scene.id === currentScene?.id
-                   ? 'border-emerald-400 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-100 shadow-md ring-1 ring-emerald-300/60'
-                   : 'border-slate-200 dark:border-slate-700 hover-border-emerald-300 hover:bg-emerald-50/40 dark:hover:border-emerald-700 dark:hover:bg-emerald-900/20 text-slate-700 dark:text-slate-200'"
-                 role="button"
-                 tabindex="0"
-                 @click="setCurrentScene(scene.id, true)"
-                 @keydown.enter.prevent="setCurrentScene(scene.id, true)"
-                 @keydown.space.prevent="setCurrentScene(scene.id, true)">
-              <div class="min-h-[48px]">
-                <div class="flex min-w-0 gap-2 items-start">
-                  <div class="px-2 py-0.5 rounded-bl-lg bg-slate-900/80 text-white text-[11px] font-semibold shadow-sm pointer-events-none leading-none absolute top-0 right-0">#<span x-text="scene.order || index + 1"></span></div>
-                  <div class="flex-1 pr-9">
-                    <div class="w-full text-left font-semibold leading-tight whitespace-normal">
-                      <span class="block" x-text="scene.title || 'Scène'"></span>
+        <div class="mt-3 rounded-2xl border border-slate-200 dark-border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm" x-show="scenes.length > 1">
+          <template x-if="scenes.length === 0">
+            <div class="border border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-4 text-sm text-slate-600 dark:text-slate-400">
+              Aucune scène disponible pour cette session.
+            </div>
+          </template>
+          <template x-if="scenes.length > 0">
+            <div class="flex items-start gap-3 flex-wrap items-center">
+              <div class="">
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100 leading-none mt-1">Scènes <i class="fa-solid fa-angles-right"></i></h3>
+              </div>              
+              <div class="flex-1 min-w-[260px] grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8">
+                <template x-for="(scene, index) in scenes" :key="scene.id">
+                  <div class="relative w-full min-h-[90px] rounded-lg border px-2 py-2 text-sm transition flex flex-col gap-2 overflow-hidden cursor-pointer"
+                       :class="scene.id === currentScene?.id
+                         ? 'border-emerald-400 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-100 shadow-md ring-1 ring-emerald-300/60'
+                         : 'border-slate-200 dark:border-slate-700 hover-border-emerald-300 hover:bg-emerald-50/40 dark:hover:border-emerald-700 dark:hover:bg-emerald-900/20 text-slate-700 dark:text-slate-200'"
+                       role="button"
+                       tabindex="0"
+                       @click="setCurrentScene(scene.id, true)"
+                       @keydown.enter.prevent="setCurrentScene(scene.id, true)"
+                       @keydown.space.prevent="setCurrentScene(scene.id, true)">
+                    <div class="min-h-[48px]">
+                      <div class="flex min-w-0 gap-2 items-start">
+                        <div class="px-2 py-0.5 rounded-bl-lg bg-slate-900/80 text-white text-[11px] font-semibold shadow-sm pointer-events-none leading-none absolute top-0 right-0">#<span x-text="scene.order || index + 1"></span></div>
+                        <div class="flex-1 pr-9">
+                          <div class="w-full text-left font-semibold leading-tight whitespace-normal">
+                            <span class="block" x-text="scene.title || 'Scène'"></span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="absolute bottom-2 right-2 flex items-center gap-1">
+                      <button class="h-6 w-6 inline-flex items-center justify-center rounded-md border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-emerald-600 hover:border-emerald-400 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                              @click.stop="moveScene(index, -1)" :disabled="index === 0">
+                        <i class="fa-solid fa-chevron-left"></i>
+                      </button>
+                      <button class="h-6 w-6 inline-flex items-center justify-center rounded-md border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-emerald-600 hover:border-emerald-400 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                              @click.stop="moveScene(index, 1)" :disabled="index === scenes.length - 1">
+                        <i class="fa-solid fa-chevron-right"></i>
+                      </button>
                     </div>
                   </div>
-                </div>
-              </div>
-            <div class="absolute bottom-2 right-2 flex items-center gap-1">
-                <button class="h-6 w-6 inline-flex items-center justify-center rounded-md border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-emerald-600 hover:border-emerald-400 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                        @click.stop="moveScene(index, -1)" :disabled="index === 0">
-                  <i class="fa-solid fa-chevron-left"></i>
-                </button>
-                <button class="h-6 w-6 inline-flex items-center justify-center rounded-md border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-emerald-600 hover:border-emerald-400 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                        @click.stop="moveScene(index, 1)" :disabled="index === scenes.length - 1">
-                  <i class="fa-solid fa-chevron-right"></i>
-                </button>
+                </template>
+                <template x-if="session && scenes.length > 1">
+                  <button class="h-[90px] min-h-[90px] min-h-[90px] w-full inline-flex flex-col items-center justify-center rounded-lg border border-dashed border-emerald-400 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition text-sm font-semibold"
+                          @click="openSceneModal()">
+                    <i class="fa-solid fa-plus text-lg"></i>
+                    <span class="truncate">Ajouter une scène</span>
+                  </button>
+                </template>
               </div>
             </div>
           </template>
-          <template x-if="session && scenes.length > 1">
-            <button class="h-[90px] min-h-[90px] min-h-[90px] w-full inline-flex flex-col items-center justify-center rounded-lg border border-dashed border-emerald-400 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition text-sm font-semibold"
-                    @click="openSceneModal()">
-              <i class="fa-solid fa-plus text-lg"></i>
-              <span class="truncate">Ajouter une scène</span>
-            </button>
-          </template>
         </div>
-      </div>
 
-      <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm space-y-4 relative">
+      <div class="mt-2 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm relative">
         <div class="rounded-2xl absolute inset-0 bg-white dark:bg-slate-900 m flex items-center justify-center z-50" x-show="sceneSelectionLoading" x-transition>
           <div class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-300">
             <div class="h-5 w-5 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
             Mise à jour...
           </div>
         </div>
-        <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3 flex-wrap border-b border-slate-200 dark:border-slate-800">
           <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100" x-text="currentScene?.title || 'Détails de la scène'"></h3>
+          <div class="flex-1 flex justify-center">
+            <div class="flex text-sm justify-center gap-2">
+              <template x-for="tab in tabs" :key="tab.id">
+                <button class="px-4 py-2 -mb-px border-b-2 font-medium transition"
+                        :class="tab.id === activeTab ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'"
+                        @click="setActiveTab(tab.id)">
+                  <span class="inline-flex items-center gap-2">
+                    <i :class="tab.id === 'images' ? 'fa-regular fa-image' : tab.id === 'audio' ? 'fa-solid fa-music' : 'fa-regular fa-note-sticky'"></i>
+                    <span x-text="tab.label"></span>
+                  </span>
+                </button>
+              </template>
+            </div>
+          </div>
           <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
             <button class="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 hover:text-emerald-600 hover:border-emerald-400 transition"
                     @click="openSceneEditModal()" :disabled="!currentScene">
@@ -146,20 +166,11 @@
           </div>
         </div>
 
-        <div class="flex border-b border-slate-200 dark:border-slate-800 text-sm">
-          <template x-for="tab in tabs" :key="tab.id">
-            <button class="px-4 py-2 -mb-px border-b-2 font-medium transition"
-                    :class="tab.id === activeTab ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'"
-                    @click="setActiveTab(tab.id)"
-                    x-text="tab.label"></button>
-          </template>
-        </div>
-
         <div>
           <template x-if="activeTab === 'images'">
             <div class="space-y-6">
-              <div class="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
-                <h3 class="text-xs uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Images de la scène</h3>
+              <div class="flex items-center justify-between pb-2 mt-2">
+                <h3 class="text-s font-semibold text-slate-900 dark:text-slate-100">Images de la scène</h3>
                 <div class="flex items-center gap-2">
                   <button class="inline-flex items-center gap-2 rounded-lg border border-emerald-500 text-emerald-600 px-3 py-2 text-sm hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition"
                           @click="openUploadModal()">
@@ -207,8 +218,8 @@
               </div>
 
               <div class="space-y-3 pt-4 border-t border-dashed border-slate-300 dark:border-slate-700">
-                <div class="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
-                  <h3 class="text-xs uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Toutes vos images</h3>
+                <div class="flex items-center justify-between pb-2">
+                  <h3 class="text-s font-semibold text-slate-900 dark:text-slate-100">Toutes vos images</h3>
                   <a href="/admin/gallery/gallery.html"
                      class="inline-flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                     <i class="fa-regular fa-image"></i>
@@ -252,11 +263,11 @@
 
           <template x-if="activeTab === 'audio'">
             <div class="space-y-6">
-              <div class="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
-                <h3 class="text-xs uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Audio de la scène</h3>
+              <div class="flex items-center justify-between pb-2 mt-2">
+                <h3 class="text-s font-semibold text-slate-900 dark:text-slate-100">Audio de la scène</h3>
                 <label class="cursor-pointer inline-flex items-center gap-2 text-sm text-indigo-600 dark:text-indigo-300" x-show="tenantId">
-                  <input type="file" class="hidden" multiple accept="audio/*" @change="uploadSceneAudio($event)">
-                  <span class="inline-flex items-center gap-2 rounded-lg border border-indigo-500 px-3 py-1.5 text-indigo-800 dark:text-indigo-100 bg-white dark:bg-transparent hover:bg-indigo-500/10">
+                  <input type="file" class="hidden" multiple accept="audio/*" @change="uploadSceneAudio($event)">                                                                                        
+                  <span class="inline-flex items-center gap-2 rounded-lg border border-indigo-500 px-3 py-2 text-indigo-800 dark:text-indigo-100 bg-white dark:bg-transparent hover:bg-indigo-500/10 transition">
                     <i class="fa-solid fa-upload"></i> Ajouter (&lt; 1 Mo)
                   </span>
                 </label>
@@ -296,8 +307,8 @@
               </div>
 
               <div class="space-y-3 pt-4 border-t border-dashed border-slate-300 dark:border-slate-700">
-                <div class="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
-                  <h3 class="text-xs uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Tous vos audios</h3>
+                <div class="flex items-center justify-between pb-2">
+                  <h3 class="text-s font-semibold text-slate-900 dark:text-slate-100">Tous vos audios</h3>
                   <a href="/admin/audio/audio.html"
                      class="inline-flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                     <i class="fa-solid fa-music text-base"></i>
@@ -337,19 +348,6 @@
 
           <template x-if="activeTab === 'notes'">
             <div class="space-y-4 max-w-4xl mx-auto notes-editor">
-              <div class="flex items-center justify-between pb-2">          
-                <div class="flex items-center gap-2">
-                  <button class="inline-flex items-center gap-2 rounded-lg border border-rose-200 text-rose-600 px-3 py-1.5 text-sm hover:bg-rose-50 dark:hover:bg-rose-900/30 transition"
-                          x-show="currentScene?.notes"
-                          @click="deleteSceneNote()">
-                    <i class="fa-solid fa-trash"></i> Supprimer la note
-                  </button>
-                  <div class="inline-flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400" x-show="notesSaving">
-                    <span class="h-3.5 w-3.5 rounded-full border-2 border-emerald-700 border-t-transparent animate-spin"></span>
-                    <span>Sauvegarde...</span>
-                  </div>
-                </div>
-              </div>
               <template x-if="!currentScene?.notes">
                 <div class="border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl py-12 px-6 text-center space-y-4 flex flex-col items-center justify-center">
                   <p class="text-sm text-slate-500 dark:text-slate-400">Aucune note pour cette scène.</p>
@@ -361,18 +359,23 @@
               </template>
               <div class="space-y-2" x-show="currentScene?.notes">
                 <textarea x-ref="sceneNotesArea" placeholder="Vos notes de session..." class="w-full"></textarea>
+                <div class="flex items-center justify-between pt-2">          
+                  <div class="flex items-center gap-2">
+                    <button class="inline-flex items-center gap-2 rounded-lg border border-rose-200 text-rose-600 px-3 py-1.5 text-sm hover:bg-rose-50 dark:hover:bg-rose-900/30 transition"
+                            x-show="currentScene?.notes"
+                            @click="deleteSceneNote()">
+                      <i class="fa-solid fa-trash"></i> Supprimer la note
+                    </button>
+                    <div class="inline-flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400" x-show="notesSaving">
+                      <span class="h-3.5 w-3.5 rounded-full border-2 border-emerald-700 border-t-transparent animate-spin"></span>
+                      <span>Sauvegarde...</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </template>
 
-          <template x-if="activeTab === 'tension'">
-            <div class="space-y-3">
-              <div>
-                <p class="text-xs uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Tension</p>
-                <div class="text-sm text-slate-700 dark:text-slate-300" x-text="currentScene?.tension ? JSON.stringify(currentScene.tension) : 'Pas de configuration de tension.'"></div>
-              </div>
-            </div>
-          </template>
         </div>
       </div>
     </div>

@@ -125,8 +125,7 @@ export function sessionViewSection(baseInit) {
     tabs: [
       { id: 'images', label: 'Images' },
       { id: 'audio', label: 'Audio' },
-      { id: 'notes', label: 'Notes' },
-      { id: 'tension', label: 'Tension' }
+      { id: 'notes', label: 'Notes' }
     ],
 
     async init() {
