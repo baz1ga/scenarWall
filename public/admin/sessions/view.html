@@ -59,9 +59,9 @@
                    : 'border-slate-200 dark:border-slate-700 hover-border-emerald-300 hover:bg-emerald-50/40 dark:hover:border-emerald-700 dark:hover:bg-emerald-900/20 text-slate-700 dark:text-slate-200'"
                  role="button"
                  tabindex="0"
-                 @click="setCurrentScene(scene.id)"
-                 @keydown.enter.prevent="setCurrentScene(scene.id)"
-                 @keydown.space.prevent="setCurrentScene(scene.id)">
+                 @click="setCurrentScene(scene.id, true)"
+                 @keydown.enter.prevent="setCurrentScene(scene.id, true)"
+                 @keydown.space.prevent="setCurrentScene(scene.id, true)">
               <div class="min-h-[48px]">
                 <div class="flex min-w-0 gap-2 items-start">
                   <div class="px-2 py-0.5 rounded-bl-lg bg-slate-900/80 text-white text-[11px] font-semibold shadow-sm pointer-events-none leading-none absolute top-0 right-0">#<span x-text="scene.order || index + 1"></span></div>

@@ -35,6 +35,21 @@ export function sessionViewSection(baseInit) {
     },
     sceneSelectionLoading: false,
     sceneSelectionTimer: null,
+    selectedSceneId: '',
+    pendingSceneId: '',
+    sessionSceneStorageKey() {
+      return this.session?.id ? `sw_session_current_scene_${this.session.id}` : null;
+    },
+    storeSelectedScene(id) {
+      const key = this.sessionSceneStorageKey();
+      if (!key || !id) return;
+      try { localStorage.setItem(key, id); } catch (_) {}
+    },
+    readStoredScene() {
+      const key = this.sessionSceneStorageKey();
+      if (!key) return '';
+      try { return localStorage.getItem(key) || ''; } catch (_) { return ''; }
+    },
     zoomModal: {
       open: false,
       url: '',
@@ -166,7 +181,13 @@ export function sessionViewSection(baseInit) {
         return (b.updatedAt || 0) - (a.updatedAt || 0);
       });
       this.scenes = list.map(sc => ({ ...sc, images: this.normalizeImages(sc.images) }));
-      this.currentScene = this.scenes.length ? this.scenes[this.scenes.length - 1] : null;
+      const stored = this.readStoredScene();
+      if (stored && this.scenes.find(s => s.id === stored)) {
+        this.setCurrentScene(stored, false);
+      } else {
+        const fallback = this.scenes.length ? this.scenes[this.scenes.length - 1]?.id : '';
+        if (fallback) this.setCurrentScene(fallback, false);
+      }
       this.updateBreadcrumb();
     },
 
@@ -207,19 +228,36 @@ export function sessionViewSection(baseInit) {
       }
     },
 
-   setCurrentScene(id) {
+    applySceneSelection(id) {
       const found = this.scenes.find(s => s.id === id);
       if (!found) return;
-      if (this.currentScene?.id === found.id && !this.sceneSelectionLoading) return;
       this.currentScene = found;
+      this.selectedSceneId = found.id;
       this.activeTab = 'images';
       this.updateBreadcrumb();
-      this.sceneSelectionLoading = true;
-      if (this.sceneSelectionTimer) clearTimeout(this.sceneSelectionTimer);
-      this.sceneSelectionTimer = setTimeout(() => {
-        this.sceneSelectionLoading = false;
+      this.storeSelectedScene(found.id);
+    },
+
+    setCurrentScene(id, withLoader = false) {
+      if (this.sceneSelectionTimer) {
+        clearTimeout(this.sceneSelectionTimer);
         this.sceneSelectionTimer = null;
-      }, 1000);
+      }
+      if (withLoader) {
+        this.pendingSceneId = id;
+        this.sceneSelectionLoading = true;
+        this.sceneSelectionTimer = setTimeout(() => {
+          this.sceneSelectionLoading = false;
+          this.sceneSelectionTimer = null;
+          const target = this.pendingSceneId || id;
+          this.pendingSceneId = '';
+          this.applySceneSelection(target);
+        }, 900);
+        return;
+      }
+      this.sceneSelectionLoading = false;
+      this.pendingSceneId = '';
+      this.applySceneSelection(id);
     },
 
     openEditModal() {
@@ -296,9 +334,7 @@ export function sessionViewSection(baseInit) {
         const created = await res.json();
         await this.fetchScenes(this.session.id);
         this.closeSceneModal();
-        if (created?.id) {
-          this.setCurrentScene(created.id);
-        }
+        if (created?.id) this.setCurrentScene(created.id, true);
       } catch (err) {
         this.sceneModal.error = err?.message || 'Erreur lors de la création';
       } finally {
@@ -341,7 +377,7 @@ export function sessionViewSection(baseInit) {
         if (!res.ok) throw new Error('Mise à jour impossible');
         await this.fetchScenes(this.session.id);
         const refreshed = this.scenes.find(s => s.id === this.currentScene.id);
-        if (refreshed) this.setCurrentScene(refreshed.id);
+        if (refreshed) this.setCurrentScene(refreshed.id, false);
         this.closeSceneEditModal();
       } catch (err) {
         this.sceneEditModal.error = err?.message || 'Erreur lors de la sauvegarde';
@@ -391,7 +427,7 @@ export function sessionViewSection(baseInit) {
       const [item] = arr.splice(index, 1);
       arr.splice(target, 0, item);
       this.scenes = arr.map((scene, i) => ({ ...scene, order: i + 1 }));
-      this.setCurrentScene(item.id);
+      this.setCurrentScene(item.id, false);
       this.saveSceneOrder();
     },
     handleTenantDrop(index) {
@@ -404,37 +440,45 @@ export function sessionViewSection(baseInit) {
       this.tenantDragOver = null;
     },
     addImageToScene(name, persist = true) {
-      if (!name || !this.currentScene) return;
-      const imgs = this.normalizeImages(this.currentScene.images);
+      const sceneId = this.selectedSceneId || this.currentScene?.id;
+      if (!name || !sceneId) return;
+      const scene = this.scenes.find(s => s.id === sceneId) || this.currentScene;
+      if (!scene) return;
+      const imgs = this.normalizeImages(scene.images);
       const nextOrder = imgs.length + 1;
       imgs.push({ name, order: nextOrder });
-      this.currentScene = { ...this.currentScene, images: imgs };
-      if (persist && this.currentScene.id) this.updateSceneImages(imgs);
+      this.currentScene = { ...scene, images: imgs };
+      this.selectedSceneId = sceneId;
+      if (persist) this.updateSceneImages(imgs, sceneId);
     },
 
-    async updateSceneImages(images) {
-      if (!this.tenantId || !this.currentScene?.id) return;
+    async updateSceneImages(images, sceneIdOverride = '') {
+      const sceneId = sceneIdOverride || this.selectedSceneId || this.currentScene?.id;
+      if (!this.tenantId || !sceneId) return;
       try {
-        await fetch(`${this.API}/api/tenant/${this.tenantId}/scenes/${encodeURIComponent(this.currentScene.id)}`, {
+        await fetch(`${this.API}/api/tenant/${this.tenantId}/scenes/${encodeURIComponent(sceneId)}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', ...this.headersAuth() },
-          body: JSON.stringify({ ...this.currentScene, images })
+          body: JSON.stringify({ ...this.currentScene, id: sceneId, images })
         });
         await this.fetchScenes(this.session?.id);
-        if (this.currentScene?.id) this.setCurrentScene(this.currentScene.id);
+        this.setCurrentScene(sceneId, false);
       } catch (err) {
         this.error = err?.message || 'Erreur lors de la mise à jour des images';
       }
     },
 
     async removeImageFromScene(index) {
-      if (index === undefined || index === null || !this.currentScene) return;
-      const imgs = this.normalizeImages(this.currentScene.images);
+      const sceneId = this.selectedSceneId || this.currentScene?.id;
+      if (index === undefined || index === null || !sceneId) return;
+      const scene = this.scenes.find(s => s.id === sceneId) || this.currentScene;
+      const imgs = this.normalizeImages(scene?.images);
       if (index < 0 || index >= imgs.length) return;
       imgs.splice(index, 1);
       const reordered = imgs.map((img, idx) => ({ ...img, order: idx + 1 }));
-      this.currentScene = { ...this.currentScene, images: reordered };
-      await this.updateSceneImages(reordered);
+      this.currentScene = { ...scene, images: reordered };
+      this.selectedSceneId = sceneId;
+      await this.updateSceneImages(reordered, sceneId);
     },
     async duplicateScene(scene) {
       if (!scene || !this.session?.id || !this.tenantId) return;
@@ -456,7 +500,7 @@ export function sessionViewSection(baseInit) {
         if (!res.ok) throw new Error('Duplication impossible');
         const created = await res.json();
         await this.fetchScenes(this.session.id);
-        if (created?.id) this.setCurrentScene(created.id);
+        if (created?.id) this.setCurrentScene(created.id, false);
       } catch (err) {
         this.error = err?.message || 'Erreur lors de la duplication';
       }
