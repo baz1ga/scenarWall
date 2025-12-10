@@ -6,11 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-
     "dev:server": "nodemon --ignore data/users.json --ignore data/sessions.json --ignore data/tenants/ server.js",
     "tailwind:build": "npx tailwindcss -c tailwind.config.js -i ./src/tailwind.css -o ./public/assets/css/tailwind.css",
     "tailwind:watch": "npx tailwindcss -c tailwind.config.js -i ./src/tailwind.css -o ./public/assets/css/tailwind.css --watch",
-
     "dev": "npm-run-all --parallel tailwind:watch dev:server"
   },
   "keywords": [],
@@ -27,7 +25,6 @@
     "morgan": "^1.10.1",
     "multer": "^2.0.2",
     "sharp": "^0.33.3",
-    "simplemde": "^1.11.2",
     "ws": "^8.17.0"
   },
   "devDependencies": {

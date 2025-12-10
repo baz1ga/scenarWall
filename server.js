@@ -1069,6 +1069,14 @@ function removeAudioFromScenes(tenantId, audioName) {
   return updated;
 }
 
+function tenantNotesDir(tenantId) {
+  return path.join(TENANTS_DIR, tenantId, "notes");
+}
+
+function notePath(tenantId, name) {
+  return path.join(tenantNotesDir(tenantId), name);
+}
+
 function audioOrderFile(tenantId) {
   return path.join(TENANTS_DIR, tenantId, "audio-order.json");
 }
@@ -2002,6 +2010,99 @@ app.delete("/api/tenant/:tenant/scenes/:id", requireLogin, (req, res) => {
   touchScenarioFromSession(tenantId, existing.parentSession);
   res.json({ success: true });
 });
+
+// Scene note (markdown file)
+app.get("/api/tenant/:tenant/scenes/:id/note", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  const { id } = req.params;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const scene = readScene(tenantId, id);
+  if (!scene) return res.status(404).json({ error: "Scene not found" });
+
+  const rawNotes = typeof scene.notes === "string" ? scene.notes : "";
+  let name = "";
+  let content = "";
+  if (rawNotes && rawNotes.length < 500 && isSafeName(rawNotes)) {
+    name = rawNotes;
+    const file = notePath(tenantId, name);
+    if (fs.existsSync(file)) {
+      try { content = fs.readFileSync(file, "utf8"); } catch (_) { content = ""; }
+    }
+  } else if (rawNotes) {
+    // legacy inline note content
+    content = rawNotes;
+  }
+  return res.json({ name, content });
+});
+
+app.put("/api/tenant/:tenant/scenes/:id/note", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  const { id } = req.params;
+  const content = typeof req.body?.content === "string" ? req.body.content : "";
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const scene = readScene(tenantId, id);
+  if (!scene) return res.status(404).json({ error: "Scene not found" });
+
+  const dir = tenantNotesDir(tenantId);
+  try { fs.mkdirSync(dir, { recursive: true }); } catch (_) {}
+
+  const baseId = sanitizeFilename(scene.id || "scene", "scene");
+  let noteName = `${baseId}.md`;
+  if (!noteName || !isSafeName(noteName)) {
+    const base = sanitizeFilename(scene.title || scene.id || "note", "note");
+    noteName = uniqueFilename(dir, base, ".md");
+  }
+  const filePath = notePath(tenantId, noteName);
+  try {
+    fs.writeFileSync(filePath, content || "", "utf8");
+    const updated = { ...scene, notes: noteName, updatedAt: Math.floor(Date.now() / 1000) };
+    writeScene(tenantId, updated);
+    touchSessionUpdated(tenantId, scene.parentSession);
+    touchScenarioFromSession(tenantId, scene.parentSession);
+    return res.json({ success: true, name: noteName });
+  } catch (err) {
+    logger.error("Failed to write scene note", { tenantId, sceneId: id, err: err?.message });
+    // fallback: store inline to avoid data loss but do not fail the client
+    const updated = { ...scene, notes: content, updatedAt: Math.floor(Date.now() / 1000) };
+    try { writeScene(tenantId, updated); } catch (_) {}
+    touchSessionUpdated(tenantId, scene.parentSession);
+    touchScenarioFromSession(tenantId, scene.parentSession);
+    return res.json({ success: true, name: noteName || "", inline: true });
+  }
+});
+
+app.delete("/api/tenant/:tenant/scenes/:id/note", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  const { id } = req.params;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const scene = readScene(tenantId, id);
+  if (!scene) return res.status(404).json({ error: "Scene not found" });
+
+  const noteName = typeof scene.notes === "string" ? scene.notes : "";
+  if (noteName && isSafeName(noteName)) {
+    const file = notePath(tenantId, noteName);
+    if (fs.existsSync(file)) {
+      try { fs.unlinkSync(file); } catch (e) {
+        logger.error("Failed to delete scene note file", { tenantId, sceneId: id, err: e?.message });
+      }
+    }
+  }
+  const updated = { ...scene, notes: null, updatedAt: Math.floor(Date.now() / 1000) };
+  writeScene(tenantId, updated);
+  touchSessionUpdated(tenantId, scene.parentSession);
+  touchScenarioFromSession(tenantId, scene.parentSession);
+  return res.json({ success: true });
+});
+
+//------------------------------------------------------------
+//  SCENES (sessions)
+//------------------------------------------------------------
 
 app.put("/api/tenant/:tenant/scenes/reorder", requireLogin, (req, res) => {
   const tenantId = req.params.tenant;

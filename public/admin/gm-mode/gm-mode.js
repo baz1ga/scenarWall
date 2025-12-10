@@ -34,55 +34,48 @@ export function gmDashboard() {
     socket: null,
     socketTimer: null,
     _tensionAudio: null,
-    notesEditor: null,
     notesId: null,
-    notesSaveTimer: null,
+    notesContent: '',
     notesSaving: false,
+    notesLoading: false,
+    notesSaveTimer: null,
+    noteInputBound: false,
+    notesTextarea: null,
     initNotesEditor(el) {
-      if (!el || this.notesEditor || !window.SimpleMDE) return;
-      this.notesEditor = new window.SimpleMDE({
-        element: el,
-        spellChecker: false,
-        status: false,
-        autofocus: false,
-        toolbar: [
-          "bold", "italic", "heading", "strikethrough","|","quote","|",
-          "unordered-list", "ordered-list", "|",
-          "link", "preview", "guide"
-        ]
-      });
-      // Load existing content
+      if (!el) return;
+      this.notesTextarea = el;
+      this.noteInputBound = true;
+      this.notesTextarea.value = this.notesContent || '';
+      this.notesTextarea.addEventListener('input', () => this.queueNotesSave());
       this.loadNotes();
-      // Autosave on change (debounced)
-      this.notesEditor.codemirror.on("change", () => {
-        this.queueNotesSave();
-      });
-    },
-    queueNotesSave() {
-      if (!this.notesEditor || !this.tenantId) return;
-      if (this.notesSaveTimer) {
-        clearTimeout(this.notesSaveTimer);
-      }
-      this.notesSaveTimer = setTimeout(() => this.saveNotes(), 800);
     },
     async loadNotes() {
-      if (!this.tenantId || !this.notesEditor) return;
+      if (!this.tenantId) return;
+      this.notesLoading = true;
       try {
         const res = await fetch(`${this.API}/api/${this.tenantId}/session/notes`, { headers: this.headersAuth() });
-        if (res.ok) {
-          const data = await res.json();
-          this.notesId = data.id || null;
-          this.notesEditor.value(data.content || "");
-        }
+        if (!res.ok) throw new Error('Notes');
+        const data = await res.json();
+        this.notesId = data.id || null;
+        this.notesContent = data.content || '';
+        if (this.notesTextarea) this.notesTextarea.value = this.notesContent;
       } catch (e) {
-        // ignore load errors
+        this.notesContent = '';
+        if (this.notesTextarea) this.notesTextarea.value = '';
+      } finally {
+        this.notesLoading = false;
       }
     },
+    queueNotesSave() {
+      if (!this.tenantId) return;
+      if (this.notesSaveTimer) clearTimeout(this.notesSaveTimer);
+      this.notesSaveTimer = setTimeout(() => this.saveNotes(), 700);
+    },
     async saveNotes() {
-      if (!this.tenantId || !this.notesEditor) return;
+      if (!this.tenantId) return;
       this.notesSaveTimer = null;
-      const content = this.notesEditor.value();
       this.notesSaving = true;
+      const content = this.notesTextarea ? this.notesTextarea.value : this.notesContent;
       try {
         const body = { content };
         if (this.notesId) body.id = this.notesId;
@@ -91,14 +84,14 @@ export function gmDashboard() {
           headers: { ...this.headersAuth(), 'Content-Type': 'application/json' },
           body: JSON.stringify(body)
         });
-        if (res.ok) {
-          const data = await res.json();
-          if (data && data.id) this.notesId = data.id;
-        }
-      } catch (e) {
-        // ignore save errors
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data?.id) this.notesId = data.id;
+        this.notesContent = content;
+      } catch (_) {
+        // silent failure to keep UX responsive
+      } finally {
+        this.notesSaving = false;
       }
-      this.notesSaving = false;
     },
     changeTension(delta) {
       const target = this.tensionTargetLevel(delta);

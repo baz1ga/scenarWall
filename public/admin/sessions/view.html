@@ -1,4 +1,31 @@
 <div id="page-content" x-data="sessionViewPage()" x-init="init()" class="space-y-6" x-cloak>
+  <style>
+    /* Notes textarea styling */
+    .notes-editor textarea {
+      min-height: 360px;
+      font-size: 15px;
+      line-height: 1.5;
+      font-family: inherit;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .notes-editor textarea:focus {
+      border-color: #34d399;
+      box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.2);
+    }
+    .dark .notes-editor textarea {
+      border-color: #1f2937;
+      background: #0f172a;
+      color: #e5e7eb;
+    }
+    .dark .notes-editor textarea:focus {
+      border-color: #34d399;
+      box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.2);
+    }
+  </style>
   <div class="flex flex-wrap items-center justify-between gap-3 mt-2">
    <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100 flex flex-wrap items-center gap-2">
       <template x-if="scenarioTitle">
@@ -123,7 +150,7 @@
           <template x-for="tab in tabs" :key="tab.id">
             <button class="px-4 py-2 -mb-px border-b-2 font-medium transition"
                     :class="tab.id === activeTab ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'"
-                    @click="activeTab = tab.id"
+                    @click="setActiveTab(tab.id)"
                     x-text="tab.label"></button>
           </template>
         </div>
@@ -309,11 +336,31 @@
           </template>
 
           <template x-if="activeTab === 'notes'">
-            <div class="space-y-3">
-              <div>
-                <p class="text-xs uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">Notes</p>
-                <div class="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 whitespace-pre-line"
-                     x-text="currentScene?.notes || 'Aucune note.'"></div>
+            <div class="space-y-4 max-w-4xl mx-auto notes-editor">
+              <div class="flex items-center justify-between pb-2">          
+                <div class="flex items-center gap-2">
+                  <button class="inline-flex items-center gap-2 rounded-lg border border-rose-200 text-rose-600 px-3 py-1.5 text-sm hover:bg-rose-50 dark:hover:bg-rose-900/30 transition"
+                          x-show="currentScene?.notes"
+                          @click="deleteSceneNote()">
+                    <i class="fa-solid fa-trash"></i> Supprimer la note
+                  </button>
+                  <div class="inline-flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400" x-show="notesSaving">
+                    <span class="h-3.5 w-3.5 rounded-full border-2 border-emerald-700 border-t-transparent animate-spin"></span>
+                    <span>Sauvegarde...</span>
+                  </div>
+                </div>
+              </div>
+              <template x-if="!currentScene?.notes">
+                <div class="border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl py-12 px-6 text-center space-y-4 flex flex-col items-center justify-center">
+                  <p class="text-sm text-slate-500 dark:text-slate-400">Aucune note pour cette scène.</p>
+                  <button class="inline-flex items-center gap-2 rounded-lg border border-emerald-500 text-emerald-600 px-4 py-2 text-sm font-semibold hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition"
+                          @click="startNoteCreation()">
+                    <i class="fa-solid fa-plus"></i> Créer une note
+                  </button>
+                </div>
+              </template>
+              <div class="space-y-2" x-show="currentScene?.notes">
+                <textarea x-ref="sceneNotesArea" placeholder="Vos notes de session..." class="w-full"></textarea>
               </div>
             </div>
           </template>

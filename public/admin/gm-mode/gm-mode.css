@@ -1,34 +1,24 @@
-.CodeMirror{
-  margin-top: 0px !important;
-  height: 490px;
+.notes-editor textarea {
+  min-height: 320px;
+  font-size: 15px;
+  line-height: 1.5;
+  font-family: inherit;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
-.dark .editor-toolbar {
-  background: #0f172a !important;
-  border-color: #1e293b !important;
+.notes-editor textarea:focus {
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.2);
 }
-.dark .editor-toolbar a, .dark .editor-toolbar button {
-  color: #e2e8f0 !important;
+.dark .notes-editor textarea {
+  border-color: #1f2937;
+  background: #0f172a;
+  color: #e2e8f0;
 }
-.dark .editor-toolbar a:hover, .dark .editor-toolbar button:hover {
-  background: #1e293b !important;
-  color: #fbbf24 !important;
-}
-.dark .editor-toolbar a.active, .dark .editor-toolbar button.active {
-  background: #fbbf24 !important;
-  color: #0f172a !important;
-  border-color: #fbbf24 !important;
-}
-.dark .CodeMirror, .dark .CodeMirror-scroll {
-  background: #0f172a !important;
-  color: #e2e8f0 !important;
-  border-color: #1e293b !important;
-}
-.dark .CodeMirror-gutters {
-  background: #0f172a !important;
-  border-color: #1e293b !important;
-}
-.dark .editor-statusbar {
-  background: #0f172a !important;
-  border-color: #1e293b !important;
-  color: #94a3b8 !important;
+.dark .notes-editor textarea:focus {
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.2);
 }

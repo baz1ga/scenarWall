@@ -1,5 +1,6 @@
 import { coreSection } from '/admin/js/core.js';
 import { pixabayMixin } from '/admin/js/pixabay.js';
+// SimpleMDE supprimé : éditeur basculé en textarea simple
 
 export function sessionViewSection(baseInit) {
   return {
@@ -70,6 +71,39 @@ export function sessionViewSection(baseInit) {
     audioUploadStatus: 'ok',
     audioUploadMessage: '',
     audioUploading: false,
+    notesSaving: false,
+    notesLoading: false,
+    noteName: '',
+    noteContentBuffer: '',
+    noteSaveTimer: null,
+    noteSaveDisabled: false,
+    noteInputBound: false,
+    async noteNextTick() {
+      return new Promise(resolve => setTimeout(resolve, 0));
+    },
+    async waitForNotesTextarea(retries = 20, delay = 50) {
+      console.debug('[Notes] waitForTextarea start', { retries, delay });
+      for (let i = 0; i < retries; i++) {
+        const refEl = this.$refs?.sceneNotesArea;
+        if (refEl) return refEl;
+        const domEl = document.querySelector('[x-ref=\"sceneNotesArea\"]');
+        if (domEl) return domEl;
+        await new Promise(res => setTimeout(res, delay));
+      }
+      console.warn('[Notes] textarea not found');
+      return null;
+    },
+    getNotesTextarea() {
+      return this.$refs?.sceneNotesArea || document.querySelector('[x-ref=\"sceneNotesArea\"]');
+    },
+    setNotesValue(val) {
+      const el = this.getNotesTextarea();
+      if (el) el.value = val ?? '';
+    },
+    getNotesValue() {
+      const el = this.getNotesTextarea();
+      return el ? el.value : '';
+    },
     uploadMessage: '',
     uploadStatus: 'ok',
     uploadModalOpen: false,
@@ -249,6 +283,11 @@ export function sessionViewSection(baseInit) {
       this.currentScene = found;
       this.selectedSceneId = found.id;
       this.activeTab = 'images';
+      this.noteName = '';
+      this.noteContentBuffer = '';
+      this.noteSaveDisabled = false;
+      this.noteInputBound = false;
+      this.setNotesValue('');
       this.updateBreadcrumb();
       this.storeSelectedScene(found.id);
     },
@@ -273,6 +312,9 @@ export function sessionViewSection(baseInit) {
       this.sceneSelectionLoading = false;
       this.pendingSceneId = '';
       this.applySceneSelection(id);
+      if (this.activeTab === 'notes') {
+        this.loadSceneNotesContent();
+      }
     },
 
     openEditModal() {
@@ -369,6 +411,35 @@ export function sessionViewSection(baseInit) {
 
     closeSceneEditModal() {
       this.sceneEditModal = { open: false, title: '', saving: false, error: '' };
+    },
+
+    async setActiveTab(tab) {
+      this.activeTab = tab;
+      if (tab !== 'notes') return;
+      console.debug('[Notes] tab opened', { sceneId: this.currentScene?.id, note: this.currentScene?.notes });
+      this.noteSaveDisabled = true;
+      this.noteName = this.currentScene?.notes || '';
+      this.noteContentBuffer = '';
+      try {
+        if (!this.currentScene?.notes) {
+          this.setNotesValue('');
+          return;
+        }
+        console.debug('[Notes] loading note file');
+        await this.loadSceneNoteFile();
+        this.setNotesValue(this.noteContentBuffer || '');
+        if (!this.noteInputBound) {
+          const el = await this.waitForNotesTextarea();
+          if (el) {
+            el.addEventListener('input', () => this.queueSaveSceneNotes());
+            this.noteInputBound = true;
+          }
+        }
+      } catch (e) {
+        // ignore load/init errors
+      } finally {
+        this.noteSaveDisabled = false;
+      }
     },
 
     async submitSceneEdit() {
@@ -839,6 +910,131 @@ export function sessionViewSection(baseInit) {
         })
         .filter(Boolean)
         .sort((a, b) => (a.order || 0) - (b.order || 0));
+    },
+    loadSceneNotesContent() {
+      this.setNotesValue('');
+    },
+    async loadSceneNoteFile() {
+      console.debug('[Notes] load file start', { scene: this.currentScene?.id, note: this.currentScene?.notes });
+      this.noteName = this.currentScene?.notes || '';
+      this.noteContentBuffer = '';
+      if (!this.tenantId || !this.currentScene?.id || !this.currentScene?.notes) return;
+      this.notesLoading = true;
+      try {
+        const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/scenes/${encodeURIComponent(this.currentScene.id)}/note`, {
+          headers: this.headersAuth()
+        });
+        if (!res.ok) throw new Error('Note');
+        const data = await res.json();
+        const content = data?.content || '';
+        this.noteName = data?.name || '';
+        this.noteContentBuffer = content;
+        console.debug('[Notes] load file success', { name: this.noteName, length: (content || '').length });
+        this.setNotesValue(content || '');
+      } catch (err) {
+        console.error('[Notes] load file error', err);
+        this.error = err?.message || 'Impossible de charger la note';
+      } finally {
+        this.notesLoading = false;
+      }
+    },
+    async startNoteCreation() {
+      if (!this.tenantId || !this.currentScene?.id) return;
+      this.noteSaveDisabled = true;
+      this.noteName = '';
+      this.noteContentBuffer = '';
+      try {
+        const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/scenes/${encodeURIComponent(this.currentScene.id)}/note`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', ...this.headersAuth() },
+          body: JSON.stringify({ content: '' })
+        });
+        if (!res.ok) throw new Error('Création note impossible');
+        const data = await res.json().catch(() => ({}));
+        if (data?.name) this.noteName = data.name;
+        this.scenes = this.scenes.map(s => s.id === this.currentScene.id ? { ...s, notes: data?.name || s.notes } : s);
+        const refreshed = this.scenes.find(s => s.id === this.currentScene.id);
+        if (refreshed) this.currentScene = refreshed;
+        this.activeTab = 'notes';
+        await this.noteNextTick();
+        this.setNotesValue('');
+        if (!this.noteInputBound) {
+          const el = await this.waitForNotesTextarea();
+          if (el) {
+            el.addEventListener('input', () => this.queueSaveSceneNotes());
+            this.noteInputBound = true;
+          }
+        }
+      } catch (e) {
+        this.error = e?.message || 'Impossible de créer la note';
+      } finally {
+        this.noteSaveDisabled = false;
+      }
+    },
+    queueSaveSceneNotes() {
+      if (this.noteSaveDisabled) return;
+      if (!this.getNotesTextarea()) return;
+      if (this.noteSaveTimer) {
+        clearTimeout(this.noteSaveTimer);
+      }
+      this.noteSaveTimer = setTimeout(() => {
+        this.saveSceneNotes();
+        this.noteSaveTimer = null;
+      }, 800);
+    },
+    async saveSceneNotes() {
+      if (!this.tenantId || !this.currentScene?.id || this.noteSaveDisabled) return;
+      this.notesSaving = true;
+      const content = this.getNotesValue();
+      const previousTab = this.activeTab;
+      try {
+        const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/scenes/${encodeURIComponent(this.currentScene.id)}/note`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', ...this.headersAuth() },
+          body: JSON.stringify({ content })
+        });
+        if (!res.ok) throw new Error('Sauvegarde note');
+        const data = await res.json().catch(() => ({}));
+        if (data?.name) this.noteName = data.name;
+        // met à jour localement sans re-render complet
+        const updatedScenes = this.scenes.map(s => s.id === this.currentScene.id ? { ...s, notes: data?.name || s.notes } : s);
+        this.scenes = updatedScenes;
+        const refreshed = updatedScenes.find(s => s.id === this.currentScene.id);
+        if (refreshed) {
+          this.currentScene = refreshed;
+          this.selectedSceneId = refreshed.id;
+        }
+        if (previousTab === 'notes') this.activeTab = 'notes';
+      } catch (err) {
+        this.error = err?.message || 'Erreur lors de la sauvegarde des notes';
+      } finally {
+        this.notesSaving = false;
+      }
+    },
+    async deleteSceneNote() {
+      if (!this.tenantId || !this.currentScene?.id || !this.currentScene?.notes) return;
+      this.noteSaveDisabled = true;
+      if (this.noteSaveTimer) {
+        clearTimeout(this.noteSaveTimer);
+        this.noteSaveTimer = null;
+      }
+      try {
+        const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/scenes/${encodeURIComponent(this.currentScene.id)}/note`, {
+          method: 'DELETE',
+          headers: this.headersAuth()
+        });
+        if (!res.ok) throw new Error('Suppression note');
+        this.noteName = '';
+        this.noteContentBuffer = '';
+        this.setNotesValue('');
+        this.scenes = this.scenes.map(s => s.id === this.currentScene.id ? { ...s, notes: null } : s);
+        const refreshed = this.scenes.find(s => s.id === this.currentScene.id);
+        if (refreshed) this.currentScene = refreshed;
+      } catch (e) {
+        this.error = e?.message || 'Impossible de supprimer la note';
+      } finally {
+        this.noteSaveDisabled = false;
+      }
     },
     normalizeAudio(arr) {
       if (!Array.isArray(arr)) return [];
