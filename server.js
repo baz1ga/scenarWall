@@ -1755,13 +1755,86 @@ function sanitizeSessionInput(body = {}, existing = null) {
     title: '',
     parentScenario: null,
     createdAt: now,
-    updatedAt: now
+    updatedAt: now,
+    tensionEnabled: true,
+    tensionFont: 'Audiowide',
+    tensionColors: {
+      level1: '#37aa32',
+      level2: '#f8d718',
+      level3: '#f39100',
+      level4: '#e63027',
+      level5: '#3a3a39'
+    },
+    tensionLabels: {
+      level1: '0',
+      level2: '-5',
+      level3: '+5',
+      level4: '+10',
+      level5: '+15'
+    },
+    tensionAudio: {
+      level1: null,
+      level2: null,
+      level3: null,
+      level4: null,
+      level5: null
+    }
   };
   const payload = { ...base };
   if (typeof body.title === "string") payload.title = body.title.trim().slice(0, 200);
   if (typeof body.parentScenario === "string") {
     const v = body.parentScenario.trim();
     payload.parentScenario = v || null;
+  }
+  if (typeof body.tensionEnabled === "boolean") {
+    payload.tensionEnabled = body.tensionEnabled;
+  }
+  if (typeof body.tensionFont === "string") {
+    payload.tensionFont = body.tensionFont.trim().slice(0, 80);
+  }
+  const sanitizeColor = (hex, fallback) => {
+    const h = (hex || '').toString().trim().toLowerCase();
+    const normalized = h.startsWith('#') ? h : `#${h}`;
+    const short = normalized.match(/^#([0-9a-f]{3})$/i);
+    if (short) {
+      const c = short[1];
+      return `#${c[0]}${c[0]}${c[1]}${c[1]}${c[2]}${c[2]}`.toLowerCase();
+    }
+    return /^#([0-9a-f]{6})$/i.test(normalized) ? normalized : fallback;
+  };
+  const sanitizeLabel = (val, fb) => {
+    if (typeof val !== "string") return fb;
+    const s = val.trim().slice(0, 4);
+    return s.length ? s : fb;
+  };
+  const defaultsColors = payload.tensionColors || {};
+  const defaultsLabels = payload.tensionLabels || {};
+  if (body.tensionColors && typeof body.tensionColors === "object") {
+    payload.tensionColors = {
+      level1: sanitizeColor(body.tensionColors.level1, defaultsColors.level1),
+      level2: sanitizeColor(body.tensionColors.level2, defaultsColors.level2),
+      level3: sanitizeColor(body.tensionColors.level3, defaultsColors.level3),
+      level4: sanitizeColor(body.tensionColors.level4, defaultsColors.level4),
+      level5: sanitizeColor(body.tensionColors.level5, defaultsColors.level5)
+    };
+  }
+  if (body.tensionLabels && typeof body.tensionLabels === "object") {
+    payload.tensionLabels = {
+      level1: sanitizeLabel(body.tensionLabels.level1, defaultsLabels.level1),
+      level2: sanitizeLabel(body.tensionLabels.level2, defaultsLabels.level2),
+      level3: sanitizeLabel(body.tensionLabels.level3, defaultsLabels.level3),
+      level4: sanitizeLabel(body.tensionLabels.level4, defaultsLabels.level4),
+      level5: sanitizeLabel(body.tensionLabels.level5, defaultsLabels.level5)
+    };
+  }
+  if (body.tensionAudio && typeof body.tensionAudio === "object") {
+    payload.tensionAudio = {
+      level1: typeof body.tensionAudio.level1 === "string" ? body.tensionAudio.level1 : null,
+      level2: typeof body.tensionAudio.level2 === "string" ? body.tensionAudio.level2 : null,
+      level3: typeof body.tensionAudio.level3 === "string" ? body.tensionAudio.level3 : null,
+      level4: typeof body.tensionAudio.level4 === "string" ? body.tensionAudio.level4 : null,
+      level5: typeof body.tensionAudio.level5 === "string" ? body.tensionAudio.level5 : null
+    };
   }
   delete payload.description;
   delete payload.date;
@@ -1925,7 +1998,7 @@ function ensureDefaultSceneForSession(tenantId, sessionPayload) {
     const scene = {
       id: `scene_${Date.now()}`,
       tenantId,
-      title: sessionPayload.title || 'Nouvelle scène',
+      title: "Scène 1" || 'Nouvelle scène',
       parentSession: parentId,
       order: 1,
       images: [],

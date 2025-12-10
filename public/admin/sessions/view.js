@@ -38,6 +38,48 @@ export function sessionViewSection(baseInit) {
     sceneSelectionTimer: null,
     selectedSceneId: '',
     pendingSceneId: '',
+    // Tension (session-level)
+    tensionEnabled: true,
+    tensionFont: 'Audiowide',
+    defaultTensionColors: {
+      level1: '#37aa32',
+      level2: '#f8d718',
+      level3: '#f39100',
+      level4: '#e63027',
+      level5: '#3a3a39'
+    },
+    defaultTensionLabels: {
+      level1: '0',
+      level2: '-5',
+      level3: '+5',
+      level4: '+10',
+      level5: '+15'
+    },
+    tensionColors: {
+      level1: '#37aa32',
+      level2: '#f8d718',
+      level3: '#f39100',
+      level4: '#e63027',
+      level5: '#3a3a39'
+    },
+    tensionLabels: {
+      level1: '0',
+      level2: '-5',
+      level3: '+5',
+      level4: '+10',
+      level5: '+15'
+    },
+    tensionAudio: {
+      level1: null,
+      level2: null,
+      level3: null,
+      level4: null,
+      level5: null
+    },
+    tensionMessage: '',
+    tensionStatus: 'ok',
+    tensionSaving: false,
+    tensionSaveTimer: null,
     sessionSceneStorageKey() {
       return this.session?.id ? `sw_session_current_scene_${this.session.id}` : null;
     },
@@ -127,6 +169,7 @@ export function sessionViewSection(baseInit) {
       { id: 'audio', label: 'Audio' },
       { id: 'notes', label: 'Notes' }
     ],
+    showTension: false,
 
     async init() {
       if (typeof baseInit === 'function') {
@@ -145,6 +188,7 @@ export function sessionViewSection(baseInit) {
         await this.fetchScenes(sessionId);
         await this.refreshTenantImages();
         await this.refreshTenantAudio();
+        this.showTension = false;
       } catch (err) {
         this.error = err?.message || 'Impossible de charger la session';
       } finally {
@@ -192,6 +236,7 @@ export function sessionViewSection(baseInit) {
         ? `Scénario ${data.parentScenario} • Session ${data.id}`
         : `Session ${data.id}`;
       this.updateBreadcrumb();
+      this.loadTensionFromSession(data);
       if (data.parentScenario) {
         this.fetchScenarioTitle(data.parentScenario);
       }
@@ -909,6 +954,91 @@ export function sessionViewSection(baseInit) {
         })
         .filter(Boolean)
         .sort((a, b) => (a.order || 0) - (b.order || 0));
+    },
+    sanitizeColor(hex) {
+      const h = (hex || '').toString().trim().toLowerCase();
+      const normalized = h.startsWith('#') ? h : `#${h}`;
+      const short = normalized.match(/^#([0-9a-f]{3})$/i);
+      if (short) {
+        const c = short[1];
+        return `#${c[0]}${c[0]}${c[1]}${c[1]}${c[2]}${c[2]}`.toLowerCase();
+      }
+      return /^#([0-9a-f]{6})$/i.test(normalized) ? normalized : null;
+    },
+    normalizeTensionColors(colors) {
+      const sanitize = (c, fb) => {
+        const val = this.sanitizeColor(c);
+        return val ? val : fb;
+      };
+      return {
+        level1: sanitize(colors?.level1, this.defaultTensionColors.level1),
+        level2: sanitize(colors?.level2, this.defaultTensionColors.level2),
+        level3: sanitize(colors?.level3, this.defaultTensionColors.level3),
+        level4: sanitize(colors?.level4, this.defaultTensionColors.level4),
+        level5: sanitize(colors?.level5, this.defaultTensionColors.level5)
+      };
+    },
+    normalizeTensionLabels(labels) {
+      const clamp = (v, fb) => {
+        if (typeof v !== 'string') return fb;
+        const s = v.trim().slice(0, 4);
+        return s.length ? s : fb;
+      };
+      const src = labels || {};
+      return {
+        level1: clamp(src.level1, this.defaultTensionLabels.level1),
+        level2: clamp(src.level2, this.defaultTensionLabels.level2),
+        level3: clamp(src.level3, this.defaultTensionLabels.level3),
+        level4: clamp(src.level4, this.defaultTensionLabels.level4),
+        level5: clamp(src.level5, this.defaultTensionLabels.level5),
+      };
+    },
+    loadTensionFromSession(session) {
+      const colors = this.normalizeTensionColors(session?.tensionColors);
+      const labels = this.normalizeTensionLabels(session?.tensionLabels);
+      this.tensionEnabled = session?.tensionEnabled !== false;
+      this.tensionFont = session?.tensionFont || 'Audiowide';
+      this.tensionColors = colors;
+      this.tensionLabels = labels;
+      this.tensionAudio = session?.tensionAudio || { ...this.tensionAudio };
+    },
+    queueSaveTension() {
+      if (this.tensionSaveTimer) clearTimeout(this.tensionSaveTimer);
+      this.tensionSaveTimer = setTimeout(() => this.saveSessionTension(), 600);
+    },
+    async saveSessionTension() {
+      if (!this.tenantId || !this.session?.id) return;
+      this.tensionSaveTimer = null;
+      this.tensionSaving = true;
+      const colors = this.normalizeTensionColors(this.tensionColors);
+      const labels = this.normalizeTensionLabels(this.tensionLabels);
+      const audios = { ...this.tensionAudio };
+      Object.keys(audios).forEach(k => {
+        if (!audios[k]) audios[k] = null;
+      });
+      try {
+        const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/sessions/${encodeURIComponent(this.session.id)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', ...this.headersAuth() },
+          body: JSON.stringify({
+            tensionEnabled: this.tensionEnabled,
+            tensionFont: this.tensionFont,
+            tensionColors: colors,
+            tensionLabels: labels,
+            tensionAudio: audios
+          })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Sauvegarde tension');
+        this.session = { ...this.session, ...data };
+        this.tensionMessage = this.tensionEnabled ? 'Barre de tension activée.' : 'Barre de tension désactivée.';
+        this.tensionStatus = 'ok';
+      } catch (err) {
+        this.tensionMessage = err?.message || 'Erreur tension';
+        this.tensionStatus = 'error';
+      } finally {
+        this.tensionSaving = false;
+      }
     },
     loadSceneNotesContent() {
       this.setNotesValue('');

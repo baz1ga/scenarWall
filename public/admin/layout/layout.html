@@ -67,28 +67,33 @@
         </div>
         <div class="px-2 pt-2" x-show="sidebarCollapsed">
         </div>
-        <a href="/admin/gallery/gallery.html" :class="[
-          sidebarCollapsed ? 'justify-center gap-0 px-0' : 'justify-start gap-3 px-3',
-          section === 'galerie' ? 'bg-slate-800 text-emerald-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'
-        ]" class="w-full flex items-center py-2 rounded-lg text-sm font-medium text-left transition mt-3">
-          <i class="fa-regular fa-image text-base"></i>
-          <span x-show="!sidebarCollapsed">Galerie</span>
-        </a>
-        <a href="/admin/audio/audio.html" :class="[
-          sidebarCollapsed ? 'justify-center gap-0 px-0' : 'justify-start gap-3 px-3',
-          section === 'audio' ? 'bg-slate-800 text-indigo-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'
-        ]" class="w-full flex items-center py-2 rounded-lg text-sm font-medium text-left transition mt-2">
-          <i class="fa-solid fa-music text-base"></i>
-          <span x-show="!sidebarCollapsed">Audio</span>
-        </a>
-        <a href="/admin/users/users.html" :class="[
-          sidebarCollapsed ? 'justify-center gap-0 px-0' : 'justify-start gap-3 px-3',
-          section === 'users' ? 'bg-slate-800 text-amber-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'
-        ]" class="w-full flex items-center py-2 rounded-lg text-sm font-medium text-left transition mt-2"
-           x-show="isSuperAdmin">
-          <i class="fa-solid fa-user-gear text-base"></i>
-          <span x-show="!sidebarCollapsed">Utilisateurs</span>
-        </a>
+        <div class="mt-3 space-y-1">
+          <div class="px-3 text-[11px] uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400" x-show="!sidebarCollapsed">Bibliothèque</div>
+          <a href="/admin/gallery/gallery.html" :class="[
+            sidebarCollapsed ? 'justify-center gap-0 px-0' : 'justify-start gap-3 px-3',
+            section === 'galerie' ? 'bg-slate-800 text-emerald-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'
+          ]" class="w-full flex items-center py-2 rounded-lg text-sm font-medium text-left transition">
+            <i class="fa-regular fa-image text-base"></i>
+            <span x-show="!sidebarCollapsed">Galerie</span>
+          </a>
+          <a href="/admin/audio/audio.html" :class="[
+            sidebarCollapsed ? 'justify-center gap-0 px-0' : 'justify-start gap-3 px-3',
+            section === 'audio' ? 'bg-slate-800 text-indigo-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'
+          ]" class="w-full flex items-center py-2 rounded-lg text-sm font-medium text-left transition">
+            <i class="fa-solid fa-music text-base"></i>
+            <span x-show="!sidebarCollapsed">Audio</span>
+          </a>
+        </div>
+        <div class="mt-4 space-y-1" x-show="isSuperAdmin">
+          <div class="px-3 text-[11px] uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400" x-show="!sidebarCollapsed">Administration</div>
+          <a href="/admin/users/users.html" :class="[
+            sidebarCollapsed ? 'justify-center gap-0 px-0' : 'justify-start gap-3 px-3',
+            section === 'users' ? 'bg-slate-800 text-amber-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'
+          ]" class="w-full flex items-center py-2 rounded-lg text-sm font-medium text-left transition">
+            <i class="fa-solid fa-user-gear text-base"></i>
+            <span x-show="!sidebarCollapsed">Utilisateurs</span>
+          </a>
+        </div>
       </nav>
       <div class="px-3 pt-3" x-show="!sidebarCollapsed">
         <div class="p-2 text-center shadow-sm text-sm">

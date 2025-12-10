@@ -27,33 +27,40 @@
     }
   </style>
   <div class="flex flex-wrap items-center justify-between gap-3">
-   <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100 flex flex-wrap items-center gap-2">
-      <template x-if="scenarioTitle">
-        <a :href="`/admin/scenarios/list.html`"
-           class="text-emerald-600 hover:text-emerald-500 font-semibold">
-          <span x-text="scenarioTitle"></span>
-        </a>
-      </template>
-      <template x-if="scenarioTitle">
-        <span class="text-slate-400">›</span>
-      </template>
-      <span x-text="sessionTitle || 'Session'"></span>
-   </h1>
+    <div class="flex items-center flex-wrap">
+      <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100 flex flex-wrap items-center gap-2">
+          <template x-if="scenarioTitle">
+            <a :href="`/admin/scenarios/list.html`"
+              class="text-emerald-600 hover:text-emerald-500 font-semibold">
+              <span x-text="scenarioTitle"></span>
+            </a>
+          </template>
+          <template x-if="scenarioTitle">
+            <span class="text-slate-400">›</span>
+          </template>
+          <span x-text="sessionTitle || 'Session'"></span>
+      </h1>
+      <button x-show="session"
+            class= px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+            @click="openEditModal()">
+        <i class="fa-solid fa-pen"></i>
+      </button>
+  </div>
    <div class="flex items-center gap-2">
       <button x-show="session"
-              class="inline-flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-              @click="openEditModal()">
-        <i class="fa-solid fa-pen"></i> Renommer
-      </button>
-      <button x-show="session"
-              class="inline-flex items-center gap-2 rounded-lg border border-rose-300 text-rose-600 px-3 py-2 text-sm hover:bg-rose-50 dark:hover:bg-rose-900/20 transition"
-              @click="deleteSessionConfirm()">
-        <i class="fa-solid fa-trash"></i> Supprimer
+              class="inline-flex items-center gap-2 rounded-lg border border-amber-300 text-amber-600 px-3 py-2 text-sm hover:bg-amber-50 dark:hover:bg-amber-900/20 transition"
+              @click="showTension = !showTension">
+        <i class="fa-solid fa-bolt"></i> Tension
       </button>
       <button x-show="session && scenes.length <= 1"
               class="inline-flex items-center gap-2 rounded-lg bg-emerald-500 text-slate-900 font-semibold px-4 py-2 text-sm shadow-sm hover:bg-emerald-400 transition"
               @click="openSceneModal()">
         <i class="fa-solid fa-plus"></i> Ajouter une scène
+      </button>
+      <button x-show="session"
+              class="inline-flex items-center gap-2 rounded-lg border border-rose-300 text-rose-600 px-3 py-2 text-sm hover:bg-rose-50 dark:hover:bg-rose-900/20 transition"
+              @click="deleteSessionConfirm()">
+        <i class="fa-solid fa-trash"></i> 
       </button>
     </div>
   </div>
@@ -68,15 +75,113 @@
   <template x-if="error">
     <div class="rounded-2xl border border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-900/20 dark:text-rose-100 px-4 py-3 text-sm" x-text="error"></div>
   </template>
+      <!-- Tension modal -->
+      <template x-if="showTension">
+        <div class="fixed inset-0 z-50 flex items-center justify-center">
+          <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="showTension = false"></div>
+          <div class="relative w-full max-w-4xl mx-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-6 shadow-2xl space-y-4 z-10">
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+              <div>
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Barre de tension</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Activez et personnalisez les niveaux.</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" class="sr-only peer" x-model="tensionEnabled" @change="saveSessionTension">
+                <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:bg-emerald-500 transition"></div>
+                <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition peer-checked:translate-x-5"></div>
+              </label>
+            </div>
 
-  <template x-if="!loading && session">
-    <div class="space-y-4">
-        <div class="mt-3 rounded-2xl border border-slate-200 dark-border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm" x-show="scenes.length > 1">
-          <template x-if="scenes.length === 0">
-            <div class="border border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-4 text-sm text-slate-600 dark:text-slate-400">
-              Aucune scène disponible pour cette session.
+            <div class="grid gap-3 sm:grid-cols-2">
+            <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
+              <input type="radio" class="text-emerald-500" name="tensionFont" value="Audiowide" x-model="tensionFont" @change="saveSessionTension">
+              <span style="font-family: 'Audiowide', sans-serif;" class="text-base">Futuriste (Audiowide)</span>
+            </label>
+          <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
+            <input type="radio" class="text-emerald-500" name="tensionFont" value="Metal Mania" x-model="tensionFont" @change="saveSessionTension">
+            <span style="font-family: 'Metal Mania', cursive;" class="text-base">Horrifique (Metal Mania)</span>
+          </label>
+          <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
+            <input type="radio" class="text-emerald-500" name="tensionFont" value="Rye" x-model="tensionFont" @change="saveSessionTension">
+            <span style="font-family: 'Rye', cursive;" class="text-base">Saloon (Rye)</span>
+          </label>
+          <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
+            <input type="radio" class="text-emerald-500" name="tensionFont" value="Share Tech Mono" x-model="tensionFont" @change="saveSessionTension">
+            <span style="font-family: 'Share Tech Mono', monospace;" class="text-base">Techno (Share Tech Mono)</span>
+          </label>
+          <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
+            <input type="radio" class="text-emerald-500" name="tensionFont" value="Bangers" x-model="tensionFont" @change="saveSessionTension">
+            <span style="font-family: 'Bangers', cursive;" class="text-base">Cartoon (Bangers)</span>
+          </label>
+          <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
+            <input type="radio" class="text-emerald-500" name="tensionFont" value="Great Vibes" x-model="tensionFont" @change="saveSessionTension">
+            <span style="font-family: 'Great Vibes', cursive;" class="text-base">Manuscrit (Great Vibes)</span>
+          </label>
+            </div>
+
+            <div class="space-y-2">
+          <template x-for="level in ['level1','level2','level3','level4','level5']" :key="level">
+            <div class="rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100">
+              <div class="flex flex-wrap items-center gap-3">
+                <span class="font-semibold" x-text="`Niveau ${level.replace('level','')}`"></span>
+                <div class="ml-auto flex items-center gap-3 flex-wrap justify-end">
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs text-slate-500 dark:text-slate-400">Label</span>
+                    <input type="text" maxlength="4" class="w-20 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1 text-sm text-slate-900 dark:text-slate-100" x-model="tensionLabels[level]" @change="queueSaveTension">
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs text-slate-500 dark:text-slate-400">Couleur</span>
+                    <input type="color" class="h-9 w-12 rounded border border-slate-300 dark:border-slate-700 bg-transparent cursor-pointer" x-model="tensionColors[level]" @change="queueSaveTension">
+                  </div>
+                  <div class="flex items-center gap-2 min-w-[180px]">
+                    <span class="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">Audio</span>
+                    <select class="flex-1 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1 text-sm text-slate-900 dark:text-slate-100"
+                            x-model="tensionAudio[level]"
+                            @change="queueSaveTension">
+                      <option :value="null">Aucun</option>
+                      <template x-for="audio in tenantAudio" :key="audio.name">
+                        <option :value="audio.name" x-text="audio.name"></option>
+                      </template>
+                    </select>
+                  </div>
+                </div>
+              </div>
             </div>
           </template>
+            </div>
+            <div class="flex items-center justify-between gap-3">
+              <div class="text-sm" :class="tensionStatus === 'error' ? 'text-rose-500' : 'text-emerald-600'" x-text="tensionMessage"></div>
+              <div class="flex gap-2">
+                <button class="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                        @click="showTension = false"
+                        :disabled="tensionSaving">Annuler</button>
+                <button class="px-4 py-2 rounded-lg bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-400 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                        @click="saveSessionTension().then(() => { showTension = false; })"
+                        :disabled="tensionSaving">
+                  <span x-show="!tensionSaving">Enregistrer</span>
+                  <span x-show="tensionSaving">Enregistrement...</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+      
+  <template x-if="!loading && session">
+    <div class="space-y-4">
+      <div class="mt-3 rounded-2xl border border-slate-200 dark-border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm"
+           x-show="scenes.length > 1"
+           x-transition:enter="transition ease-out duration-200"
+           x-transition:enter-start="opacity-0 translate-y-2"
+           x-transition:enter-end="opacity-100 translate-y-0"
+           x-transition:leave="transition ease-in duration-150"
+           x-transition:leave-start="opacity-100 translate-y-0"
+           x-transition:leave-end="opacity-0 translate-y-2">
+        <template x-if="scenes.length === 0">
+          <div class="border border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-4 text-sm text-slate-600 dark:text-slate-400">
+            Aucune scène disponible pour cette session.
+          </div>
+        </template>
           <template x-if="scenes.length > 0">
             <div class="flex items-start gap-3 flex-wrap items-center">
               <div class="">
@@ -115,32 +220,55 @@
                     </div>
                   </div>
                 </template>
-                <template x-if="session && scenes.length > 1">
+
                   <button class="h-[90px] min-h-[90px] min-h-[90px] w-full inline-flex flex-col items-center justify-center rounded-lg border border-dashed border-emerald-400 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition text-sm font-semibold"
                           @click="openSceneModal()">
                     <i class="fa-solid fa-plus text-lg"></i>
                     <span class="truncate">Ajouter une scène</span>
                   </button>
-                </template>
+
               </div>
             </div>
           </template>
-        </div>
+      </div>
 
-      <div class="mt-2 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm relative">
+      <div class="mt-2 rounded-2xl border border-slate-200 dark-border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm relative"
+           x-transition:enter="transition ease-out duration-200"
+           x-transition:enter-start="opacity-0 translate-y-2"
+           x-transition:enter-end="opacity-100 translate-y-0"
+           x-transition:leave="transition ease-in duration-150"
+           x-transition:leave-start="opacity-100 translate-y-0"
+           x-transition:leave-end="opacity-0 translate-y-2">
         <div class="rounded-2xl absolute inset-0 bg-white dark:bg-slate-900 m flex items-center justify-center z-50" x-show="sceneSelectionLoading" x-transition>
           <div class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-300">
             <div class="h-5 w-5 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
             Mise à jour...
           </div>
         </div>
+        
         <div class="flex items-center gap-3 flex-wrap border-b border-slate-200 dark:border-slate-800">
-          <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100" x-text="currentScene?.title || 'Détails de la scène'"></h3>
+          
+          <div class="flex items-center flex-wrap gap-2">
+            <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100"
+                x-text="currentScene?.title || (scenes.length === 1 ? (scenes[0]?.title || 'Scène') : 'Détails de la scène')"></h3>
+            <button class="h-8 w-8 inline-flex items-center justify-center text-slate-600 hover:text-emerald-600 hover:border-emerald-400 transition"
+                    @click="openSceneEditModal()" :disabled="!currentScene">
+              <i class="fa-solid fa-pen"></i>
+            </button>
+          </div>
+          
+
           <div class="flex-1 flex justify-center">
-            <div class="flex text-sm justify-center gap-2">
+            <div class="grid grid-cols-3 text-sm w-full max-w-xl">
               <template x-for="tab in tabs" :key="tab.id">
-                <button class="px-4 py-2 -mb-px border-b-2 font-medium transition"
-                        :class="tab.id === activeTab ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'"
+                <button class="w-full px-4 py-3 -mb-[2px] border-b-4 font-medium transition text-center"
+                        :class="tab.id === activeTab
+                          ? (tab.id === 'images'
+                            ? 'border-emerald-500 text-emerald-600'
+                            : tab.id === 'audio'
+                              ? 'border-indigo-500 text-indigo-600'
+                              : 'border-amber-500 text-amber-600')
+                          : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'"
                         @click="setActiveTab(tab.id)">
                   <span class="inline-flex items-center gap-2">
                     <i :class="tab.id === 'images' ? 'fa-regular fa-image' : tab.id === 'audio' ? 'fa-solid fa-music' : 'fa-regular fa-note-sticky'"></i>
@@ -151,13 +279,10 @@
             </div>
           </div>
           <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-            <button class="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 hover:text-emerald-600 hover:border-emerald-400 transition"
-                    @click="openSceneEditModal()" :disabled="!currentScene">
-              <i class="fa-solid fa-pen"></i>
-            </button>
-            <button class="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 hover:text-emerald-600 hover:border-emerald-400 transition"
+
+            <button class="h-8 px-4 py-2 pl-inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 hover:text-emerald-600 hover:border-emerald-400 transition"
                     @click="currentScene && duplicateScene(currentScene)" :disabled="!currentScene">
-              <i class="fa-regular fa-clone"></i>
+              <i class="fa-regular fa-clone"></i> Dupliquer la scène
             </button>
             <button class="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 dark:border-rose-900 dark:text-rose-200 dark:hover:bg-rose-900/40 transition"
                     @click="currentScene && deleteScene(currentScene)" :disabled="!currentScene">
@@ -168,7 +293,7 @@
 
         <div>
           <template x-if="activeTab === 'images'">
-            <div class="space-y-6">
+            <div class="space-y-2">
               <div class="flex items-center justify-between pb-2 mt-2">
                 <h3 class="text-s font-semibold text-slate-900 dark:text-slate-100">Images de la scène</h3>
                 <div class="flex items-center gap-2">
