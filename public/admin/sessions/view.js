@@ -22,6 +22,7 @@ export function sessionViewSection(baseInit) {
     showDeleteSessionModal: false,
     showDeleteSceneModal: false,
     pendingScene: null,
+    showGmConfirm: false,
     sceneModal: {
       open: false,
       title: '',
@@ -155,6 +156,8 @@ export function sessionViewSection(baseInit) {
     uploadUrlMessage: '',
     uploadUrlStatus: 'ok',
     uploadUrlLoading: false,
+    showGmConfirm: false,
+    gmTarget: null,
     ...pixabayMixin(),
     imageDragIndex: null,
     imageDragOver: null,
@@ -368,6 +371,21 @@ export function sessionViewSection(baseInit) {
         saving: false,
         error: ''
       };
+    },
+    openGameMasterConfirm() {
+      if (!this.session?.id) return;
+      this.gmTarget = this.session.id;
+      this.showGmConfirm = true;
+    },
+    cancelGameMaster() {
+      this.showGmConfirm = false;
+      this.gmTarget = null;
+    },
+    proceedGameMaster() {
+      if (!this.gmTarget) return;
+      this.openGameMaster(this.gmTarget);
+      this.showGmConfirm = false;
+      this.gmTarget = null;
     },
 
     closeEditModal() {

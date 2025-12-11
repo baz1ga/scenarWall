@@ -13,6 +13,8 @@ export function gmDashboard() {
     sessionError: '',
     selectedSessionId: '',
     currentSession: null,
+    showLeaveModal: false,
+    leaveTarget: '',
     scenes: [],
     sceneLoading: false,
     sceneError: '',
@@ -306,6 +308,27 @@ export function gmDashboard() {
         // ignore send errors
       }
     },
+    sessionViewLink() {
+      if (!this.selectedSessionId) return '#';
+      return `/admin/sessions/view.html?id=${encodeURIComponent(this.selectedSessionId)}`;
+    },
+    confirmLeaveToSession() {
+      if (!this.selectedSessionId) return;
+      this.leaveTarget = this.sessionViewLink();
+      this.showLeaveModal = true;
+    },
+    cancelLeave() {
+      this.showLeaveModal = false;
+      this.leaveTarget = '';
+    },
+    proceedLeave() {
+      if (this.leaveTarget) {
+        window.location.href = this.leaveTarget;
+      }
+      this.showLeaveModal = false;
+      this.leaveTarget = '';
+    },
+
     async loadScenesForSession(sessionId, preferredScene) {
       if (!this.tenantId || !sessionId) return;
       this.sceneLoading = true;

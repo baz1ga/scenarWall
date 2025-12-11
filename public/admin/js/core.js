@@ -118,6 +118,13 @@ export function coreSection() {
         'Authorization': 'Bearer ' + this.token
       });
   },
+
+  openGameMaster(sessionId) {
+    const id = sessionId || this.session?.id || this.selectedSessionId;
+    if (!id) return;
+    const url = `/admin/gm-mode/gm-mode.html?session=${encodeURIComponent(id)}`;
+    window.location.href = url;
+  },
   headersGod() {
       return withCsrf({
         'x-auth-token': this.token
