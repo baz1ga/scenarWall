@@ -2524,10 +2524,16 @@ wss.on("connection", (ws, req) => {
     if (!ws.meta || !ws.meta.tenantId) return;
 
     if (msg.type === "tension:update" && typeof msg.level === "string") {
-      broadcastTenant(ws.meta.tenantId, { type: "tension:update", level: msg.level });
+      const payload = { type: "tension:update", level: msg.level };
+      if (typeof msg.sessionId === "string") payload.sessionId = msg.sessionId;
+      broadcastTenant(ws.meta.tenantId, payload);
     }
-    if (msg.type === "slideshow:update" && typeof msg.index === "number") {
-      broadcastTenant(ws.meta.tenantId, { type: "slideshow:update", index: msg.index });
+    if (msg.type === "slideshow:update" && (typeof msg.index === "number" || typeof msg.name === "string")) {
+      const payload = { type: "slideshow:update" };
+      if (typeof msg.index === "number") payload.index = msg.index;
+      if (typeof msg.name === "string") payload.name = msg.name;
+      if (typeof msg.sessionId === "string") payload.sessionId = msg.sessionId;
+      broadcastTenant(ws.meta.tenantId, payload);
     }
     if (msg.type === "hourglass:command" && typeof msg.action === "string") {
       const payload = { type: "hourglass:command", action: msg.action };
@@ -2537,7 +2543,9 @@ wss.on("connection", (ws, req) => {
       broadcastTenant(ws.meta.tenantId, payload);
     }
     if (msg.type === "tension:config" && msg.config && typeof msg.config === "object") {
-      broadcastTenant(ws.meta.tenantId, { type: "tension:config", config: msg.config });
+      const payload = { type: "tension:config", config: msg.config };
+      if (typeof msg.sessionId === "string") payload.sessionId = msg.sessionId;
+      broadcastTenant(ws.meta.tenantId, payload);
     }
   });
 });

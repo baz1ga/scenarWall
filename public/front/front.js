@@ -41,7 +41,7 @@ async function loadCarouselImages() {
     const data = await res.json();
 
     // data = liste des images visibles déjà filtrées côté serveur
-    carouselImages = data.map(img => img.url);
+    carouselImages = data.map(img => ({ url: img.url, name: img.name }));
 
     if (carouselImages.length === 0) {
       zone1Img.src = "";
@@ -49,13 +49,14 @@ async function loadCarouselImages() {
       return;
     }
 
-    if (pendingSlideIndex !== null) {
-      setSlideIndex(pendingSlideIndex);
-      pendingSlideIndex = null;
+    if (pendingSlideName) {
+      const idx = carouselImages.findIndex(img => img.name === pendingSlideName);
+      carouselIndex = idx !== -1 ? idx : 0;
+      pendingSlideName = null;
     } else {
       carouselIndex = 0;
-      updateCarousel();
     }
+    updateCarousel();
 
   } catch (err) {
     console.error("❌ Erreur chargement images :", err);
@@ -63,7 +64,8 @@ async function loadCarouselImages() {
 }
 
 function updateCarousel() {
-  zone1Img.src = carouselImages[carouselIndex];
+  const item = carouselImages[carouselIndex];
+  zone1Img.src = item?.url || "";
   photoNumber.textContent = carouselIndex + 1;
 }
 
@@ -95,7 +97,6 @@ let tensionEnabled = true;
 let tensionFont = "Audiowide";
 let gmControlled = true;
 let slideshowControlled = false;
-let pendingSlideIndex = null;
 let tensionSocket = null;
 let tensionSocketTimer = null;
 const defaultZoneBorder = { top: "13px", right: "30px", bottom: "13px", left: "30px" };
@@ -125,6 +126,8 @@ let hourglass = null;
 const hourglassTimeEl = document.getElementById("hourglass-time");
 let hourglassVisible = false;
 let hourglassShowTimer = false;
+let configRequestRetries = 0;
+let pendingSlideName = null;
 
 function readableTextColor(bgColor) {
   const match = (bgColor || "").match(/(\d+)\D+(\d+)\D+(\d+)/);
@@ -164,7 +167,6 @@ function applyTensionColors(colors) {
 
 function applyTensionLabels(labels) {
   const values = { ...defaultTensionLabels, ...(labels || {}) };
-  console.log("[Front][Tension] apply labels", values);
   items.forEach((item, idx) => {
     const label = values[`level${idx + 1}`] || defaultTensionLabels[`level${idx + 1}`];
     item.textContent = label;
@@ -250,15 +252,14 @@ function selectTensionLevel(level) {
   playTensionAudio(target.dataset.level);
 }
 
-function setSlideIndex(idx) {
-  if (!carouselImages.length) {
-    pendingSlideIndex = idx;
-    return;
+function setSlideByName(name) {
+  if (!name) return;
+  const idx = carouselImages.findIndex(img => img.name === name);
+  if (idx === -1) {
+    pendingSlideName = name;
+  } else {
+    setSlideIndex(idx);
   }
-  const len = carouselImages.length;
-  const safeIndex = ((idx % len) + len) % len;
-  carouselIndex = safeIndex;
-  updateCarousel();
 }
 
 function setupTensionSocket() {
@@ -273,13 +274,13 @@ function setupTensionSocket() {
   ws.onopen = () => {
     setGmControlled(true);
     slideshowControlled = true;
-    // demande la config tension de la session courante au GM
+    // demande la config tension et l'index du diaporama de la session courante au GM
     ws.send(JSON.stringify({ type: "tension:request", sessionId: SESSION_ID || null }));
+    ws.send(JSON.stringify({ type: "slideshow:request", sessionId: SESSION_ID || null }));
     if (tensionSocketTimer) {
       clearTimeout(tensionSocketTimer);
       tensionSocketTimer = null;
     }
-    ws.send(JSON.stringify({ type: "tension:request", sessionId: SESSION_ID || null }));
   };
   ws.onclose = () => {
     slideshowControlled = false;
@@ -293,21 +294,20 @@ function setupTensionSocket() {
       if (data.sessionId && SESSION_ID && data.sessionId !== SESSION_ID) {
         return;
       }
-      console.log("[Front][WS] message", data);
       if (data.type === "tension:update" && data.level) {
         selectTensionLevel(data.level);
       }
-      if (data.type === "tension:config" && data.config) {
-        console.log("[Front][Tension] apply config from WS", data.config);
+      if (data.type === "tension:config" && data.config) {        
         applyTensionState(data.config.tensionEnabled);
         applyTensionFont(data.config.tensionFont);
         applyTensionColors(data.config.tensionColors);
         applyTensionLabels(data.config.tensionLabels);
         tensionAudio = { ...tensionAudio, ...(data.config.tensionAudio || {}) };
       }
-      if (data.type === "slideshow:update" && typeof data.index === "number") {
+      if (data.type === "slideshow:update" && data.name) {
         slideshowControlled = true;
-        setSlideIndex(data.index);
+        setSlideByName(data.name);
+        configRequestRetries = 0;
       }
       if (data.type === "hourglass:command" && data.action) {
         applyHourglassCommand(data);
@@ -334,6 +334,22 @@ async function loadTensionConfig() {
     applyTensionFont("Audiowide");
     applyTensionColors(defaultTensionColors);
     applyTensionLabels(defaultTensionLabels);
+  }
+}
+
+async function loadSessionConfig() {
+  if (!SESSION_ID) return;
+  try {
+    const res = await fetch(`/api/tenant/${encodeURIComponent(TENANT)}/sessions/${encodeURIComponent(SESSION_ID)}`);
+    if (!res.ok) throw new Error("Session fetch failed");
+    const data = await res.json();
+    applyTensionState(data.tensionEnabled);
+    applyTensionFont(data.tensionFont);
+    applyTensionColors(data.tensionColors);
+    applyTensionLabels(data.tensionLabels);
+    tensionAudio = { ...tensionAudio, ...(data.tensionAudio || {}) };
+  } catch (err) {
+    console.warn("Front session tension config unavailable", err);
   }
 }
 
@@ -405,12 +421,28 @@ function applyHourglassCommand(cmd) {
   updateHourglassTime();
 }
 
+function requestRemoteConfig() {
+  if (tensionSocket && tensionSocket.readyState === WebSocket.OPEN) {
+    tensionSocket.send(JSON.stringify({ type: "tension:request", sessionId: SESSION_ID || null }));
+    tensionSocket.send(JSON.stringify({ type: "slideshow:request", sessionId: SESSION_ID || null }));
+    configRequestRetries = 0;
+    return;
+  }
+  if (configRequestRetries < 5) {
+    configRequestRetries += 1;
+    setTimeout(requestRemoteConfig, 800);
+  }
+}
+
 // ---------------------------------------------------------
 // INIT
 // ---------------------------------------------------------
 setGmControlled(true);
-loadTensionConfig().then(() => {
-  setupTensionSocket();
-  loadCarouselImages();
-  initHourglass();
-});
+loadTensionConfig()
+  .then(() => loadSessionConfig())
+  .finally(() => {
+    setupTensionSocket();
+    loadCarouselImages();
+    initHourglass();
+    requestRemoteConfig();
+  });

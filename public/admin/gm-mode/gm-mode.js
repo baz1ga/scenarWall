@@ -49,6 +49,8 @@ export function gmDashboard() {
     socket: null,
     socketTimer: null,
     _tensionAudio: null,
+    _pendingTensionSessionId: null,
+    _pendingSlideshowSessionId: null,
     tenantImages: [],
     tenantAudio: [],
     notesContent: '',
@@ -166,6 +168,7 @@ export function gmDashboard() {
       this.playlist = [];
       await this.loadSessionData();
       await this.loadScenesForSession(id, preferredScene);
+      this.fulfillPendingRequests();
     },
     async loadSessionData() {
       if (!this.tenantId || !this.selectedSessionId) return;
@@ -272,6 +275,19 @@ export function gmDashboard() {
         };
       });      
       this.sendTensionConfig();
+      this.fulfillPendingRequests();
+    },
+    fulfillPendingRequests() {
+      const targetTension = this._pendingTensionSessionId;
+      const targetSlide = this._pendingSlideshowSessionId;
+      if (this.selectedSessionId && (!targetTension || targetTension === this.selectedSessionId)) {
+        this.sendTensionConfig();
+        this._pendingTensionSessionId = null;
+      }
+      if (this.selectedSessionId && (!targetSlide || targetSlide === this.selectedSessionId)) {
+        this.sendSlideshow(this.slideshowIndex);
+        this._pendingSlideshowSessionId = null;
+      }
     },
     sendTensionConfig() {
       if (!this.selectedSessionId) return;
@@ -722,11 +738,7 @@ export function gmDashboard() {
       const len = this.slideshowImages.length;
       const safeIndex = Math.min(Math.max(index, 0), len - 1);
       this.slideshowIndex = safeIndex;
-      const slide = this.slideshowImages[safeIndex];
-      const broadcastIndex = slide?.name
-        ? this.tenantImages.findIndex(img => img.name === slide.name)
-        : safeIndex;
-      this.sendSlideshow(broadcastIndex >= 0 ? broadcastIndex : safeIndex);
+      this.sendSlideshow(safeIndex);
     },
     prevSlide() {
       if (this.slideshowIndex > 0) {
@@ -805,7 +817,14 @@ export function gmDashboard() {
           clearTimeout(this.socketTimer);
           this.socketTimer = null;
         }
-        if (this.selectedSessionId) this.sendTensionConfig();
+        if (this.selectedSessionId) {
+          this.sendTensionConfig();
+          this.sendSlideshow(this.slideshowIndex);
+        } else {
+          // pas encore de session sélectionnée, on traitera la requête quand selectSession aura fini
+          this._pendingTensionSessionId = true;
+          this._pendingSlideshowSessionId = true;
+        }
       };
       ws.onclose = () => {
         this.socketTimer = setTimeout(() => this.connectSocket(), 2000);
@@ -819,6 +838,15 @@ export function gmDashboard() {
           if (msg.type === 'tension:request') {
             if (!msg.sessionId || msg.sessionId === this.selectedSessionId) {
               this.sendTensionConfig();
+            } else {
+              this._pendingTensionSessionId = msg.sessionId;
+            }
+          }
+          if (msg.type === 'slideshow:request') {
+            if (!msg.sessionId || msg.sessionId === this.selectedSessionId) {
+              this.sendSlideshow(this.slideshowIndex);
+            } else {
+              this._pendingSlideshowSessionId = msg.sessionId;
             }
           }
         } catch (_) {
@@ -839,8 +867,18 @@ export function gmDashboard() {
     sendSlideshow(index) {
       if (!this.selectedSessionId) return;
       if (!this.socket || this.socket.readyState !== WebSocket.OPEN) return;
+      if (!this.slideshowImages.length) return;
+      const len = this.slideshowImages.length;
+      const safeIndex = len > 0 ? Math.min(Math.max(index, 0), len - 1) : 0;
+      const slide = len > 0 ? (this.slideshowImages[safeIndex] || null) : null;
+      if (!slide) return;
       try {
-        this.socket.send(JSON.stringify({ type: 'slideshow:update', index, sessionId: this.selectedSessionId }));
+        this.socket.send(JSON.stringify({
+          type: 'slideshow:update',
+          name: slide.name || null,
+          sessionId: this.selectedSessionId
+        }));
+        console.log('[GM][WS] send slideshow:update', { name: slide?.name, sessionId: this.selectedSessionId });
       } catch (e) {
         // ignore
       }
