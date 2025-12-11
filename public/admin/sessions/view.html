@@ -308,7 +308,7 @@
                             ? 'border-yellow-600 text-yellow-600'
                             : tab.id === 'audio'
                               ? 'border-lime-600 text-lime-600'
-                              : 'border-emerald-900 text-emerald-900')
+                              : 'border-sky-600 text-sky-600')
                           : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'"
                         @click="setActiveTab(tab.id)">
                   <span class="inline-flex items-center gap-2">
@@ -537,6 +537,11 @@
                       <span>Sauvegarde...</span>
                     </div>
                   </div>
+                  <a class="inline-flex items-center gap-2 rounded-lg border border-sky-200 text-sky-700 px-3 py-1.5 text-sm font-semibold hover:bg-sky-50 dark:border-sky-700 dark:text-sky-300 dark:hover:bg-slate-800 transition"
+                     :href="`/admin/notes/notes.html${tenantId ? `?tenant=${encodeURIComponent(tenantId)}` : ''}`"
+                     target="_blank">
+                    <i class="fa-solid fa-note-sticky"></i> Toutes les notes
+                  </a>
                 </div>
               </div>
             </div>

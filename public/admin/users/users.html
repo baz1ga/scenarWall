@@ -36,20 +36,20 @@
         <thead class="bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200">
           <tr>
             <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('name')">
-              <div class="inline-flex items-center gap-2">Nom <i :class="sortIcon('name','users')" class="text-xs"></i></div>
+              <div class="inline-flex items-center gap-2">Nom <i :class="sortIcon('name','users')" class="text-xs users-text"></i></div>
             </th>
             <th class="px-4 py-2 text-left">Tenant</th>
             <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('images')">
-              <div class="inline-flex items-center gap-2">Images <i :class="sortIcon('images','users')" class="text-xs"></i></div>
+              <div class="inline-flex items-center gap-2">Images <i :class="sortIcon('images','users')" class="text-xs users-text"></i></div>
             </th>
             <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('audios')">
-              <div class="inline-flex items-center gap-2">Audio <i :class="sortIcon('audios','users')" class="text-xs"></i></div>
+              <div class="inline-flex items-center gap-2">Audio <i :class="sortIcon('audios','users')" class="text-xs users-text"></i></div>
             </th>
             <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('usage')">
-              <div class="inline-flex items-center gap-2">Usage <i :class="sortIcon('usage','users')" class="text-xs"></i></div>
+              <div class="inline-flex items-center gap-2">Usage <i :class="sortIcon('usage','users')" class="text-xs users-text"></i></div>
             </th>
             <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('lastLogin')">
-              <div class="inline-flex items-center gap-2">Dernière connexion <i :class="sortIcon('lastLogin','users')" class="text-xs"></i></div>
+              <div class="inline-flex items-center gap-2">Dernière connexion <i :class="sortIcon('lastLogin','users')" class="text-xs users-text"></i></div>
             </th>
             <th class="px-4 py-2 text-left">Actions</th>
           </tr>
