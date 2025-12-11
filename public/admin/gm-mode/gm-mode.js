@@ -48,6 +48,7 @@ export function gmDashboard() {
     _hourglassInterval: null,
     hourglassVisible: false,
     hourglassShowTimer: false,
+    scenarDeckOpen: false,
     socket: null,
     socketTimer: null,
     _tensionAudio: null,

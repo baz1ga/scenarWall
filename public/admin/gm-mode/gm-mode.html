@@ -1,4 +1,4 @@
-<div id="page-content" x-data="gmDashboard()" x-init="init()" class="min-h-screen overflow-hidden" x-cloak>
+<div id="page-content" x-data="gmDashboard()" x-init="init(); scenarDeckOpen = true" class="min-h-screen overflow-hidden" x-cloak>
   <link rel="stylesheet" href="/admin/gm-mode/gm-mode.css">
   <style>
     :root {
@@ -11,28 +11,104 @@
     .gm-ring { box-shadow: 0 0 0 2px var(--gm-accent); }
   </style>
 
-  <div class="max-w-7xl mx-auto space-y-4">
-    <template x-if="showLeaveModal">
-      <div class="fixed inset-0 z-50 flex items-center justify-center px-4">
-        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="cancelLeave()"></div>
-        <div class="relative bg-white dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-md p-5 space-y-4 z-10">
-          <div class="flex items-start gap-3">
-            <div class="h-10 w-10 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-200 flex items-center justify-center">
-              <i class="fa-solid fa-triangle-exclamation"></i>
-            </div>
-            <div class="space-y-1">
-              <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Quitter le mode Game Master ?</h2>
-              <p class="text-sm text-slate-600 dark:text-slate-400">Vous allez retourner sur la page de la session.</p>
-            </div>
+  <div class="max-w-6xl mx-auto space-y-4">
+    <!-- ScenarDeck floating button -->
+    <div class="fixed bottom-6 right-6 z-60" x-show="!scenarDeckOpen">
+      <button class="inline-flex items-center gap-2 rounded-full bg-indigo-500 text-white px-4 py-2 shadow-lg hover:bg-indigo-400 transition"
+              @click="scenarDeckOpen = true">
+        <i class="fa-solid fa-th-large"></i> ScenarDeck
+      </button>
+    </div>
+
+    <!-- ScenarDeck modal -->
+    <template x-if="scenarDeckOpen">
+      <div class="fixed inset-0 z-50 flex items-end justify-end px-4 pb-6">
+        <div class="absolute inset-0"></div>
+        <div class="relative bg-white dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-xs p-5 space-y-4 z-10">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold inline-flex items-center gap-2 text-indigo-600 dark:text-indigo-300"><i class="fa-solid fa-th-large"></i> ScenarDeck</h3>
+            <button class="text-slate-500 hover:text-slate-800 dark:hover:text-slate-200" @click="scenarDeckOpen = false"><i class="fa-solid fa-minus"></i></button>
           </div>
-          <div class="flex items-center justify-end gap-2">
-            <button class="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition" @click="cancelLeave()">Annuler</button>
-            <button class="px-4 py-2 rounded-lg bg-indigo-500 text-white text-sm font-semibold hover:bg-indigo-400 transition" @click="proceedLeave()">Continuer</button>
+          <div class="grid grid-cols-3 grid-rows-3 gap-x-3 gap-y-3 justify-items-center">
+            <button
+              class="h-[72px] w-[72px] inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              :class="timerRunning ? 'bg-red-600 text-white border-red-700 hover:bg-red-500' : ''"
+              @click="toggleTimer()"
+            >
+              <i :class="timerRunning ? 'fa-solid fa-stop text-red-100 text-xl' : 'fa-solid fa-circle text-xl text-red-500'" ></i>
+              <span class="text-[12px]" x-text="timerRunning ? 'Stop' : 'Rec'"></span>
+            </button>
+            <button
+              class="h-[72px] w-[72px] inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-lg font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              :style="tensionButtonStyle(1)"
+              @click="changeTension(1)"
+              :disabled="!tensionEnabled"
+              :class="!tensionEnabled ? 'opacity-50 cursor-not-allowed' : ''"
+            >
+              <span class="text-[18px] font-extrabold" x-text="tensionButtonLabel(1)"></span>
+            </button>
+            <button
+              class="h-[72px] w-[72px] inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              @click="resetTimer()"
+            >
+              <i class="fa-solid fa-stopwatch-20 text-xl"></i>
+              <span class="text-[12px]">Reset</span>
+            </button>
+            <button
+              class="h-[72px] w-[72px] inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              @click="prevSlide()"
+              :disabled="slideshowImages.length === 0"
+            >
+              <i class="fa-solid fa-chevron-left text-xl"></i>
+              <span class="text-[12px]">Slide -</span>
+            </button>
+            <button
+              class="h-[72px] w-[72px] inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-lg font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              :style="tensionButtonStyle(-1)"
+              @click="changeTension(-1)"
+              :disabled="!tensionEnabled"
+              :class="!tensionEnabled ? 'opacity-50 cursor-not-allowed' : ''"
+            >
+              <span class="text-[18px] font-extrabold" x-text="tensionButtonLabel(-1)"></span>
+            </button>
+            <button
+              class="h-[72px] w-[72px] inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              @click="nextSlide()"
+              :disabled="slideshowImages.length === 0"
+            >
+              <i class="fa-solid fa-chevron-right text-xl"></i>
+              <span class="text-[12px]">Slide +</span>
+            </button>
+            <button
+              class="h-[72px] w-[72px] inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              @click="playOrResetHourglass()"
+            >
+              <i class="fa-solid fa-hourglass-half text-indigo-500"></i>
+              <span class="text-[12px] text-indigo-500" x-text="hourglassButtonLabel()"></span>
+            </button>
+            <button
+              class="h-[72px] w-[72px] inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              @click="openHourglassModal()"
+              :disabled="hourglassRunning || hourglassVisible"
+              :class="(hourglassRunning || hourglassVisible) ? 'opacity-50 cursor-not-allowed' : ''"
+            >
+              <i class="fa-solid fa-hourglass-start text-indigo-500"></i>
+              <span class="text-[12px] text-indigo-500" x-text="hourglassDisplay()"></span>
+            </button>
+            <button
+              class="h-[72px] w-[72px] inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              @click="toggleHourglassVisibility()"
+            >
+              <i class="fa-solid text-indigo-500" :class="hourglassVisible ? 'fa-hourglass-half' : 'fa-hourglass'"></i>
+              <span class="text-[12px] text-indigo-500" x-text="hourglassVisible ? 'Masquer' : 'Afficher'"></span>
+            </button>
           </div>
         </div>
       </div>
     </template>
 
+
+    <!-- Header -->
     <div class="flex items-center justify-between gap-3 mt-1">
       <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100 inline-flex items-center gap-2">
         <template x-if="scenarioTitle">
@@ -51,78 +127,126 @@
           <i class="fa-solid fa-gear text-slate-500 text-sm"></i>
         </button>
       </h1>
+      <div class="flex items-center gap-3">
+        <div class="inline-flex items-center gap-3 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-base font-mono font-semibold shadow-sm"
+             :class="timerRunning ? 'text-indigo-600' : 'text-slate-700 dark:text-slate-100'">
+          <i class="fa-solid fa-stopwatch text-indigo-500 text-lg"></i>
+          <span class="tracking-tight" x-text="`${timerParts().h}:${timerParts().m}:${timerParts().s}`"></span>
+        </div>
       <button class="inline-flex items-center gap-2 rounded-lg border border-indigo-500 bg-indigo-500 text-white font-semibold px-4 py-2 text-sm hover:bg-indigo-400 dark:bg-slate-900 dark:border-indigo-500 dark:text-indigo-100 dark:hover:bg-slate-800 transition"
               @click="openFront"
               x-show="selectedSessionId">
         <i class="fa-solid fa-film"></i>
         <span>Présenter</span>
       </button>
+      </div>
     </div>
 
+    <!-- Scènes -->
     <template x-if="scenes.length > 1">
-      <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm space-y-3">
+      <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm space-y-3 w-full">
         <div class="flex items-center gap-2">
           <i class="fa-solid fa-clapperboard text-indigo-500"></i>
           <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100 leading-none mt-1">Scènes</h3>
         </div>
-        <div class="flex items-center gap-2">
-          <button class="h-9 w-9 inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-indigo-600 hover:border-indigo-400 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                  :disabled="sceneCarouselIndex === 0"
-                  @click="carouselPrev()">
-            <i class="fa-solid fa-chevron-left"></i>
-          </button>
-          <div class="overflow-hidden flex-1">
-            <div class="flex items-center gap-3"
-                 :style="`transform: translateX(-${sceneCarouselIndex * 290}px); transition: transform 200ms ease;`">
-              <template x-for="(scene, index) in scenes" :key="scene.id">
-                <div class="flex items-center gap-2 shrink-0">
-                  <div class="relative w-[200px] min-h-[90px] rounded-lg border px-2 py-2 text-sm transition flex flex-col gap-2 overflow-hidden cursor-pointer"
-                       :class="scene.id === selectedSceneId
-                         ? 'border-indigo-400 bg-indigo-50 text-indigo-800 dark:border-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-100 shadow-md ring-1 ring-indigo-300/60'
-                         : 'border-slate-200 dark:border-slate-700 hover:border-indigo-300 hover:bg-indigo-50/40 dark:hover:border-indigo-700 dark:hover:bg-indigo-900/20 text-slate-700 dark:text-slate-200'"
-                       role="button"
-                       tabindex="0"
-                       @click="selectScene(scene.id)"
-                       @keydown.enter.prevent="selectScene(scene.id)"
-                       @keydown.space.prevent="selectScene(scene.id)">
-                    <div class="min-h-[48px]">
-                      <div class="flex min-w-0 gap-2 items-start">
-                        <div class="px-2 py-0.5 rounded-bl-lg bg-slate-900/80 text-white text-[11px] font-semibold shadow-sm pointer-events-none leading-none absolute top-0 right-0">#<span x-text="scene.order || index + 1"></span></div>
-                        <div class="flex-1 pr-9">
-                          <div class="w-full text-left font-semibold leading-tight whitespace-normal">
-                            <span class="block" x-text="scene.title || 'Scène'"></span>
+        <!-- Vue simple si <=5 scènes -->
+        <div class="flex flex-wrap gap-3 w-full" x-show="scenes.length <= 5">
+          <template x-for="(scene, index) in scenes" :key="scene.id">
+            <div class="flex items-center gap-2">
+              <div class="relative w-[200px] min-h-[90px] rounded-lg border px-2 py-2 text-sm transition flex flex-col gap-2 overflow-hidden cursor-pointer"
+                   :class="scene.id === selectedSceneId
+                     ? 'border-indigo-400 bg-indigo-50 text-indigo-800 dark:border-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-100 shadow-md ring-1 ring-indigo-300/60'
+                     : 'border-slate-200 dark:border-slate-700 hover:border-indigo-300 hover:bg-indigo-50/40 dark:hover:border-indigo-700 dark:hover:bg-indigo-900/20 text-slate-700 dark:text-slate-200'"
+                   role="button"
+                   tabindex="0"
+                   @click="selectScene(scene.id)"
+                   @keydown.enter.prevent="selectScene(scene.id)"
+                   @keydown.space.prevent="selectScene(scene.id)">
+                <div class="min-h-[48px]">
+                  <div class="flex min-w-0 gap-2 items-start">
+                    <div class="px-2 py-0.5 rounded-bl-lg bg-slate-900/80 text-white text-[11px] font-semibold shadow-sm pointer-events-none leading-none absolute top-0 right-0">#<span x-text="scene.order || index + 1"></span></div>
+                    <div class="flex-1 pr-9">
+                      <div class="w-full text-left font-semibold leading-tight whitespace-normal">
+                        <span class="block" x-text="scene.title || 'Scène'"></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <template x-if="index < scenes.length - 1">
+                <div class="text-slate-400 dark:text-slate-600 px-1 shrink-0">
+                  <i class="fa-solid fa-angles-right text-xl"></i>
+                </div>
+              </template>
+            </div>
+          </template>
+        </div>
+
+        <!-- Carrousel si >5 scènes -->
+        <div class="w-full" x-show="scenes.length > 5">
+          <div class="flex items-center gap-2 w-full">
+            <button class="h-9 w-9 inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-indigo-600 hover:border-indigo-400 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                    :disabled="sceneCarouselIndex === 0"
+                    @click="carouselPrev()">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <div class="overflow-hidden flex-1 w-full">
+              <div class="flex items-center gap-3 w-full"
+                   :style="`transform: translateX(-${sceneCarouselIndex * 25}%); transition: transform 200ms ease;`">
+                <template x-for="(scene, index) in scenes" :key="scene.id">
+                  <div class="flex items-center gap-2 shrink-0 basis-1/5 min-w-[200px]">
+                    <div class="relative w-[200px] min-h-[90px] rounded-lg border px-2 py-2 text-sm transition flex flex-col gap-2 overflow-hidden cursor-pointer"
+                         :class="scene.id === selectedSceneId
+                           ? 'border-indigo-400 bg-indigo-50 text-indigo-800 dark:border-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-100 shadow-md ring-1 ring-indigo-300/60'
+                           : 'border-slate-200 dark:border-slate-700 hover:border-indigo-300 hover:bg-indigo-50/40 dark:hover:border-indigo-700 dark:hover:bg-indigo-900/20 text-slate-700 dark:text-slate-200'"
+                         role="button"
+                         tabindex="0"
+                         @click="selectScene(scene.id)"
+                         @keydown.enter.prevent="selectScene(scene.id)"
+                         @keydown.space.prevent="selectScene(scene.id)">
+                      <div class="min-h-[48px]">
+                        <div class="flex min-w-0 gap-2 items-start">
+                          <div class="px-2 py-0.5 rounded-bl-lg bg-slate-900/80 text-white text-[11px] font-semibold shadow-sm pointer-events-none leading-none absolute top-0 right-0">#<span x-text="scene.order || index + 1"></span></div>
+                          <div class="flex-1 pr-9">
+                            <div class="w-full text-left font-semibold leading-tight whitespace-normal">
+                              <span class="block" x-text="scene.title || 'Scène'"></span>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
+                    <template x-if="index < scenes.length - 1">
+                      <div class="text-slate-400 dark:text-slate-600 px-1 shrink-0">
+                        <i class="fa-solid fa-angles-right text-xl"></i>
+                      </div>
+                    </template>
                   </div>
-                  <template x-if="index < scenes.length - 1">
-                    <div class="text-slate-400 dark:text-slate-600 px-1 shrink-0">
-                      <i class="fa-solid fa-angles-right text-xl"></i>
-                    </div>
-                  </template>
-                </div>
-              </template>
+                </template>
+              </div>
             </div>
+            <button class="h-9 w-9 inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-indigo-600 hover:border-indigo-400 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                    :disabled="sceneCarouselIndex >= Math.max(0, scenes.length - 5)"
+                    @click="carouselNext()">
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
           </div>
-          <button class="h-9 w-9 inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-indigo-600 hover:border-indigo-400 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                  :disabled="sceneCarouselIndex >= Math.max(0, scenes.length - 5)"
-                  @click="carouselNext()">
-            <i class="fa-solid fa-chevron-right"></i>
-          </button>
         </div>
       </div>
     </template>
 
-    <div class="grid gap-4 md:grid-cols-[1fr_260px]">
+
+    <!-- Notes / tension / diaporama / playlist -->
+    <div class="grid gap-4">
     <section class="space-y-4">
       <div class="grid gap-4 md:grid-cols-[1fr_500px]">
+        <!-- Notes de la scène -->
         <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-3 shadow-sm space-y-3 notes-editor"
              x-init="initNotesEditor($refs.notesEditor)">
-          <h2 class="text-xl font-semibold inline-flex items-center gap-2 pl-2 inline"><i class="fa-solid fa-note-sticky text-indigo-500"></i> Notes de la scène</h2>
-          <textarea x-ref="notesEditor" placeholder="Vos notes pour cette scène..." class="w-full"></textarea>
+            <h2 class="text-xl font-semibold inline-flex items-center gap-2 pl-2 inline"><i class="fa-solid fa-note-sticky text-indigo-500"></i> Notes de la scène</h2>
+            <textarea x-ref="notesEditor" placeholder="Vos notes pour cette scène..." class="w-full"></textarea>
         </div>
         <div>
+          <!-- Tension -->
           <template x-if="tensionEnabled">
             <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 py-2 shadow-sm transition h-[62px] flex items-center"
                  :style="selectedTension ? `background:${tensionLevels.find(l=>l.key===selectedTension)?.color || ''}22; border-color:${tensionLevels.find(l=>l.key===selectedTension)?.color || ''}` : ''">
@@ -144,6 +268,7 @@
               </div>
             </div>
           </template>
+          <!-- Diaporama -->
           <div class="mt-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm space-y-2 h-[195px] overflow-hidden">
             <div class="flex items-center justify-between gap-2">
               <h3 class="text-lg font-semibold inline-flex items-center gap-2"><i class="fa-solid fa-image text-indigo-500"></i> Diaporama</h3>
@@ -219,8 +344,7 @@
               </div>
             </div>
           </div>
-
-
+          <!-- Playlist -->
           <div class="mt-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 pt-4 pb-2 shadow-sm h-[325px]">
             <h3 class="text-lg font-semibold mb-1 inline-flex items-center gap-2"><i class="fa-solid fa-music text-indigo-500"></i> Playlist</h3>
             <template x-if="playlistLoading">
@@ -246,103 +370,9 @@
         </div>
       </div>
     </section>
-
-    <aside class="space-y-4 flex flex-col h-full">
-      <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm">
-        <h3 class="text-lg font-semibold mb-1 inline-flex items-center gap-2"><i class="fa-solid fa-stopwatch text-indigo-500"></i> Timer</h3>
-        <div class="text-3xl font-mono font-semibold inline-flex items-center gap-1"
-            :class="timerRunning ? 'text-indigo-500' : 'text-slate-900 dark:text-slate-100'">
-          <span x-text="timerParts().h"></span>
-            <span :class="colonClass()">:</span>
-            <span x-text="timerParts().m"></span>
-            <span :class="colonClass()">:</span>
-            <span x-text="timerParts().s"></span>
-          </div>
-        </div>
-        <div class="invisible rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm h-[162px]">
-          <h3 class="text-lg font-semibold inline-flex items-center gap-2"><i class="fa-solid fa-scroll"></i> Notes-PJ</h3>
-          <p class="text-sm text-slate-600 dark:text-slate-300">Zone pour les notes PJ (placeholder).</p>
-        </div>
-        <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm">
-          <h3 class="text-lg font-semibold inline-flex items-center gap-2"><i class="fa-solid fa-th-large"></i> ScenarDeck</h3>
-          <div class="grid grid-cols-3 grid-rows-3 gap-x-3 gap-y-3 mt-2 justify-items-center">
-            <button
-              class="h-[72px] w-[72px] inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-              :class="timerRunning ? 'bg-red-600 text-white border-red-700 hover:bg-red-500' : ''"
-              @click="toggleTimer()"
-            >
-              <i :class="timerRunning ? 'fa-solid fa-stop text-red-100 text-xl' : 'fa-solid fa-circle text-xl text-red-500'" ></i>
-              <span class="text-[12px]" x-text="timerRunning ? 'Stop' : 'Rec'"></span>
-            </button>
-            <button
-              class="h-[72px] w-[72px] inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-lg font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-              :style="tensionButtonStyle(1)"
-              @click="changeTension(1)"
-              :disabled="!tensionEnabled"
-              :class="!tensionEnabled ? 'opacity-50 cursor-not-allowed' : ''"
-            >
-              <span class="text-[18px] font-extrabold" x-text="tensionButtonLabel(1)"></span>
-            </button>
-            <button
-              class="h-[72px] w-[72px] inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-              @click="resetTimer()"
-            >
-              <i class="fa-solid fa-stopwatch-20 text-xl"></i>
-              <span class="text-[12px]">Reset</span>
-            </button>
-            <button
-              class="h-[72px] w-[72px] inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-              @click="prevSlide()"
-              :disabled="slideshowImages.length === 0"
-            >
-              <i class="fa-solid fa-chevron-left text-xl"></i>
-              <span class="text-[12px]">Slide -</span>
-            </button>
-            <button
-              class="h-[72px] w-[72px] inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-lg font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-              :style="tensionButtonStyle(-1)"
-              @click="changeTension(-1)"
-              :disabled="!tensionEnabled"
-              :class="!tensionEnabled ? 'opacity-50 cursor-not-allowed' : ''"
-            >
-              <span class="text-[18px] font-extrabold" x-text="tensionButtonLabel(-1)"></span>
-            </button>
-            <button
-              class="h-[72px] w-[72px] inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-              @click="nextSlide()"
-              :disabled="slideshowImages.length === 0"
-            >
-              <i class="fa-solid fa-chevron-right text-xl"></i>
-              <span class="text-[12px]">Slide +</span>
-            </button>
-            <button
-              class="h-[72px] w-[72px] inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-              @click="playOrResetHourglass()"
-            >
-              <i class="fa-solid fa-hourglass-half text-indigo-500"></i>
-              <span class="text-[12px] text-indigo-500" x-text="hourglassButtonLabel()"></span>
-            </button>
-            <button
-              class="h-[72px] w-[72px] inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-              @click="openHourglassModal()"
-              :disabled="hourglassRunning || hourglassVisible"
-              :class="(hourglassRunning || hourglassVisible) ? 'opacity-50 cursor-not-allowed' : ''"
-            >
-              <i class="fa-solid fa-hourglass-start text-indigo-500"></i>
-              <span class="text-[12px] text-indigo-500" x-text="hourglassDisplay()"></span>
-            </button>
-            <button
-              class="h-[72px] w-[72px] inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-              @click="toggleHourglassVisibility()"
-            >
-              <i class="fa-solid text-indigo-500" :class="hourglassVisible ? 'fa-hourglass-half' : 'fa-hourglass'"></i>
-            <span class="text-[12px] text-indigo-500" x-text="hourglassVisible ? 'Masquer' : 'Afficher'"></span>
-          </button>
-        </div>
-      </div>
-    </aside>
   </div>
 
+  <!-- Sablier modal -->
   <div x-cloak x-show="hourglassModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
     <div class="bg-white dark:bg-slate-950 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-sm p-5 space-y-4">
       <div class="flex items-center justify-between">
@@ -389,6 +419,29 @@
       </div>
     </div>
   </div>
+
+  <!-- Confirmation leave modal -->
+  <template x-if="showLeaveModal">
+    <div class="fixed inset-0 z-50 flex items-center justify-center px-4">
+      <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="cancelLeave()"></div>
+      <div class="relative bg-white dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-md p-5 space-y-4 z-10">
+        <div class="flex items-start gap-3">
+          <div class="h-10 w-10 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-200 flex items-center justify-center">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+          <div class="space-y-1">
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Quitter le mode Game Master ?</h2>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Vous allez retourner sur la page de la session.</p>
+          </div>
+        </div>
+        <div class="flex items-center justify-end gap-2">
+          <button class="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition" @click="cancelLeave()">Annuler</button>
+          <button class="px-4 py-2 rounded-lg bg-indigo-500 text-white text-sm font-semibold hover:bg-indigo-400 transition" @click="proceedLeave()">Continuer</button>
+        </div>
+      </div>
+    </div>
+  </template>
 </div>
 <script src="/admin/js/layout-loader.js"></script>
 <script type="module" src="/admin/gm-mode/gm-mode.js" data-page-script></script>
+</div>
