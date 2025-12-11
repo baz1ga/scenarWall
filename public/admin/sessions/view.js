@@ -672,11 +672,14 @@ export function sessionViewSection(baseInit) {
         const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/images`, { headers: this.headersAuth() });
         if (!res.ok) throw new Error('Images');
         const data = await res.json();
-        this.tenantImages = Array.isArray(data) ? data.filter(i => !i.hidden) : [];
+        this.tenantImages = Array.isArray(data) ? data : [];
       } catch (e) {
         this.tenantImages = [];
       }
       this.galleryLoading = false;
+    },
+    visibleTenantImages() {
+      return Array.isArray(this.tenantImages) ? this.tenantImages.filter(i => !i.hidden) : [];
     },
     openUploadModal() {
       this.uploadModalOpen = true;

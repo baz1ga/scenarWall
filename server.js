@@ -2459,16 +2459,15 @@ app.get("/t/:tenantId/api/images", async (req, res) => {
 
   const files = fs.readdirSync(dir)
     .filter(f => /\.(png|jpg|jpeg|webp)$/i.test(f))
-    .filter(f => !hidden.includes(f))
-    .sort((a, b) => order.indexOf(a) - order.indexOf(b))
-    .map(f => f);
+    .sort((a, b) => order.indexOf(a) - order.indexOf(b));
 
   await ensureThumbnails(tenantId, files);
 
   const list = files.map(f => ({
     name: f,
     url: `/t/${tenantId}/images/${f}`,
-    thumbUrl: `/t/${tenantId}/thumbs/${f}`
+    thumbUrl: `/t/${tenantId}/thumbs/${f}`,
+    hidden: hidden.includes(f)
   }));
 
   res.json(list);
