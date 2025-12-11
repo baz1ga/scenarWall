@@ -22,69 +22,48 @@ if (!TENANT) {
 // API publique tenantisée
 const API_IMAGES = `/t/${TENANT}/api/images`;
 
-// ---------------------------------------------------------
-//  CARROUSEL
-// ---------------------------------------------------------
-let carouselImages = [];
-let carouselIndex = 0;
-
 const zone1Img = document.getElementById("zone1-img");
 const photoNumber = document.getElementById("photo-number");
+const photoLoader = document.getElementById("photo-loader");
+const photoWrapper = document.getElementById("photo-wrapper");
 
-// ---------------------------------------------------------
-//  CHARGEMENT DES IMAGES
-// ---------------------------------------------------------
-async function loadCarouselImages() {
+function showPhotoLoader(show) {
+  if (!photoLoader || !photoWrapper) return;
+  photoLoader.classList.toggle("hidden", !show);
+  photoWrapper.classList.toggle("opacity-50", show);
+}
 
+async function loadInitialImage() {
   try {
+    showPhotoLoader(true);
     const res = await fetch(API_IMAGES);
     const data = await res.json();
-
     // data = liste des images visibles déjà filtrées côté serveur
-    carouselImages = data.map(img => ({ url: img.url, name: img.name }));
-
-    if (carouselImages.length === 0) {
-      zone1Img.src = "";
-      photoNumber.textContent = "—";
-      return;
-    }
-
+    const fallback = data && data.length ? data[0] : null;
     if (pendingSlideName) {
-      const idx = carouselImages.findIndex(img => img.name === pendingSlideName);
-      carouselIndex = idx !== -1 ? idx : 0;
+      const found = (data || []).find(img => img.name === pendingSlideName);
+      applySlide(found);
       pendingSlideName = null;
     } else {
-      carouselIndex = 0;
+      applySlide(fallback);
     }
-    updateCarousel();
-
   } catch (err) {
     console.error("❌ Erreur chargement images :", err);
+  } finally {
+    showPhotoLoader(false);
   }
 }
 
-function updateCarousel() {
-  const item = carouselImages[carouselIndex];
-  zone1Img.src = item?.url || "";
-  photoNumber.textContent = carouselIndex + 1;
+function applySlide(img) {
+  if (!img || !img.url) {
+    showPhotoLoader(false);
+    return;
+  }
+  showPhotoLoader(true);
+  zone1Img.src = img.url;
+  photoNumber.textContent = img.name || "—";
+  zone1Img.onload = () => showPhotoLoader(false);
 }
-
-// ---------------------------------------------------------
-//  FLECHES ← →
-// ---------------------------------------------------------
-document.getElementById("carousel-prev").onclick = () => {
-  if (slideshowControlled) return;
-  if (!carouselImages.length) return;
-  carouselIndex = (carouselIndex - 1 + carouselImages.length) % carouselImages.length;
-  updateCarousel();
-};
-
-document.getElementById("carousel-next").onclick = () => {
-  if (slideshowControlled) return;
-  if (!carouselImages.length) return;
-  carouselIndex = (carouselIndex + 1) % carouselImages.length;
-  updateCarousel();
-};
 
 // ---------------------------------------------------------
 //  BARRE DE TENSION
@@ -254,12 +233,15 @@ function selectTensionLevel(level) {
 
 function setSlideByName(name) {
   if (!name) return;
-  const idx = carouselImages.findIndex(img => img.name === name);
-  if (idx === -1) {
-    pendingSlideName = name;
-  } else {
-    setSlideIndex(idx);
-  }
+  pendingSlideName = name;
+  // charge l'image demandée directement depuis l'API
+  fetch(API_IMAGES)
+    .then(res => res.json())
+    .then(data => {
+      const found = Array.isArray(data) ? data.find(img => img.name === name) : null;
+      if (found) applySlide(found);
+    })
+    .catch(() => {});
 }
 
 function setupTensionSocket() {
@@ -272,6 +254,7 @@ function setupTensionSocket() {
   const ws = new WebSocket(`${proto}://${location.host}/ws?tenantId=${encodeURIComponent(TENANT)}&role=front`);
   tensionSocket = ws;
   ws.onopen = () => {
+    console.log("[Front][WS] open");
     setGmControlled(true);
     slideshowControlled = true;
     // demande la config tension et l'index du diaporama de la session courante au GM
@@ -283,10 +266,14 @@ function setupTensionSocket() {
     }
   };
   ws.onclose = () => {
+    console.log("[Front][WS] close");
     slideshowControlled = false;
     tensionSocketTimer = setTimeout(setupTensionSocket, 2000);
   };
-  ws.onerror = () => ws.close();
+  ws.onerror = (err) => {
+    console.warn("[Front][WS] error", err);
+    ws.close();
+  };
   ws.onmessage = (evt) => {
     try {
       const data = JSON.parse(evt.data || "{}");
@@ -294,6 +281,7 @@ function setupTensionSocket() {
       if (data.sessionId && SESSION_ID && data.sessionId !== SESSION_ID) {
         return;
       }
+      console.log("[Front][WS] message", data);
       if (data.type === "tension:update" && data.level) {
         selectTensionLevel(data.level);
       }
@@ -308,6 +296,7 @@ function setupTensionSocket() {
         slideshowControlled = true;
         setSlideByName(data.name);
         configRequestRetries = 0;
+        console.log("[Front][Slideshow] applied", { name: data.name });
       }
       if (data.type === "hourglass:command" && data.action) {
         applyHourglassCommand(data);
@@ -442,7 +431,7 @@ loadTensionConfig()
   .then(() => loadSessionConfig())
   .finally(() => {
     setupTensionSocket();
-    loadCarouselImages();
+    loadInitialImage();
     initHourglass();
     requestRemoteConfig();
   });
