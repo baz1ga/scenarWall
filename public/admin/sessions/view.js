@@ -167,6 +167,7 @@ export function sessionViewSection(baseInit) {
       saving: false,
       error: ''
     },
+    initialSceneParam: '',
     tabs: [
       { id: 'images', label: 'Images' },
       { id: 'audio', label: 'Audio' },
@@ -181,6 +182,7 @@ export function sessionViewSection(baseInit) {
       this.section = 'scenarios';
       const params = new URLSearchParams(window.location.search || '');
       const sessionId = params.get('id');
+      this.initialSceneParam = params.get('scene') || '';
       if (!sessionId) {
         this.error = 'Session introuvable';
         this.loading = false;
@@ -277,13 +279,11 @@ export function sessionViewSection(baseInit) {
         images: this.normalizeImages(sc.images),
         audio: this.normalizeAudio(sc.audio)
       }));
+      const fromParam = this.initialSceneParam && this.scenes.find(s => s.id === this.initialSceneParam) ? this.initialSceneParam : '';
       const stored = this.readStoredScene();
-      if (stored && this.scenes.find(s => s.id === stored)) {
-        this.setCurrentScene(stored, false);
-      } else {
-        const fallback = this.scenes.length ? this.scenes[this.scenes.length - 1]?.id : '';
-        if (fallback) this.setCurrentScene(fallback, false);
-      }
+      const target = fromParam || (stored && this.scenes.find(s => s.id === stored)?.id) || (this.scenes.length ? this.scenes[this.scenes.length - 1]?.id : '');
+      if (target) this.setCurrentScene(target, false);
+      this.initialSceneParam = '';
       this.updateBreadcrumb();
     },
 

@@ -625,8 +625,18 @@ function writeScene(tenantId, data) {
 }
 
 function deleteScene(tenantId, id) {
+  const existing = readScene(tenantId, id);
   [scenePath(tenantId, id), path.join(legacySceneDir(tenantId), `${id}.json`)]
     .forEach(file => { if (fs.existsSync(file)) fs.unlinkSync(file); });
+  const noteName = typeof existing?.notes === "string" ? existing.notes : "";
+  if (noteName && isSafeName(noteName)) {
+    const file = notePath(tenantId, noteName);
+    if (fs.existsSync(file)) {
+      try { fs.unlinkSync(file); } catch (err) {
+        logger.error("Failed to delete scene note during scene removal", { tenantId, sceneId: id, err: err?.message });
+      }
+    }
+  }
 }
 
 function loadConfig(tenantId) {
@@ -2445,6 +2455,69 @@ app.get("/t/:tenantId/audio/:name", (req, res) => {
     return res.status(404).send("Audio not found");
   }
   res.sendFile(file);
+});
+
+app.get("/t/:tenantId/notes/:name", (req, res) => {
+  const { tenantId, name } = req.params;
+  if (!req.session?.user || req.session.user.tenantId !== tenantId) {
+    return res.status(403).send("Forbidden tenant");
+  }
+  if (!isSafeName(name)) return res.status(400).send("Invalid name");
+  const file = path.join(TENANTS_DIR, tenantId, "notes", name);
+  if (!fs.existsSync(file)) {
+    return res.status(404).send("Note not found");
+  }
+  res.type("text/markdown");
+  res.sendFile(file);
+});
+
+app.put("/t/:tenantId/notes/:name", (req, res) => {
+  const { tenantId, name } = req.params;
+  if (!req.session?.user || req.session.user.tenantId !== tenantId) {
+    return res.status(403).send("Forbidden tenant");
+  }
+  if (!isSafeName(name)) return res.status(400).send("Invalid name");
+  const notesDir = path.join(TENANTS_DIR, tenantId, "notes");
+  if (!fs.existsSync(notesDir)) fs.mkdirSync(notesDir, { recursive: true });
+  const content = typeof req.body?.content === "string" ? req.body.content : "";
+  fs.writeFileSync(path.join(notesDir, name), content, "utf8");
+  res.json({ ok: true });
+});
+
+app.delete("/t/:tenantId/notes/:name", (req, res) => {
+  const { tenantId, name } = req.params;
+  if (!req.session?.user || req.session.user.tenantId !== tenantId) {
+    return res.status(403).send("Forbidden tenant");
+  }
+  if (!isSafeName(name)) return res.status(400).send("Invalid name");
+  const file = path.join(TENANTS_DIR, tenantId, "notes", name);
+  if (fs.existsSync(file)) {
+    fs.unlinkSync(file);
+  }
+  res.json({ ok: true });
+});
+
+app.get("/t/:tenantId/api/notes", (req, res) => {
+  const { tenantId } = req.params;
+  if (!req.session?.user || req.session.user.tenantId !== tenantId) {
+    return res.status(403).send("Forbidden tenant");
+  }
+  const dir = path.join(TENANTS_DIR, tenantId, "notes");
+  if (!fs.existsSync(dir)) return res.json([]);
+  try {
+    const files = fs.readdirSync(dir)
+      .filter((f) => /\.md$/i.test(f) && isSafeName(f));
+    const list = files.map((name) => {
+      const stat = fs.statSync(path.join(dir, name));
+      return {
+        name,
+        updatedAt: stat.mtimeMs
+      };
+    });
+    res.json(list);
+  } catch (e) {
+    res.status(500).json({ error: "Cannot read notes" });
+  }
 });
 
 app.get("/t/:tenantId/api/images", async (req, res) => {

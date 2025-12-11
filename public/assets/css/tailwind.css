@@ -720,6 +720,11 @@ video {
   margin-right: auto;
 }
 
+.mx-4{
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
 .-mb-\[2px\]{
   margin-bottom: -2px;
 }
@@ -766,6 +771,13 @@ video {
 
 .mt-6{
   margin-top: 1.5rem;
+}
+
+.line-clamp-3{
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
 .block{
@@ -898,6 +910,10 @@ video {
 
 .h-screen{
   height: 100vh;
+}
+
+.h-64{
+  height: 16rem;
 }
 
 .max-h-\[120px\]{
@@ -1653,6 +1669,10 @@ video {
 .bg-yellow-500{
   --tw-bg-opacity: 1;
   background-color: rgb(234 179 8 / var(--tw-bg-opacity, 1));
+}
+
+.bg-black\/40{
+  background-color: rgb(0 0 0 / 0.4);
 }
 
 .bg-gradient-to-br{
@@ -2533,6 +2553,10 @@ video {
   color: rgb(202 138 4 / var(--tw-text-opacity, 1));
 }
 
+.hover\:underline:hover{
+  text-decoration-line: underline;
+}
+
 .hover\:shadow-md:hover{
   --tw-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --tw-shadow-colored: 0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);
@@ -2728,6 +2752,10 @@ video {
 
 .dark\:bg-yellow-900\/20:is(.dark *){
   background-color: rgb(113 63 18 / 0.2);
+}
+
+.dark\:bg-slate-900\/40:is(.dark *){
+  background-color: rgb(15 23 42 / 0.4);
 }
 
 .dark\:from-slate-900:is(.dark *){
