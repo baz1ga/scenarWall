@@ -90,6 +90,7 @@ document.getElementById("carousel-next").onclick = () => {
 const items = document.querySelectorAll(".tension-item");
 const zone1 = document.getElementById("zone1");
 const tensionBar = document.querySelector(".tension-bar");
+const SESSION_ID = new URLSearchParams(window.location.search).get("session") || null;
 let tensionEnabled = true;
 let tensionFont = "Audiowide";
 let gmControlled = true;
@@ -163,6 +164,7 @@ function applyTensionColors(colors) {
 
 function applyTensionLabels(labels) {
   const values = { ...defaultTensionLabels, ...(labels || {}) };
+  console.log("[Front][Tension] apply labels", values);
   items.forEach((item, idx) => {
     const label = values[`level${idx + 1}`] || defaultTensionLabels[`level${idx + 1}`];
     item.textContent = label;
@@ -271,10 +273,13 @@ function setupTensionSocket() {
   ws.onopen = () => {
     setGmControlled(true);
     slideshowControlled = true;
+    // demande la config tension de la session courante au GM
+    ws.send(JSON.stringify({ type: "tension:request", sessionId: SESSION_ID || null }));
     if (tensionSocketTimer) {
       clearTimeout(tensionSocketTimer);
       tensionSocketTimer = null;
     }
+    ws.send(JSON.stringify({ type: "tension:request", sessionId: SESSION_ID || null }));
   };
   ws.onclose = () => {
     slideshowControlled = false;
@@ -284,8 +289,21 @@ function setupTensionSocket() {
   ws.onmessage = (evt) => {
     try {
       const data = JSON.parse(evt.data || "{}");
+      // si un id de session est fourni, ne traiter que la session demandée en paramètre d'URL
+      if (data.sessionId && SESSION_ID && data.sessionId !== SESSION_ID) {
+        return;
+      }
+      console.log("[Front][WS] message", data);
       if (data.type === "tension:update" && data.level) {
         selectTensionLevel(data.level);
+      }
+      if (data.type === "tension:config" && data.config) {
+        console.log("[Front][Tension] apply config from WS", data.config);
+        applyTensionState(data.config.tensionEnabled);
+        applyTensionFont(data.config.tensionFont);
+        applyTensionColors(data.config.tensionColors);
+        applyTensionLabels(data.config.tensionLabels);
+        tensionAudio = { ...tensionAudio, ...(data.config.tensionAudio || {}) };
       }
       if (data.type === "slideshow:update" && typeof data.index === "number") {
         slideshowControlled = true;

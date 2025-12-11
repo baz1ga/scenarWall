@@ -175,6 +175,16 @@ export function gmDashboard() {
         });
         if (res.ok) {
           const data = await res.json();
+          const fallbackSession = this.sessions.find(s => s.id === this.selectedSessionId) || {};
+          const labelsFromApi = data?.tensionLabels;
+          const colorsFromApi = data?.tensionColors;
+          const isEmptyObj = (obj) => obj && typeof obj === 'object' && Object.keys(obj).length === 0;
+          if (!labelsFromApi || isEmptyObj(labelsFromApi)) {
+            data.tensionLabels = fallbackSession.tensionLabels || data.tensionLabels;
+          }
+          if (!colorsFromApi || isEmptyObj(colorsFromApi)) {
+            data.tensionColors = fallbackSession.tensionColors || data.tensionColors;
+          }
           this.currentSession = data;
           this.scenarioId = data.parentScenario || '';
           if (this.scenarioId) {
@@ -234,8 +244,8 @@ export function gmDashboard() {
       const colors = session?.tensionColors || {};
       const labels = session?.tensionLabels || {};
       const normalizeLabel = (val, fb) => {
-        if (typeof val !== 'string') return fb;
-        const s = val.trim().slice(0, 4);
+        if (val === undefined || val === null) return fb;
+        const s = String(val).trim();
         return s.length ? s : fb;
       };
       const names = ['level1','level2','level3','level4','level5'];
@@ -255,11 +265,30 @@ export function gmDashboard() {
         const color = this.sanitizeColor(colors[key]) || defaults[key];
         return {
           key,
+          // priorité aux labels de la session, sinon fallback Lx
           label: normalizeLabel(labels[key], `L${idx+1}`),
           color,
           textColor: pickTextColor(color)
         };
-      });
+      });      
+      this.sendTensionConfig();
+    },
+    sendTensionConfig() {
+      if (!this.selectedSessionId) return;
+      if (!this.socket || this.socket.readyState !== WebSocket.OPEN) return;
+      const cfg = {
+        tensionEnabled: this.tensionEnabled,
+        tensionFont: this.currentSession?.tensionFont || 'Audiowide',
+        tensionColors: this.currentSession?.tensionColors || {},
+        tensionLabels: this.currentSession?.tensionLabels || {},
+        tensionAudio: this.currentSession?.tensionAudio || {}
+      };
+      console.log('[GM][WS] send tension:config', { sessionId: this.selectedSessionId, cfg });
+      try {
+        this.socket.send(JSON.stringify({ type: 'tension:config', config: cfg, sessionId: this.selectedSessionId }));
+      } catch (e) {
+        // ignore send errors
+      }
     },
     async loadScenesForSession(sessionId, preferredScene) {
       if (!this.tenantId || !sessionId) return;
@@ -380,11 +409,6 @@ export function gmDashboard() {
       this.slideshowCarouselEnabled = virtualLength > 2;
       this.slideshowImages = mapped;
       this.slideshowIndex = mapped.length ? 0 : 0;
-      console.log('[GM][Diaporama] build', {
-        scene: this.currentScene?.id,
-        imagesScene: mapped.length,
-        carousel: this.slideshowCarouselEnabled
-      });
       if (mapped.length) {
         this.setSlide(0);
       } else {
@@ -699,11 +723,6 @@ export function gmDashboard() {
       const safeIndex = Math.min(Math.max(index, 0), len - 1);
       this.slideshowIndex = safeIndex;
       const slide = this.slideshowImages[safeIndex];
-      console.log('[GM][Diaporama] setSlide', {
-        requested: index,
-        applied: safeIndex,
-        name: slide?.name
-      });
       const broadcastIndex = slide?.name
         ? this.tenantImages.findIndex(img => img.name === slide.name)
         : safeIndex;
@@ -786,6 +805,7 @@ export function gmDashboard() {
           clearTimeout(this.socketTimer);
           this.socketTimer = null;
         }
+        if (this.selectedSessionId) this.sendTensionConfig();
       };
       ws.onclose = () => {
         this.socketTimer = setTimeout(() => this.connectSocket(), 2000);
@@ -793,24 +813,42 @@ export function gmDashboard() {
       ws.onerror = () => {
         ws.close();
       };
-      ws.onmessage = () => {};
+      ws.onmessage = (evt) => {
+        try {
+          const msg = JSON.parse(evt.data || '{}');
+          if (msg.type === 'tension:request') {
+            if (!msg.sessionId || msg.sessionId === this.selectedSessionId) {
+              this.sendTensionConfig();
+            }
+          }
+        } catch (_) {
+          // ignore parse errors
+        }
+      };
     },
 
     sendTension(levelKey) {
+      if (!this.selectedSessionId) return;
       if (!this.socket || this.socket.readyState !== WebSocket.OPEN) return;
       try {
-        this.socket.send(JSON.stringify({ type: 'tension:update', level: levelKey }));
+        this.socket.send(JSON.stringify({ type: 'tension:update', level: levelKey, sessionId: this.selectedSessionId }));
       } catch (e) {
         // ignore send errors
       }
     },
     sendSlideshow(index) {
+      if (!this.selectedSessionId) return;
       if (!this.socket || this.socket.readyState !== WebSocket.OPEN) return;
       try {
-        this.socket.send(JSON.stringify({ type: 'slideshow:update', index }));
+        this.socket.send(JSON.stringify({ type: 'slideshow:update', index, sessionId: this.selectedSessionId }));
       } catch (e) {
         // ignore
       }
+    },
+    openFront() {
+      if (!this.tenantId) return;
+      const sessionParam = this.selectedSessionId ? `?session=${encodeURIComponent(this.selectedSessionId)}` : '';
+      window.open(`/t/${this.tenantId}/front${sessionParam}`, '_blank');
     },
 
     async playTension(levelKey) {

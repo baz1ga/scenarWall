@@ -2536,6 +2536,9 @@ wss.on("connection", (ws, req) => {
       if (typeof msg.show === "boolean") payload.show = msg.show;
       broadcastTenant(ws.meta.tenantId, payload);
     }
+    if (msg.type === "tension:config" && msg.config && typeof msg.config === "object") {
+      broadcastTenant(ws.meta.tenantId, { type: "tension:config", config: msg.config });
+    }
   });
 });
 

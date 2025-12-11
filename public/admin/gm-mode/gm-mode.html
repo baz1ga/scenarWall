@@ -2,7 +2,7 @@
   <link rel="stylesheet" href="/admin/gm-mode/gm-mode.css">
 
   <div class="max-w-7xl mx-auto space-y-4">
-    <div class="flex items-center gap-3 mt-1">
+    <div class="flex items-center justify-between gap-3 mt-1">
       <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100 inline-flex items-center gap-2">
         <template x-if="scenarioTitle">
           <a href="/admin/scenarios/list.html"
@@ -15,6 +15,12 @@
         </template>
         <span x-text="currentSession?.title || selectedSessionId || 'Session'"></span>
       </h1>
+      <button class="inline-flex items-center gap-2 rounded-lg border border-emerald-500 bg-emerald-500 text-slate-900 font-semibold px-4 py-2 text-sm hover:bg-emerald-400 dark:bg-slate-900 dark:border-emerald-500 dark:text-emerald-100 dark:hover:bg-slate-800 transition"
+              @click="openFront"
+              x-show="selectedSessionId">
+        <i class="fa-solid fa-film"></i>
+        <span>Présenter</span>
+      </button>
     </div>
 
     <template x-if="scenes.length > 1">
