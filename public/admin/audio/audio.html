@@ -1,7 +1,17 @@
 <div id="page-content" x-data="audioPage()" x-init="init()" class="space-y-6" x-cloak>
+  <style>
+    :root {
+      --audio-accent: #65a30d; /* lime-600 */
+      --audio-accent-strong: #4d7c0f; /* lime-700 */
+    }
+    .audio-text { color: var(--audio-accent); }
+    .audio-border { border-color: var(--audio-accent); }
+    .audio-bg { background-color: var(--audio-accent); color: #fff; border-color: var(--audio-accent); }
+    .audio-ring { box-shadow: 0 0 0 2px var(--audio-accent); }
+  </style>
   <section class="space-y-6 max-w-5xl mx-auto">
     <div class="flex items-center justify-between gap-3">
-      <h2 class="text-lg font-semibold">Fichiers audio</h2>
+      <h1 class="text-2xl font-semibold flex flex-wrap items-center gap-2 audio-text"><i class="fa-solid fa-music"></i> Fichiers audio</h1>
       <div class="flex items-center gap-2">
         <button
           class="btn-outline-rose inline-flex h-[34px] items-center gap-2 rounded-lg border border-rose-200 dark:border-rose-900 bg-white dark:bg-slate-950 px-3 py-1.5 text-xs text-rose-700 dark:text-rose-200 hover:bg-rose-50 dark:hover:bg-rose-950 transition disabled:opacity-40 disabled:cursor-not-allowed"
@@ -12,9 +22,9 @@
           <i class="fa-solid fa-trash"></i> Supprimer
           <span class="badge-count badge-rose" x-text="selectedAudio.length" x-show="selectedAudio.length > 0"></span>
         </button>
-        <label class="cursor-pointer inline-flex items-center gap-2 text-sm text-indigo-600 dark:text-indigo-300" x-show="tenantId">
+        <label class="cursor-pointer inline-flex items-center gap-2 text-sm audio-text" x-show="tenantId">
           <input type="file" class="hidden" multiple accept="audio/*" @change="uploadAudio($event)">
-          <span class="inline-flex items-center gap-2 rounded-lg border border-indigo-500 px-3 py-1.5 text-indigo-800 dark:text-indigo-100 bg-white dark:bg-transparent hover:bg-indigo-500/10"><i class="fa-solid fa-upload"></i> Ajouter (&lt; 1 Mo)</span>
+          <span class="inline-flex items-center gap-2 rounded-lg px-3 py-1.5 audio-border audio-text bg-white dark:bg-transparent hover:bg-lime-500/10"><i class="fa-solid fa-upload"></i> Ajouter (&lt; 1 Mo)</span>
         </label>
       </div>
     </div>
@@ -34,13 +44,13 @@
           @dragover.prevent="onAudioDragOver(index)"
           @drop.prevent="onAudioDrop(index)"
           :class="[
-            audioDragOverIndex === index && audioDragIndex !== null ? 'ring-2 ring-indigo-400 ring-offset-2 ring-offset-slate-50 dark:ring-offset-slate-900 shadow-lg' : '',
+            audioDragOverIndex === index && audioDragIndex !== null ? 'audio-ring ring-offset-2 ring-offset-slate-50 dark:ring-offset-slate-900 shadow-lg' : '',
             audioDragIndex === index ? 'opacity-80 scale-[0.99]' : ''
           ]"
         >
           <button
-            class="h-8 w-8 inline-flex items-center justify-center rounded-lg bg-white/90 dark:bg-slate-900/90 text-slate-500 hover:text-indigo-500 border border-slate-200 dark:border-slate-700 cursor-grab select-none"
-            :class="audioDragIndex === index ? 'cursor-grabbing text-indigo-500' : ''"
+            class="h-8 w-8 inline-flex items-center justify-center rounded-lg bg-white/90 dark:bg-slate-900/90 text-slate-500 hover:text-lime-600 border border-slate-200 dark:border-slate-700 cursor-grab select-none"
+            :class="audioDragIndex === index ? 'cursor-grabbing audio-text' : ''"
             title="Glisser pour réordonner"
             draggable="true"
             @dragstart.stop="startAudioDrag(index)"
@@ -48,10 +58,10 @@
           >
             <i class="fa-solid fa-grip-vertical text-sm"></i>
           </button>
-          <label class="h-8 w-8 flex items-center justify-center rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow cursor-pointer">
+          <label class="h-8 w-8 flex items-center justify-center bg-white dark:bg-slate-900 cursor-pointer">
             <input
               type="checkbox"
-              class="h-4 w-4 rounded border border-slate-400 bg-white text-emerald-500 accent-emerald-500 cursor-pointer"
+              class="h-4 w-4 rounded border border-slate-400 bg-white text-lime-600 accent-lime-600 cursor-pointer"
               :checked="selectedAudio.includes(audio.name)"
               @change.stop="toggleSelectAudio(audio.name)"
               :aria-label="`Sélectionner ${audio.name}`"
@@ -62,7 +72,7 @@
             <div class="text-xs text-slate-500" x-text="formatBytes(audio.size)"></div>
           </div>
           <audio :src="audio.url" controls class="w-60 h-10"></audio>
-          <button class="px-2 py-1 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 inline-flex items-center gap-1" @click="openRenameAudioModal(audio.name)">
+          <button class="px-2 py-1 rounded border bg-white dark:bg-slate-900 audio-border audio-text hover:bg-lime-50 dark:hover:bg-lime-900/30 inline-flex items-center gap-1" @click="openRenameAudioModal(audio.name)">
             <i class="fa-solid fa-pen"></i>
           </button>
         </div>
@@ -81,7 +91,7 @@
     <div class="absolute inset-0 bg-black/60" @click="closeRenameAudioModal()"></div>
     <div class="relative w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
       <div class="flex items-center gap-3">
-        <div class="h-10 w-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xl">
+        <div class="h-10 w-10 rounded-full flex items-center justify-center text-xl audio-text" style="background: rgba(101,163,13,0.15);">
           <i class="fa-solid fa-pen"></i>
         </div>
         <div class="text-lg font-semibold text-slate-900 dark:text-slate-100">Renommer l'audio</div>
@@ -91,7 +101,8 @@
         <label class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 font-semibold">Nouveau nom</label>
         <input
           type="text"
-          class="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+          class="w-full rounded-lg border bg-white dark:bg-slate-800 px-3 py-2 text-sm focus:ring-2 focus:outline-none"
+          style="border-color: var(--audio-accent); --tw-ring-color: var(--audio-accent);"
           x-model="renameAudioModal.newName"
           placeholder="ex: ambiance.mp3"
         >
@@ -99,7 +110,7 @@
       </div>
       <div class="flex justify-end gap-2 pt-2">
         <button class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800" @click="closeRenameAudioModal()">Annuler</button>
-        <button class="px-4 py-2 rounded-lg bg-indigo-500 text-white font-semibold hover:bg-indigo-400" @click="confirmRenameAudio()">Renommer</button>
+        <button class="px-4 py-2 rounded-lg audio-bg font-semibold hover:brightness-110" @click="confirmRenameAudio()">Renommer</button>
       </div>
     </div>
   </div>

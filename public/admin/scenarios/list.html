@@ -1,16 +1,26 @@
 <div id="page-content" x-data="scenariosListPage()" x-init="init()" class="space-y-6" x-cloak>
-  <div class="flex items-center justify-between gap-3 mt-2">
-    <div>
-      <div class="flex items-center gap-3">
-        <span class="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20">
-          <i class="fa-solid fa-scroll text-xl"></i>
-        </span>
+  <style>
+    :root {
+      --scenario-accent: #10b981; /* emerald-500 */
+      --scenario-accent-strong: #059669; /* emerald-600 */
+    }
+    .scenario-text { color: var(--scenario-accent); }
+    .scenario-border { border-color: var(--scenario-accent); }
+    .scenario-bg { background-color: var(--scenario-accent); color: #0f172a; border-color: var(--scenario-accent); }
+  </style>
+  <section class="max-w-7xl mx-auto">
+      <div class="flex items-center justify-between gap-3 mt-2">
         <div>
-          <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100">Scénarios</h1>
-          <p class="text-sm text-slate-500 dark:text-slate-400">Gérez vos intrigues et leurs sessions associées</p>
+          <div class="flex items-center gap-3">
+            <span class="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20">
+              <i class="fa-solid fa-scroll text-xl"></i>
+            </span>
+            <div>
+              <h1 class="text-2xl font-semibold scenario-text">Scénarios</h1>
+              <p class="text-sm text-slate-500 dark:text-slate-400">Gérez vos intrigues et leurs sessions associées</p>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
     <button type="button" @click="openCreateModal()"
             class="inline-flex items-center gap-2 rounded-lg bg-emerald-500 text-slate-900 font-semibold px-4 py-2 text-sm shadow-sm hover:bg-emerald-400 transition">
       <i class="fa-solid fa-plus"></i> Nouveau
@@ -197,6 +207,7 @@
       </div>
     </div>
   </template>
+  </section>
 </div>
 <script src="/admin/js/layout-loader.js"></script>
 <script type="module" src="/admin/scenarios/list.js" data-page-script></script>

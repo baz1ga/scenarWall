@@ -1,4 +1,14 @@
 <div id="page-content" x-data="sessionViewPage()" x-init="init()" class="space-y-0 pt-2" x-cloak>
+  
+  <style>
+    :root {
+      --scenario-accent: #10b981; /* emerald-500 */
+      --scenario-accent-strong: #059669; /* emerald-600 */
+    }
+    .scenario-text { color: var(--scenario-accent); }
+    .scenario-border { border-color: var(--scenario-accent); }
+    .scenario-bg { background-color: var(--scenario-accent); color: #0f172a; border-color: var(--scenario-accent); }
+  </style>
   <style>
     /* Notes textarea styling */
     .notes-editor textarea {
@@ -26,9 +36,10 @@
       box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.2);
     }
   </style>
+  <section class="max-w-7xl mx-auto">
   <div class="flex flex-wrap items-center gap-3">
     <div class="flex items-center flex-wrap gap-2">
-      <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100 flex flex-wrap items-center gap-2">
+      <h1 class="text-2xl font-semibold text-emerald-700 dark:text-emerald-300 flex flex-wrap items-center gap-2">
           <template x-if="scenarioTitle">
             <a :href="`/admin/scenarios/list.html`"
               class="text-emerald-600 hover:text-emerald-500 font-semibold">
@@ -57,7 +68,7 @@
 
     <div class="flex items-center gap-2">
       <button x-show="session"
-              class="inline-flex items-center gap-2 rounded-lg border border-amber-300 text-amber-600 px-3 py-2 text-sm hover:bg-amber-50 dark:hover:bg-amber-900/20 transition"
+              class="inline-flex items-center gap-2 rounded-lg border border-rose-400 text-rose-700 px-3 py-2 text-sm hover:bg-rose-50 dark:hover:bg-rose-900/20 transition"
               @click="showTension = !showTension">
         <i class="fa-solid fa-bolt"></i> Tension
       </button>
@@ -112,39 +123,39 @@
           <div class="relative w-full max-w-4xl mx-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-6 shadow-2xl space-y-4 z-10">
             <div class="flex items-center justify-between gap-3 flex-wrap">
               <div>
-                <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Barre de tension</h3>
+                <h3 class="text-lg font-semibold text-rose-700 dark:text-rose-200 inline-flex items-center gap-2"><i class="fa-solid fa-bolt"></i> Barre de tension</h3>
                 <p class="text-xs text-slate-500 dark:text-slate-400">Activez et personnalisez les niveaux.</p>
               </div>
               <label class="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" class="sr-only peer" x-model="tensionEnabled" @change="saveSessionTension">
-                <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:bg-emerald-500 transition"></div>
+                <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:bg-rose-600 transition"></div>
                 <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition peer-checked:translate-x-5"></div>
               </label>
             </div>
 
             <div class="grid gap-3 sm:grid-cols-2">
-            <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
-              <input type="radio" class="text-emerald-500" name="tensionFont" value="Audiowide" x-model="tensionFont" @change="saveSessionTension">
+            <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-900/20">
+              <input type="radio" class="text-rose-600" name="tensionFont" value="Audiowide" x-model="tensionFont" @change="saveSessionTension">
               <span style="font-family: 'Audiowide', sans-serif;" class="text-base">Futuriste (Audiowide)</span>
             </label>
-          <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
-            <input type="radio" class="text-emerald-500" name="tensionFont" value="Metal Mania" x-model="tensionFont" @change="saveSessionTension">
+          <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-900/20">
+            <input type="radio" class="text-rose-600" name="tensionFont" value="Metal Mania" x-model="tensionFont" @change="saveSessionTension">
             <span style="font-family: 'Metal Mania', cursive;" class="text-base">Horrifique (Metal Mania)</span>
           </label>
-          <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
-            <input type="radio" class="text-emerald-500" name="tensionFont" value="Rye" x-model="tensionFont" @change="saveSessionTension">
+          <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-900/20">
+            <input type="radio" class="text-rose-600" name="tensionFont" value="Rye" x-model="tensionFont" @change="saveSessionTension">
             <span style="font-family: 'Rye', cursive;" class="text-base">Saloon (Rye)</span>
           </label>
-          <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
-            <input type="radio" class="text-emerald-500" name="tensionFont" value="Share Tech Mono" x-model="tensionFont" @change="saveSessionTension">
+          <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-900/20">
+            <input type="radio" class="text-rose-600" name="tensionFont" value="Share Tech Mono" x-model="tensionFont" @change="saveSessionTension">
             <span style="font-family: 'Share Tech Mono', monospace;" class="text-base">Techno (Share Tech Mono)</span>
           </label>
-          <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
-            <input type="radio" class="text-emerald-500" name="tensionFont" value="Bangers" x-model="tensionFont" @change="saveSessionTension">
+          <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-900/20">
+            <input type="radio" class="text-rose-600" name="tensionFont" value="Bangers" x-model="tensionFont" @change="saveSessionTension">
             <span style="font-family: 'Bangers', cursive;" class="text-base">Cartoon (Bangers)</span>
           </label>
-          <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">
-            <input type="radio" class="text-emerald-500" name="tensionFont" value="Great Vibes" x-model="tensionFont" @change="saveSessionTension">
+          <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-900/20">
+            <input type="radio" class="text-rose-600" name="tensionFont" value="Great Vibes" x-model="tensionFont" @change="saveSessionTension">
             <span style="font-family: 'Great Vibes', cursive;" class="text-base">Manuscrit (Great Vibes)</span>
           </label>
             </div>
@@ -163,7 +174,7 @@
                     <span class="text-xs text-slate-500 dark:text-slate-400">Couleur</span>
                     <input type="color" class="h-9 w-12 rounded border border-slate-300 dark:border-slate-700 bg-transparent cursor-pointer" x-model="tensionColors[level]" @change="queueSaveTension">
                   </div>
-                  <div class="flex items-center gap-2 min-w-[180px]">
+                <div class="flex items-center gap-2 min-w-[180px]">
                     <span class="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">Audio</span>
                     <select class="flex-1 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1 text-sm text-slate-900 dark:text-slate-100"
                             x-model="tensionAudio[level]"
@@ -294,10 +305,10 @@
                 <button class="w-full px-4 py-3 -mb-[2px] border-b-4 font-medium transition text-center"
                         :class="tab.id === activeTab
                           ? (tab.id === 'images'
-                            ? 'border-emerald-500 text-emerald-600'
+                            ? 'border-yellow-600 text-yellow-600'
                             : tab.id === 'audio'
-                              ? 'border-indigo-500 text-indigo-600'
-                              : 'border-amber-500 text-amber-600')
+                              ? 'border-lime-600 text-lime-600'
+                              : 'border-emerald-900 text-emerald-900')
                           : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'"
                         @click="setActiveTab(tab.id)">
                   <span class="inline-flex items-center gap-2">
@@ -327,7 +338,7 @@
               <div class="flex items-center justify-between pb-2 mt-2">
                 <h3 class="text-s font-semibold text-slate-900 dark:text-slate-100">Images de la scène</h3>
                 <div class="flex items-center gap-2">
-                  <button class="inline-flex items-center gap-2 rounded-lg border border-emerald-500 text-emerald-600 px-3 py-2 text-sm hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition"
+                  <button class="inline-flex items-center gap-2 rounded-lg border border-yellow-600 text-yellow-600 px-3 py-2 text-sm hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition"
                           @click="openUploadModal()">
                     <i class="fa-solid fa-upload"></i> Ajouter
                   </button>
@@ -376,7 +387,7 @@
                 <div class="flex items-center justify-between pb-2">
                   <h3 class="text-s font-semibold text-slate-900 dark:text-slate-100">Toutes vos images</h3>
                   <a href="/admin/gallery/gallery.html"
-                     class="inline-flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                     class="inline-flex items-center gap-1 rounded-lg border border-yellow-600 dark:border-yellow-600 px-3 py-1.5 text-xs text-yellow-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                     <i class="fa-regular fa-image"></i>
                     Ouvrir la galerie
                   </a>
@@ -422,7 +433,7 @@
                 <h3 class="text-s font-semibold text-slate-900 dark:text-slate-100">Audio de la scène</h3>
                 <label class="cursor-pointer inline-flex items-center gap-2 text-sm text-indigo-600 dark:text-indigo-300" x-show="tenantId">
                   <input type="file" class="hidden" multiple accept="audio/*" @change="uploadSceneAudio($event)">                                                                                        
-                  <span class="inline-flex items-center gap-2 rounded-lg border border-indigo-500 px-3 py-2 text-indigo-800 dark:text-indigo-100 bg-white dark:bg-transparent hover:bg-indigo-500/10 transition">
+                  <span class="inline-flex items-center gap-2 rounded-lg border border-lime-600 px-3 py-2 text-lime-600 dark:text-indigo-100 bg-white dark:bg-transparent hover:bg-indigo-500/10 transition">
                     <i class="fa-solid fa-upload"></i> Ajouter (&lt; 1 Mo)
                   </span>
                 </label>
@@ -465,7 +476,7 @@
                 <div class="flex items-center justify-between pb-2">
                   <h3 class="text-s font-semibold text-slate-900 dark:text-slate-100">Tous vos audios</h3>
                   <a href="/admin/audio/audio.html"
-                     class="inline-flex items-center gap-1 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                     class="inline-flex items-center gap-1 rounded-lg border border-lime-600 dark:border-slate-700 px-3 py-1.5 text-xs text-lime-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                     <i class="fa-solid fa-music text-base"></i>
                     Ouvrir les audios
                   </a>
@@ -796,6 +807,7 @@
       </div>
     </div>
   </template>
+  </section>
 </div>
 <script src="/admin/js/layout-loader.js"></script>
 <script type="module" src="/admin/sessions/view.js" data-page-script></script>

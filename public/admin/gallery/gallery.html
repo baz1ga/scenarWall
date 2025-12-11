@@ -1,13 +1,24 @@
 <div id="page-content" x-data="galleryPage()" x-init="init()" class="space-y-6" x-cloak>
+  <style>
+    :root {
+      --gallery-accent: #ca8a04; /* yellow-600 */
+      --gallery-accent-strong: #a16207; /* yellow-700 */
+    }
+    .gallery-text { color: var(--gallery-accent); }
+    .gallery-border { border-color: var(--gallery-accent); }
+    .gallery-bg { background-color: var(--gallery-accent); color: #fff; border-color: var(--gallery-accent); }
+    .gallery-ring { box-shadow: 0 0 0 2px var(--gallery-accent); }
+  </style>
+  <section class="max-w-7xl mx-auto">
     <div id="visiblePictures" class="space-y-2">
       <div class="flex items-center justify-between gap-3">
         <div>
-          <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100 flex flex-wrap items-center gap-2">Votre bibliothèque</h1>
+          <h1 class="text-2xl font-semibold flex flex-wrap items-center gap-2 gallery-text"><i class="fa-solid fa-images"></i> Votre bibliothèque</h1>
           <p class="text-sm text-slate-500 dark:text-slate-400">Images disponibles pour vos scènes</p>
         </div>
         <div class="flex items-center gap-2">
           <button
-            class="btn-ghost inline-flex h-[34px] items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition disabled:opacity-40 disabled:cursor-not-allowed"
+            class="inline-flex h-[34px] items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition disabled:opacity-40 disabled:cursor-not-allowed"
             @click="hideSelectedVisible()"
             :disabled="galleryLoading || selectedVisible.length === 0"
             :title="selectedVisible.length === 0 ? 'Sélectionnez des images' : 'Mettre de coté'"
@@ -16,7 +27,8 @@
             <span class="badge-count" x-text="selectedVisible.length" x-show="selectedVisible.length > 0"></span>
           </button>
           <button
-            class="btn-outline-emerald inline-flex h-[34px] items-center gap-2 rounded-lg border border-emerald-500 px-3 py-1.5 text-sm text-emerald-800 dark:text-emerald-100 bg-white dark:bg-transparent hover:bg-emerald-500/10 transition"
+            class="inline-flex h-[34px] items-center gap-2 rounded-lg border px-3 py-1.5 text-sm bg-white dark:bg-transparent transition hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
+            :class="['gallery-border','gallery-text']"
             x-show="tenantId"
             @click="openUploadModal()"
           >
@@ -44,7 +56,7 @@
                     @drop.prevent="onDrop(index)"
                     :class="[
                       'shadow-sm hover:shadow-md',
-                      dragOverIndex === index ? 'ring-2 ring-emerald-400 ring-offset-2 ring-offset-slate-50 dark:ring-offset-slate-900 shadow-lg' : '',
+                      dragOverIndex === index ? 'gallery-ring ring-offset-2 ring-offset-slate-50 dark:ring-offset-slate-900 shadow-lg' : '',
                       dragIndex === index ? 'opacity-80 scale-[0.98]' : ''
                     ]"
                   >
@@ -52,7 +64,7 @@
                       <label class="h-8 w-8 flex items-center justify-center rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow cursor-pointer">
                         <input
                           type="checkbox"
-                          class="h-4 w-4 rounded border border-slate-400 bg-white text-emerald-500 accent-emerald-500 cursor-pointer"
+                          class="h-4 w-4 rounded border border-slate-400 bg-white text-yellow-500 accent-yellow-500 cursor-pointer"
                           :checked="selectedVisible.includes(img.name)"
                           @change.stop="toggleSelectVisible(img.name)"
                           :aria-label="`Sélectionner ${img.name}`"
@@ -60,8 +72,8 @@
                       </label>
                     </div>
                     <button
-                      class="absolute top-2 left-2 h-7 w-7 flex items-center justify-center rounded-full bg-white/90 dark:bg-slate-900/90 text-slate-500 hover:text-emerald-500 cursor-grab select-none border border-slate-200 dark:border-slate-700 text-xs"
-                      :class="dragIndex === index ? 'cursor-grabbing text-emerald-500' : ''"
+                      class="absolute top-2 left-2 h-7 w-7 flex items-center justify-center rounded-full bg-white/90 dark:bg-slate-900/90 text-slate-500 hover:text-yellow-600 cursor-grab select-none border border-slate-200 dark:border-slate-700 text-xs"
+                      :class="dragIndex === index ? 'cursor-grabbing text-yellow-600' : ''"
                       title="Glisser pour réordonner"
                       @mousedown.prevent
                     >
@@ -73,7 +85,8 @@
                     </div>
                     <div class="absolute inset-0 bg-slate-900/15 dark:bg-slate-100/10 opacity-0 group-hover:opacity-100 transition flex items-center justify-center pointer-events-none text-[10px] font-semibold tracking-wide text-white">Glisser pour déplacer</div>
                     <div
-                      class="absolute inset-0 flex items-center justify-center bg-emerald-600/15 text-emerald-900 dark:text-emerald-100 text-xs font-semibold tracking-wide uppercase"
+                      class="absolute inset-0 flex items-center justify-center text-xs font-semibold tracking-wide uppercase"
+                      :style="dragIndex !== null && dragOverIndex === index ? 'background: var(--gallery-accent-strong); color: #fff;' : 'display:none;'"
                       x-show="dragIndex !== null && dragOverIndex === index"
                       x-transition
                     >
@@ -91,7 +104,7 @@
     <div id="hiddenPictures" class="space-y-4 mt-6">
       <div class="flex items-center justify-between gap-3">
         <div>
-          <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100 flex flex-wrap items-center gap-2">Vos images mises de coté</h1>
+          <h1 class="text-2xl font-semibold gallery-text dark:text-slate-100 flex flex-wrap items-center gap-2"><i class="fa-solid fa-image"></i>Vos images mises de coté</h1>
           <p class="text-sm text-slate-500 dark:text-slate-400">N'impact pas vos scènes existantes</p>
         </div>
         <div class="flex items-center gap-2">
@@ -131,7 +144,7 @@
                   <label class="h-8 w-8 flex items-center justify-center rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow cursor-pointer">
                     <input
                       type="checkbox"
-                      class="h-4 w-4 rounded border border-slate-400 bg-white text-emerald-500 accent-emerald-500 cursor-pointer"
+                      class="h-4 w-4 rounded border border-slate-400 bg-white text-yellow-500 accent-yellow-500 cursor-pointer"
                       :checked="selectedHidden.includes(img.name)"
                       @change.stop="toggleSelectHidden(img.name)"
                       :aria-label="`Sélectionner ${img.name}`"
@@ -150,7 +163,7 @@
           </div>
         </div>
       </div>
-      <div class="text-sm" :class="uploadStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-300'" x-text="uploadMessage"></div>
+      <div class="text-sm" :class="uploadStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'gallery-text'" x-text="uploadMessage"></div>
     </div>
 
 
@@ -166,21 +179,21 @@
       <div class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800">
         <button
           class="px-4 py-2 text-sm font-semibold"
-          :class="uploadTab === 'drop' ? 'text-emerald-600 dark:text-emerald-300 border-b-2 border-emerald-500' : 'text-slate-500 dark:text-slate-400'"
+          :class="uploadTab === 'drop' ? 'gallery-text border-b-2 gallery-border' : 'text-slate-500 dark:text-slate-400'"
           @click="setUploadTab('drop')"
         >
           Dépôt de fichiers
         </button>
         <button
           class="px-4 py-2 text-sm font-semibold"
-          :class="uploadTab === 'url' ? 'text-emerald-600 dark:text-emerald-300 border-b-2 border-emerald-500' : 'text-slate-500 dark:text-slate-400'"
+          :class="uploadTab === 'url' ? 'gallery-text border-b-2 gallery-border' : 'text-slate-500 dark:text-slate-400'"
           @click="setUploadTab('url')"
         >
           Import via URL
         </button>
         <button
           class="px-4 py-2 text-sm font-semibold"
-          :class="uploadTab === 'pixabay' ? 'text-emerald-600 dark:text-emerald-300 border-b-2 border-emerald-500' : 'text-slate-500 dark:text-slate-400'"
+          :class="uploadTab === 'pixabay' ? 'gallery-text border-b-2 gallery-border' : 'text-slate-500 dark:text-slate-400'"
           @click="setUploadTab('pixabay')"
         >
           <span class="inline-flex items-center gap-2">
@@ -192,17 +205,17 @@
 
       <div class="space-y-4" x-show="uploadTab === 'drop'">
         <div
-          class="rounded-2xl border-2 border-dashed border-emerald-300 dark:border-emerald-700 bg-emerald-50/50 dark:bg-emerald-900/10 p-6 text-center transition cursor-pointer"
-          :class="uploadDragActive ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : ''"
+          class="rounded-2xl border-2 border-dashed p-6 text-center transition cursor-pointer"
+          :class="uploadDragActive ? 'gallery-border bg-yellow-50 dark:bg-yellow-900/20' : 'gallery-border bg-yellow-50/50 dark:bg-yellow-900/10'"
           @dragover.prevent="uploadDragActive = true"
           @dragleave.prevent="uploadDragActive = false"
           @drop="handleUploadDrop($event)"
           @click="$refs.uploadInput.click()"
         >
-          <div class="text-3xl text-emerald-500 mb-2"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+          <div class="text-3xl gallery-text mb-2"><i class="fa-solid fa-cloud-arrow-up"></i></div>
           <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">PNG, JPG, WEBP — Taille max 6 Mo par fichier</div>
           <div class="mt-3">
-            <span class="inline-flex items-center gap-2 rounded-lg border border-emerald-500 px-3 py-1.5 text-sm text-emerald-800 dark:text-emerald-100 bg-white dark:bg-transparent hover:bg-emerald-500/10">Parcourir</span>
+            <span class="inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm bg-white dark:bg-transparent hover:bg-yellow-50 dark:hover:bg-yellow-900/20" :class="['gallery-border','gallery-text']">Parcourir</span>
           </div>
           <input type="file" multiple accept="image/*" class="hidden" x-ref="uploadInput" @change="uploadFile($event)">
         </div>
@@ -212,11 +225,13 @@
           <input
             type="url"
             x-model="uploadUrl"
-            class="flex-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-400 focus:outline-none"
+            class="flex-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm focus:ring-2 focus:outline-none"
+            style="--tw-ring-color: var(--gallery-accent);"
             placeholder="Coller l'url de votre image ici"
           >
           <button
-            class="btn-outline-emerald"
+            class="inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm bg-white dark:bg-transparent transition hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
+            :class="['gallery-border','gallery-text']"
             @click="uploadFromUrl()"
             :disabled="uploadUrlLoading || !uploadUrl"
           >
@@ -224,19 +239,21 @@
             <span x-text="uploadUrlLoading ? 'Chargement...' : 'Importer'"></span>
           </button>
         </div>
-        <p class="text-xs" :class="uploadUrlStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-300'" x-text="uploadUrlMessage"></p>
+        <p class="text-xs" :class="uploadUrlStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'gallery-text'" x-text="uploadUrlMessage"></p>
       </div>
       <div class="space-y-3 flex-1 overflow-y-auto pr-1" x-show="uploadTab === 'pixabay'">
         <div class="flex items-center gap-2">
           <input
             type="text"
             x-model="pixabayQuery"
-            class="flex-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-400 focus:outline-none disabled:opacity-50"
+            class="flex-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm focus:ring-2 focus:outline-none disabled:opacity-50"
+            style="--tw-ring-color: var(--gallery-accent);"
             :placeholder="pixabayKey ? 'Rechercher sur Pixabay (ex: dungeon, cthulhu, orc...)' : 'Clé API manquante'"
             :disabled="!pixabayKey"
           >
           <button
-            class="btn-outline-emerald"
+            class="inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm bg-white dark:bg-transparent transition hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
+            :class="['gallery-border','gallery-text']"
             @click="searchPixabay()"
             :disabled="pixabayLoading || !pixabayQuery.trim() || !pixabayKey"
           >
@@ -244,7 +261,7 @@
             <span x-text="pixabayLoading ? 'Recherche...' : 'Rechercher'"></span>
           </button>
         </div>
-        <p class="text-xs" :class="pixabayStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-300'" x-text="pixabayMessage || (!pixabayKey ? `Clé API Pixabay manquante (variable d'environnement PIXABAY_KEY)` : '')"></p>
+        <p class="text-xs" :class="pixabayStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'gallery-text'" x-text="pixabayMessage || (!pixabayKey ? `Clé API Pixabay manquante (variable d'environnement PIXABAY_KEY)` : '')"></p>
         <div class="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-3" x-show="pixabayResults.length > 0">
           <template x-for="img in pixabayResults" :key="img.id">
             <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
@@ -252,7 +269,7 @@
               <div class="p-3 flex items-center justify-between">
                 <div class="text-xs text-slate-500 truncate" x-text="img.user || 'Pixabay'"></div>
                 <button
-                  class="inline-flex items-center gap-1 rounded-lg bg-emerald-500 text-slate-900 px-2 py-1 text-xs font-semibold hover:bg-emerald-400"
+                  class="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold bg-yellow-500 text-slate-900 hover:bg-yellow-400"
                   @click="importFromPixabay(img.largeImageURL || img.webformatURL)"
                   :disabled="uploadUrlLoading"
                 >
@@ -295,6 +312,7 @@
       </div>
     </div>
   </div>
+  </section>
 </div>
 <script src="/admin/js/layout-loader.js"></script>
 <script type="module" src="/admin/gallery/gallery.js" data-page-script></script>

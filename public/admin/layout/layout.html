@@ -37,7 +37,7 @@
       <nav class="flex-1" :class="sidebarCollapsed ? 'px-1' : 'px-3'">
         <a href="/admin/scenarios/list.html" :class="[
           sidebarCollapsed ? 'justify-center gap-0 px-0' : 'justify-start gap-3 px-3',
-          section === 'scenarios' ? 'bg-slate-800 text-amber-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'
+          section === 'scenarios' ? 'bg-slate-800 text-emerald-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'
         ]" class="w-full flex items-center py-2 rounded-lg text-sm font-medium text-left transition">
           <i class="fa-solid fa-scroll text-base"></i>
           <span x-show="!sidebarCollapsed">Scénarios</span>
@@ -55,7 +55,7 @@
                 <div class="space-y-0.5">
                   <template x-for="sessId in sc.sessions.slice(0,3)" :key="sessId">
                     <a :href="`/admin/sessions/view.html?id=${encodeURIComponent(sessId)}`"
-                       class="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 hover:text-amber-400 transition pl-3">
+                       class="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 hover:text-emerald-400 transition pl-3">
                       <i class="fa-regular fa-circle-dot text-[10px]"></i>
                       <span x-text="lookupSessionTitle(sessId)"></span>
                     </a>
@@ -71,14 +71,14 @@
           <div class="px-3 text-[11px] uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400" x-show="!sidebarCollapsed">Bibliothèque</div>
           <a href="/admin/gallery/gallery.html" :class="[
             sidebarCollapsed ? 'justify-center gap-0 px-0' : 'justify-start gap-3 px-3',
-            section === 'galerie' ? 'bg-slate-800 text-emerald-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'
+            section === 'galerie' ? 'bg-slate-800 text-yellow-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'
           ]" class="w-full flex items-center py-2 rounded-lg text-sm font-medium text-left transition">
             <i class="fa-regular fa-image text-base"></i>
             <span x-show="!sidebarCollapsed">Galerie</span>
           </a>
           <a href="/admin/audio/audio.html" :class="[
             sidebarCollapsed ? 'justify-center gap-0 px-0' : 'justify-start gap-3 px-3',
-            section === 'audio' ? 'bg-slate-800 text-indigo-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'
+            section === 'audio' ? 'bg-slate-800 text-lime-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'
           ]" class="w-full flex items-center py-2 rounded-lg text-sm font-medium text-left transition">
             <i class="fa-solid fa-music text-base"></i>
             <span x-show="!sidebarCollapsed">Audio</span>
@@ -88,7 +88,7 @@
           <div class="px-3 text-[11px] uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400" x-show="!sidebarCollapsed">Administration</div>
           <a href="/admin/users/users.html" :class="[
             sidebarCollapsed ? 'justify-center gap-0 px-0' : 'justify-start gap-3 px-3',
-            section === 'users' ? 'bg-slate-800 text-amber-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'
+            section === 'users' ? 'bg-slate-800 text-cyan-300' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 hover:text-slate-900 dark:hover:bg-slate-800'
           ]" class="w-full flex items-center py-2 rounded-lg text-sm font-medium text-left transition">
             <i class="fa-solid fa-user-gear text-base"></i>
             <span x-show="!sidebarCollapsed">Utilisateurs</span>

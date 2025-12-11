@@ -1,5 +1,15 @@
 <div id="page-content" x-data="gmDashboard()" x-init="init()" class="min-h-screen overflow-hidden" x-cloak>
   <link rel="stylesheet" href="/admin/gm-mode/gm-mode.css">
+  <style>
+    :root {
+      --gm-accent: #4f46e5; /* indigo-600 */
+      --gm-accent-strong: #4338ca; /* indigo-700 */
+    }
+    .gm-text { color: var(--gm-accent); }
+    .gm-border { border-color: var(--gm-accent); }
+    .gm-bg { background-color: var(--gm-accent); color: #fff; border-color: var(--gm-accent); }
+    .gm-ring { box-shadow: 0 0 0 2px var(--gm-accent); }
+  </style>
 
   <div class="max-w-7xl mx-auto space-y-4">
     <template x-if="showLeaveModal">
@@ -7,7 +17,7 @@
         <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="cancelLeave()"></div>
         <div class="relative bg-white dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-md p-5 space-y-4 z-10">
           <div class="flex items-start gap-3">
-            <div class="h-10 w-10 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-200 flex items-center justify-center">
+            <div class="h-10 w-10 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-200 flex items-center justify-center">
               <i class="fa-solid fa-triangle-exclamation"></i>
             </div>
             <div class="space-y-1">
@@ -17,7 +27,7 @@
           </div>
           <div class="flex items-center justify-end gap-2">
             <button class="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition" @click="cancelLeave()">Annuler</button>
-            <button class="px-4 py-2 rounded-lg bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-400 transition" @click="proceedLeave()">Continuer</button>
+            <button class="px-4 py-2 rounded-lg bg-indigo-500 text-white text-sm font-semibold hover:bg-indigo-400 transition" @click="proceedLeave()">Continuer</button>
           </div>
         </div>
       </div>
@@ -27,7 +37,7 @@
       <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100 inline-flex items-center gap-2">
         <template x-if="scenarioTitle">
           <a href="/admin/scenarios/list.html"
-             class="text-emerald-600 hover:text-emerald-500 font-semibold">
+             class="text-indigo-500 hover:text-indigo-400 font-semibold">
             <span x-text="scenarioTitle"></span>
           </a>
         </template>
@@ -35,7 +45,7 @@
           <span class="text-slate-400">›</span>
         </template>
         <button type="button"
-                class="inline-flex items-center gap-2 text-left hover:text-emerald-600 transition"
+                class="inline-flex items-center gap-2 text-left hover:text-indigo-500 transition"
                 @click.prevent="confirmLeaveToSession()">
           <span x-text="currentSession?.title || selectedSessionId || 'Session'"></span>
           <i class="fa-solid fa-gear text-slate-500 text-sm"></i>
@@ -56,7 +66,7 @@
           <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100 leading-none mt-1">Scènes</h3>
         </div>
         <div class="flex items-center gap-2">
-          <button class="h-9 w-9 inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-emerald-600 hover:border-emerald-400 transition disabled:opacity-40 disabled:cursor-not-allowed"
+          <button class="h-9 w-9 inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-indigo-600 hover:border-indigo-400 transition disabled:opacity-40 disabled:cursor-not-allowed"
                   :disabled="sceneCarouselIndex === 0"
                   @click="carouselPrev()">
             <i class="fa-solid fa-chevron-left"></i>
@@ -95,7 +105,7 @@
               </template>
             </div>
           </div>
-          <button class="h-9 w-9 inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-emerald-600 hover:border-emerald-400 transition disabled:opacity-40 disabled:cursor-not-allowed"
+          <button class="h-9 w-9 inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-indigo-600 hover:border-indigo-400 transition disabled:opacity-40 disabled:cursor-not-allowed"
                   :disabled="sceneCarouselIndex >= Math.max(0, scenes.length - 5)"
                   @click="carouselNext()">
             <i class="fa-solid fa-chevron-right"></i>
@@ -123,7 +133,7 @@
                     <div
                       class="inline-flex items-center gap-3 rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap cursor-pointer transition"
                       :style="`background:${level.color}; border:1px solid ${level.color}; color:${level.textColor};`"
-                      :class="selectedTension === level.key ? 'ring-2 ring-offset-1 ring-emerald-400 dark:ring-emerald-500/80 shadow-md scale-[1.03]' : ''"
+                      :class="selectedTension === level.key ? 'ring-2 ring-offset-1 ring-indigo-400 dark:ring-indigo-500/80 shadow-md scale-[1.03]' : ''"
                       @click="playTension(level.key)"
                       :aria-label="`Lancer le niveau ${level.label}`"
                     >
@@ -151,7 +161,7 @@
               <div class="grid grid-cols-3 gap-3 items-center h-[120px]">
                 <div></div>
                 <div class="flex flex-col justify-center">
-                  <div class="relative rounded-lg border border-emerald-400 dark:border-emerald-500 overflow-hidden bg-gradient-to-br from-emerald-600 to-emerald-700 text-white cursor-pointer max-h-[90px] min-h-[90px] px-3"
+                  <div class="relative rounded-lg border border-indigo-400 dark:border-indigo-500 overflow-hidden bg-gradient-to-br from-indigo-600 to-indigo-700 text-white cursor-pointer max-h-[90px] min-h-[90px] px-3"
                        @click="nextSlide()"
                        title="Passer à la scène suivante">
                     <div class="h-full w-full flex flex-col items-center justify-center text-center leading-tight font-semibold">
@@ -177,7 +187,7 @@
               </div>
               <div class="flex flex-col justify-center transform scale-[1.03]">
                 <template x-if="currentSlide()">
-                  <div class="relative rounded-lg border-2 border-emerald-400 dark:border-emerald-500 overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-lg max-h-[120px]">
+                  <div class="relative rounded-lg border-2 border-indigo-400 dark:border-indigo-500 overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-lg max-h-[120px]">
                     <img class="w-full h-full object-cover" :src="currentSlide().displayUrl || currentSlide().url" :alt="currentSlide().name || 'Image actuelle'">
                     <template x-if="currentSlide()?.order">
                       <div class="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-white/80 text-[11px] font-semibold text-slate-700 shadow-sm">#<span x-text="currentSlide().order"></span></div>
@@ -197,10 +207,10 @@
                   </div>
                 </template>
                 <template x-if="!nextSlideObj() && hasNextScene">
-                  <div class="relative rounded-lg border border-emerald-400 dark:border-emerald-500 overflow-hidden bg-gradient-to-br from-emerald-600 to-emerald-700 text-white opacity-90 cursor-pointer max-h-[90px] min-h-[90px] px-3"
+                  <div class="relative rounded-lg border border-indigo-400 dark:border-indigo-500 overflow-hidden bg-gradient-to-br from-indigo-600 to-indigo-700 text-white opacity-90 cursor-pointer max-h-[90px] min-h-[90px] px-3"
                        @click="nextSlide()"
                        title="Passer à la scène suivante">
-                    <div class="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-white/90 text-[11px] font-semibold text-emerald-700 shadow-sm">#<span x-text="(slideshowImages?.length || 0) + 1"></span></div>
+                    <div class="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-white/90 text-[11px] font-semibold text-indigo-700 shadow-sm">#<span x-text="(slideshowImages?.length || 0) + 1"></span></div>
                     <div class=" h-full w-full flex flex-col items-center justify-center text-center leading-tight font-semibold">
                       <div class="text-[17px] pt-[23px]">Passer à la scène suivante</div>
                     </div>
@@ -241,7 +251,7 @@
       <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 shadow-sm">
         <h3 class="text-lg font-semibold mb-1 inline-flex items-center gap-2"><i class="fa-solid fa-stopwatch text-indigo-500"></i> Timer</h3>
         <div class="text-3xl font-mono font-semibold inline-flex items-center gap-1"
-             :class="timerRunning ? 'text-emerald-500' : 'text-slate-900 dark:text-slate-100'">
+            :class="timerRunning ? 'text-indigo-500' : 'text-slate-900 dark:text-slate-100'">
           <span x-text="timerParts().h"></span>
             <span :class="colonClass()">:</span>
             <span x-text="timerParts().m"></span>
@@ -341,13 +351,13 @@
       </div>
       <div class="space-y-2">    
         <div class="flex flex-wrap gap-2">
-          <button class="px-3 py-1.5 rounded-lg border border-amber-500 text-amber-600 dark:text-amber-400 text-sm hover:bg-amber-50 dark:hover:bg-amber-500/10"
+          <button class="px-3 py-1.5 rounded-lg border border-indigo-500 text-indigo-600 dark:text-indigo-300 text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
                   @click="hourglassDurationTemp = 30">30s</button>
-          <button class="px-3 py-1.5 rounded-lg border border-amber-500 text-amber-600 dark:text-amber-400 text-sm hover:bg-amber-50 dark:hover:bg-amber-500/10"
+          <button class="px-3 py-1.5 rounded-lg border border-indigo-500 text-indigo-600 dark:text-indigo-300 text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
                   @click="hourglassDurationTemp = 60">1min</button>
-          <button class="px-3 py-1.5 rounded-lg border border-amber-500 text-amber-600 dark:text-amber-400 text-sm hover:bg-amber-50 dark:hover:bg-amber-500/10"
+          <button class="px-3 py-1.5 rounded-lg border border-indigo-500 text-indigo-600 dark:text-indigo-300 text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
                   @click="hourglassDurationTemp = 180">3min</button>
-          <button class="px-3 py-1.5 rounded-lg border border-amber-500 text-amber-600 dark:text-amber-400 text-sm hover:bg-amber-50 dark:hover:bg-amber-500/10"
+          <button class="px-3 py-1.5 rounded-lg border border-indigo-500 text-indigo-600 dark:text-indigo-300 text-sm hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
                   @click="hourglassDurationTemp = 300">5min</button>
         </div>
       </div>
@@ -364,7 +374,7 @@
         <label class="relative inline-flex items-center cursor-pointer select-none">
           <input type="checkbox" class="sr-only peer" x-model="hourglassShowTimer"
                  @change="sendHourglass('showTimer', { show: hourglassVisible ? !!hourglassShowTimer : false })">
-          <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-amber-500 rounded-full dark:bg-slate-700 peer-checked:bg-amber-500 transition relative">
+          <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-500 rounded-full dark:bg-slate-700 peer-checked:bg-indigo-500 transition relative">
             <div class="absolute top-[3px] left-[3px] h-4 w-4 bg-white rounded-full shadow-sm transition"
                  :style="hourglassShowTimer ? 'transform: translateX(20px);' : 'transform: translateX(0);'"></div>
           </div>
@@ -374,7 +384,7 @@
       <div class="flex justify-end gap-2 pt-2">
         <button class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
                 @click="closeHourglassModal()">Annuler</button>
-        <button class="px-4 py-2 rounded-lg bg-amber-500 text-white text-sm font-semibold hover:bg-amber-400"
+        <button class="px-4 py-2 rounded-lg bg-indigo-500 text-white text-sm font-semibold hover:bg-indigo-400"
                 @click="applyHourglassDuration()">Valider</button>
       </div>
     </div>
