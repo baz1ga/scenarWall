@@ -21,6 +21,8 @@ export function coreSection() {
       message: '',
       action: null
     },
+    recentScenarios: [],
+    recentSessionsIndex: {},
 
     async init() {
       if (window.API_READY && typeof window.API_READY.then === 'function') {
@@ -56,7 +58,7 @@ export function coreSection() {
       // section depuis l'URL ?section=...
       const params = new URLSearchParams(window.location.search || '');
       const requested = params.get('section');
-      const allowed = ['home', 'galerie', 'audio', 'tension', 'users', 'gm'];
+      const allowed = ['home', 'galerie', 'audio', 'tension', 'users', 'gm', 'scenarios'];
       if (requested && allowed.includes(requested)) {
         this.section = requested;
       }
@@ -71,6 +73,7 @@ export function coreSection() {
       if (this.isSuperAdmin && typeof this.loadGlobalQuota === 'function') {
         this.loadGlobalQuota();
       }
+      this.fetchRecentScenarios?.();
 
       // charger les données de la section demandée
       if (this.section === 'audio' && typeof this.loadAudio === 'function') {
@@ -115,13 +118,20 @@ export function coreSection() {
         'Authorization': 'Bearer ' + this.token
       });
   },
+
+  openGameMaster(sessionId) {
+    const id = sessionId || this.session?.id || this.selectedSessionId;
+    if (!id) return;
+    const url = `/admin/gm-mode/gm-mode.html?session=${encodeURIComponent(id)}`;
+    window.location.href = url;
+  },
   headersGod() {
       return withCsrf({
         'x-auth-token': this.token
       });
   },
 
-  formatBytes(bytes) {
+    formatBytes(bytes) {
       const val = Number(bytes) || 0;
       if (val === 0) return '0 B';
       const units = ['B','KB','MB','GB','TB'];
@@ -129,6 +139,45 @@ export function coreSection() {
       const size = val / Math.pow(1024, i);
       return `${size.toFixed(size >= 10 ? 0 : 1)} ${units[i]}`;
   },
+
+    openScenarioModalFromLayout() {
+      const isOnScenarioPage = window.location.pathname.includes('/admin/scenarios/scenarios.html');
+      window.location.href = '/admin/scenarios/edit.html';
+    },
+
+    async fetchRecentScenarios() {
+      if (!this.tenantId) return;
+      try {
+        const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/scenarios`, { headers: this.headersAuth() });
+        if (!res.ok) throw new Error('scenarios');
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          // index sessions -> title for sidebar display
+          try {
+            const sessRes = await fetch(`${this.API}/api/tenant/${this.tenantId}/sessions`, { headers: this.headersAuth() });
+            if (sessRes.ok) {
+              const sessions = await sessRes.json();
+              this.recentSessionsIndex = (sessions || []).reduce((acc, s) => {
+                acc[s.id] = s.title || s.id;
+                return acc;
+              }, {});
+            }
+          } catch (e) {}
+          this.recentScenarios = [...data]
+            .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+            .slice(0, 8);
+        } else {
+          this.recentScenarios = [];
+        }
+      } catch (e) {
+        this.recentScenarios = [];
+      }
+    },
+
+    lookupSessionTitle(id) {
+      if (!id) return '';
+      return this.recentSessionsIndex[id] || id;
+    },
 
     toggleTheme() {
       this.theme = this.theme === 'dark' ? 'light' : 'dark';
@@ -146,7 +195,7 @@ export function coreSection() {
 
     setBreadcrumb() {
       const map = {
-        galerie: 'Galerie', audio: 'Audio', tension: 'Tension', users: 'Utilisateurs', quotas: 'Quotas'
+        galerie: 'Galerie', audio: 'Audio', tension: 'Tension', users: 'Utilisateurs', quotas: 'Quotas', scenarios: 'Scénarios'
       };
       this.breadcrumb = 'Administration / ' + (map[this.section] || '');
       this.title = map[this.section] || 'Administration';

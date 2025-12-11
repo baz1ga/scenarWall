@@ -1,4 +1,5 @@
 import { coreSection } from '/admin/js/core.js';
+import { pixabayMixin } from '/admin/js/pixabay.js';
 
 export function gallerySection() {
   return {
@@ -20,13 +21,7 @@ export function gallerySection() {
     uploadUrlMessage: '',
     uploadUrlStatus: 'ok',
     uploadUrlLoading: false,
-    pixabayKey: window.PIXABAY_KEY || '',
-    pixabayQuery: '',
-    pixabayLoading: false,
-    pixabayResults: [],
-    pixabayMessage: '',
-    pixabayStatus: 'ok',
-    pixabayInitialized: false,
+    ...pixabayMixin(),
 
     async refreshGallery() {
       if (!this.tenantId) return;
@@ -47,6 +42,23 @@ export function gallerySection() {
         this.selectedHidden = [];
       }
       this.galleryLoading = false;
+    },
+    async countImageUsage(names = []) {
+      if (!this.tenantId || !Array.isArray(names) || names.length === 0) return 0;
+      try {
+        const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/scenes`, { headers: this.headersAuth() });
+        if (!res.ok) return 0;
+        const scenes = await res.json();
+        if (!Array.isArray(scenes)) return 0;
+        const target = new Set(names);
+        return scenes.reduce((acc, sc) => {
+          const images = Array.isArray(sc?.images) ? sc.images : [];
+          const uses = images.some(img => target.has(img?.name));
+          return acc + (uses ? 1 : 0);
+        }, 0);
+      } catch (err) {
+        return 0;
+      }
     },
     openUploadModal() {
       this.uploadModalOpen = true;
@@ -69,7 +81,7 @@ export function gallerySection() {
           this.pixabayStatus = 'error';
           return;
         }
-        this.searchPixabay(true);
+        this.searchPixabay({ allowEmpty: true });
       }
     },
     handleUploadDrop(event) {
@@ -157,62 +169,6 @@ export function gallerySection() {
         this.uploadUrlStatus = 'error';
       }
       this.uploadUrlLoading = false;
-    },
-    async searchPixabay(allowEmpty = false) {
-      if (!this.pixabayKey) return;
-      const qTrim = this.pixabayQuery.trim();
-      if (!qTrim && !allowEmpty) return;
-      this.pixabayLoading = true;
-      this.pixabayMessage = '';
-      this.pixabayStatus = 'ok';
-      try {
-        const url = new URL('https://pixabay.com/api/');
-        url.searchParams.set('key', this.pixabayKey);
-        url.searchParams.set('image_type', 'all');
-        url.searchParams.set('per_page', '30');
-        url.searchParams.set('orientation', 'horizontal');
-        url.searchParams.set('safesearch', 'true');
-        if (qTrim) {
-          url.searchParams.set('q', qTrim);
-        } else {
-          url.searchParams.set('editors_choice', 'true');
-          url.searchParams.set('order', 'popular');
-        }
-
-        const res = await fetch(url.toString()).catch(() => null);
-        if (!res || !res.ok) throw new Error('Recherche impossible sur Pixabay.');
-        const data = await res.json();
-        if (!Array.isArray(data.hits)) {
-          const errMsg = data?.error || data?.message || 'Réponse Pixabay invalide.';
-          throw new Error(errMsg);
-        }
-        const hits = data.hits;
-        this.pixabayResults = hits.filter(h => h.type === 'photo' || h.type === 'illustration');
-        if (this.pixabayResults.length === 0) {
-          this.pixabayMessage = 'Aucun résultat.';
-          this.pixabayStatus = 'error';
-        } else {
-          this.pixabayInitialized = true;
-        }
-      } catch (err) {
-        this.pixabayResults = [];
-        this.pixabayMessage = err.message || 'Erreur Pixabay.';
-        this.pixabayStatus = 'error';
-      }
-      this.pixabayLoading = false;
-    },
-    async importPixabay(url) {
-      if (!url) return;
-      this.pixabayMessage = '';
-      this.pixabayStatus = 'ok';
-      await this.uploadFromUrl(url);
-      if (this.uploadUrlStatus === 'ok') {
-        this.pixabayMessage = 'Image importée depuis Pixabay.';
-        this.pixabayStatus = 'ok';
-      } else {
-        this.pixabayMessage = this.uploadUrlMessage || 'Import Pixabay impossible.';
-        this.pixabayStatus = 'error';
-      }
     },
     setUpload(msg, status = 'ok') {
       this.uploadMessage = msg;
@@ -322,7 +278,11 @@ export function gallerySection() {
       await this.fetchQuota();
     },
     async deleteImage(name) {
-      this.askConfirm('Supprimer définitivement cette image ?', async () => {
+      const impacted = await this.countImageUsage([name]);
+      const msg = impacted > 0
+        ? `Supprimer définitivement cette image ? Elle est utilisée dans ${impacted} scène${impacted > 1 ? 's' : ''} et sera retirée.`
+        : 'Supprimer définitivement cette image ? Elle sera retirée de toutes vos scènes.';
+      this.askConfirm(msg, async () => {
         this.selectedHidden = this.selectedHidden.filter(n => n !== name);
         await fetch(`${this.API}/api/${this.tenantId}/images/${name}`, { method: 'DELETE', headers: this.headersAuth() });
         await this.refreshGallery();
@@ -342,7 +302,11 @@ export function gallerySection() {
     async deleteSelectedHidden() {
       if (!this.selectedHidden.length) return;
       const names = [...this.selectedHidden];
-      this.askConfirm(`Supprimer définitivement ${names.length} image${names.length > 1 ? 's' : ''} ?`, async () => {
+      const impacted = await this.countImageUsage(names);
+      const msg = impacted > 0
+        ? `Supprimer définitivement ${names.length} image${names.length > 1 ? 's' : ''} ? Elles sont utilisées dans ${impacted} scène${impacted > 1 ? 's' : ''} et seront retirées.`
+        : `Supprimer définitivement ${names.length} image${names.length > 1 ? 's' : ''} ? Elles seront retirées de toutes vos scènes.`;
+      this.askConfirm(msg, async () => {
         for (const name of names) {
           await fetch(`${this.API}/api/${this.tenantId}/images/${name}`, { method: 'DELETE', headers: this.headersAuth() });
         }

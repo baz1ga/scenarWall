@@ -1,4 +1,13 @@
 <div id="page-content" x-data="usersPage()" x-init="init()" class="space-y-6" x-cloak>
+  <style>
+    :root {
+      --users-accent: #0ea5e9; /* cyan-500 */
+      --users-accent-strong: #0e7490; /* cyan-700 */
+    }
+    .users-text { color: var(--users-accent); }
+    .users-border { border-color: var(--users-accent); }
+    .users-bg { background-color: var(--users-accent); color: #fff; border-color: var(--users-accent); }
+  </style>
   <section class="space-y-6 max-w-5xl mx-auto">
     <div class="flex items-center justify-between"></div>
     <div class="flex flex-col lg:flex-row gap-4">
@@ -11,7 +20,8 @@
           <div class="flex flex-wrap items-center gap-3 ml-auto">
             <div class="flex items-center gap-3">
               <input type="number" min="1" step="1" class="w-32 sm:w-40 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100" x-model.number="globalQuotaValue">
-              <button class="rounded-lg border border-emerald-500 bg-emerald-500 text-slate-900 font-semibold px-3 py-2 text-sm hover:bg-emerald-400 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800" @click="saveGlobalQuota">Mettre à jour</button>
+              <button class="rounded-lg px-3 py-2 text-sm font-semibold text-white users-bg hover:brightness-110 transition"
+                      @click="saveGlobalQuota">Mettre à jour</button>
             </div>
           </div>
         </div>
@@ -26,20 +36,20 @@
         <thead class="bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200">
           <tr>
             <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('name')">
-              <div class="inline-flex items-center gap-2">Nom <i :class="sortIcon('name','users')" class="text-xs"></i></div>
+              <div class="inline-flex items-center gap-2">Nom <i :class="sortIcon('name','users')" class="text-xs users-text"></i></div>
             </th>
             <th class="px-4 py-2 text-left">Tenant</th>
             <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('images')">
-              <div class="inline-flex items-center gap-2">Images <i :class="sortIcon('images','users')" class="text-xs"></i></div>
+              <div class="inline-flex items-center gap-2">Images <i :class="sortIcon('images','users')" class="text-xs users-text"></i></div>
             </th>
             <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('audios')">
-              <div class="inline-flex items-center gap-2">Audio <i :class="sortIcon('audios','users')" class="text-xs"></i></div>
+              <div class="inline-flex items-center gap-2">Audio <i :class="sortIcon('audios','users')" class="text-xs users-text"></i></div>
             </th>
             <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('usage')">
-              <div class="inline-flex items-center gap-2">Usage <i :class="sortIcon('usage','users')" class="text-xs"></i></div>
+              <div class="inline-flex items-center gap-2">Usage <i :class="sortIcon('usage','users')" class="text-xs users-text"></i></div>
             </th>
             <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('lastLogin')">
-              <div class="inline-flex items-center gap-2">Dernière connexion <i :class="sortIcon('lastLogin','users')" class="text-xs"></i></div>
+              <div class="inline-flex items-center gap-2">Dernière connexion <i :class="sortIcon('lastLogin','users')" class="text-xs users-text"></i></div>
             </th>
             <th class="px-4 py-2 text-left">Actions</th>
           </tr>
@@ -59,14 +69,15 @@
               <td class="px-4 py-2" x-text="u.audioCount || 0"></td>
               <td class="px-4 py-2">
                 <div class="w-36 sm:w-44 h-2 rounded-full bg-slate-800 overflow-hidden" :title="usageTitle(u)">
-                  <div class="h-full bg-emerald-500" :style="`width:${usageData(u).percent}%`"></div>
+                  <div class="h-full" :style="`width:${usageData(u).percent}%; background: var(--users-accent);`"></div>
                 </div>
                 <div class="text-xs text-slate-400" x-text="usageData(u).text"></div>
               </td>
               <td class="px-4 py-2" x-text="u.lastLogin ? new Date(u.lastLogin).toLocaleString('fr-FR') : '—'"></td>
               <td class="px-4 py-2">
                 <div class="flex items-center gap-2">
-                  <button class="px-2 py-1 inline-flex items-center rounded border border-emerald-500 bg-emerald-500 text-slate-900 font-semibold hover:bg-emerald-400 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-700" @click="editTenantQuota(u)">
+                  <button class="px-2 py-1 inline-flex items-center rounded font-semibold text-white users-bg hover:brightness-110 transition"
+                          @click="editTenantQuota(u)">
                     <i class="fa-solid fa-chart-pie"></i>
                   </button>
                   <template x-if="!u.admin">
@@ -93,7 +104,7 @@
     <div class="absolute inset-0 bg-black/60" @click="closeTenantQuotaModal()"></div>
     <div class="relative w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
       <div class="flex items-center gap-3">
-        <div class="h-10 w-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl">
+        <div class="h-10 w-10 rounded-full text-white flex items-center justify-center text-xl" style="background: var(--users-accent);">
           <i class="fa-solid fa-chart-pie"></i>
         </div>
         <div class="text-lg font-semibold text-slate-900 dark:text-slate-100">Quota personnalisé</div>
@@ -108,7 +119,8 @@
           type="number"
           min="0"
           step="0.1"
-          class="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-400 focus:outline-none"
+          class="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm focus:ring-2 focus:outline-none"
+          style="--tw-ring-color: var(--users-accent);"
           x-model="tenantQuotaModal.value"
           placeholder="Quota global"
         >
@@ -116,7 +128,8 @@
       </div>
       <div class="flex justify-end gap-2 pt-2">
         <button class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800" @click="closeTenantQuotaModal()">Annuler</button>
-        <button class="px-4 py-2 rounded-lg bg-emerald-500 text-slate-900 font-semibold hover:bg-emerald-400" @click="saveTenantQuota()">Enregistrer</button>
+        <button class="px-4 py-2 rounded-lg text-white font-semibold users-bg hover:brightness-110 transition"
+                @click="saveTenantQuota()">Enregistrer</button>
       </div>
     </div>
   </div>

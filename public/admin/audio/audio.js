@@ -16,6 +16,27 @@ export function audioSection() {
       error: ''
     },
 
+    async countAudioUsage(names = []) {
+      if (!this.tenantId || !names.length) return 0;
+      try {
+        const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/scenes`, { headers: this.headersAuth() });
+        if (!res.ok) return 0;
+        const scenes = await res.json();
+        let count = 0;
+        scenes.forEach(scene => {
+          const list = Array.isArray(scene.audio) ? scene.audio : [];
+          const hasMatch = list.some(item => {
+            const name = typeof item === 'string' ? item : item?.name;
+            return names.includes(name);
+          });
+          if (hasMatch) count++;
+        });
+        return count;
+      } catch (e) {
+        return 0;
+      }
+    },
+
     async loadAudio() {
       if (!this.tenantId) return;
       this.audioLoading = true;
@@ -118,14 +139,23 @@ export function audioSection() {
     async deleteSelectedAudio() {
       if (!this.selectedAudio.length) return;
       const names = [...this.selectedAudio];
-      this.askConfirm(`Supprimer définitivement ${names.length} audio${names.length > 1 ? 's' : ''} ?`, async () => {
+      const impacted = await this.countAudioUsage(names);
+      const impactLabel = impacted > 0 ? ` (${impacted} scène${impacted > 1 ? 's' : ''} impactée${impacted > 1 ? 's' : ''})` : '';
+      this.askConfirm(`Supprimer définitivement ${names.length} audio${names.length > 1 ? 's' : ''}${impactLabel} ?`, async () => {
         try {
+          let scenesUpdatedTotal = 0;
           for (const name of names) {
-            await fetch(`${this.API}/api/${this.tenantId}/audio/${encodeURIComponent(name)}`, { method: 'DELETE', headers: this.headersAuth() });
+            const res = await fetch(`${this.API}/api/${this.tenantId}/audio/${encodeURIComponent(name)}`, { method: 'DELETE', headers: this.headersAuth() });
+            const data = await res.json().catch(() => ({}));
+            if (data?.scenesUpdated) scenesUpdatedTotal += data.scenesUpdated;
           }
           this.selectedAudio = [];
           await this.loadAudio();
           await this.fetchQuota();
+          if (scenesUpdatedTotal > 0) {
+            this.audioMessage = `${scenesUpdatedTotal} scène${scenesUpdatedTotal > 1 ? 's' : ''} nettoyée${scenesUpdatedTotal > 1 ? 's' : ''}.`;
+            this.audioStatus = 'ok';
+          }
         } catch (err) {
           this.audioMessage = 'Suppression impossible.';
           this.audioStatus = 'error';
@@ -134,11 +164,19 @@ export function audioSection() {
     },
     async deleteAudio(name) {
       this.selectedAudio = this.selectedAudio.filter(n => n !== name);
-      this.askConfirm('Supprimer définitivement cet audio ?', async () => {
+      const impacted = await this.countAudioUsage([name]);
+      const impactLabel = impacted > 0 ? ` (${impacted} scène${impacted > 1 ? 's' : ''} impactée${impacted > 1 ? 's' : ''})` : '';
+      this.askConfirm(`Supprimer définitivement cet audio${impactLabel} ?`, async () => {
         try {
-          await fetch(`${this.API}/api/${this.tenantId}/audio/${encodeURIComponent(name)}`, { method: 'DELETE', headers: this.headersAuth() });
+          const res = await fetch(`${this.API}/api/${this.tenantId}/audio/${encodeURIComponent(name)}`, { method: 'DELETE', headers: this.headersAuth() });
+          const data = await res.json().catch(() => ({}));
           await this.loadAudio();
           await this.fetchQuota();
+          const scenesUpdated = data?.scenesUpdated || 0;
+          if (scenesUpdated > 0) {
+            this.audioMessage = `${scenesUpdated} scène${scenesUpdated > 1 ? 's' : ''} nettoyée${scenesUpdated > 1 ? 's' : ''}.`;
+            this.audioStatus = 'ok';
+          }
         } catch (err) {
           this.audioMessage = 'Suppression impossible.';
           this.audioStatus = 'error';

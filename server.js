@@ -176,6 +176,7 @@ const ENV_SESSION_COOKIE = {
 };
 
 const UTF8_EXT = new Set([".html", ".htm", ".js", ".mjs", ".css", ".json", ".svg", ".txt", ".xml", ".webmanifest"]);
+const SCENARIO_FORMATS = new Set(["campaign", "oneshot"]);
 
 assertRequiredEnv();
 
@@ -459,6 +460,183 @@ function writeTenantSession(tenantId, data) {
     }
   };
   fs.writeFileSync(file, JSON.stringify(payload, null, 2));
+}
+
+// Scénarios storage helpers
+function scenarioDir(tenantId) {
+  return path.join(TENANTS_DIR, tenantId, "scenario");
+}
+
+function scenarioPath(tenantId, id) {
+  return path.join(scenarioDir(tenantId), `${id}.json`);
+}
+
+function ensureScenarioDir(tenantId) {
+  const dir = scenarioDir(tenantId);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  return dir;
+}
+
+function listScenarios(tenantId) {
+  const dir = scenarioDir(tenantId);
+  if (!fs.existsSync(dir)) return [];
+  const files = fs.readdirSync(dir).filter(f => f.endsWith(".json"));
+  return files.map(f => {
+    try { return JSON.parse(fs.readFileSync(path.join(dir, f), "utf8")); }
+    catch { return null; }
+  }).filter(Boolean);
+}
+
+function readScenario(tenantId, id) {
+  const file = scenarioPath(tenantId, id);
+  if (!fs.existsSync(file)) return null;
+  try { return JSON.parse(fs.readFileSync(file, "utf8")); }
+  catch { return null; }
+}
+
+function writeScenario(tenantId, data) {
+  const dir = ensureScenarioDir(tenantId);
+  const file = scenarioPath(tenantId, data.id);
+  fs.writeFileSync(file, JSON.stringify(data, null, 2));
+  return data;
+}
+
+function deleteScenario(tenantId, id) {
+  const file = scenarioPath(tenantId, id);
+  if (fs.existsSync(file)) fs.unlinkSync(file);
+}
+
+// Sessions storage helpers
+function sessionDir(tenantId) {
+  return path.join(TENANTS_DIR, tenantId, "sessions");
+}
+
+function sessionPath(tenantId, id) {
+  return path.join(sessionDir(tenantId), `${id}.json`);
+}
+
+function ensureSessionDir(tenantId) {
+  const dir = sessionDir(tenantId);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  return dir;
+}
+
+function applySessionRuntimeDefaults(session) {
+  if (!session || typeof session !== "object") return session;
+  return {
+    ...session,
+    timer: {
+      ...DEFAULT_TENANT_SESSION.timer,
+      ...(session.timer || {})
+    },
+    hourglass: {
+      ...DEFAULT_TENANT_SESSION.hourglass,
+      ...(session.hourglass || {})
+    }
+  };
+}
+
+function listSessions(tenantId) {
+  const dir = sessionDir(tenantId);
+  if (!fs.existsSync(dir)) return [];
+  const files = fs.readdirSync(dir).filter(f => f.endsWith(".json"));
+  return files.map(f => {
+    try { return JSON.parse(fs.readFileSync(path.join(dir, f), "utf8")); }
+    catch { return null; }
+  }).filter(Boolean).map(applySessionRuntimeDefaults);
+}
+
+function readSessionFile(tenantId, id) {
+  const file = sessionPath(tenantId, id);
+  if (!fs.existsSync(file)) return null;
+  try {
+    const data = JSON.parse(fs.readFileSync(file, "utf8"));
+    return applySessionRuntimeDefaults(data);
+  }
+  catch { return null; }
+}
+
+function writeSessionFile(tenantId, data) {
+  const dir = ensureSessionDir(tenantId);
+  const file = sessionPath(tenantId, data.id);
+  const payload = applySessionRuntimeDefaults(data);
+  fs.writeFileSync(file, JSON.stringify(payload, null, 2));
+  return data;
+}
+
+function deleteSessionFile(tenantId, id) {
+  const file = sessionPath(tenantId, id);
+  if (fs.existsSync(file)) fs.unlinkSync(file);
+}
+
+// Scenes storage helpers
+function sceneDir(tenantId) {
+  return path.join(TENANTS_DIR, tenantId, "scenes");
+}
+
+function legacySceneDir(tenantId) {
+  return path.join(TENANTS_DIR, tenantId, "scnes");
+}
+
+function scenePath(tenantId, id) {
+  return path.join(sceneDir(tenantId), `${id}.json`);
+}
+
+function ensureSceneDir(tenantId) {
+  const dir = sceneDir(tenantId);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  return dir;
+}
+
+function listScenes(tenantId) {
+  const dirs = [sceneDir(tenantId), legacySceneDir(tenantId)];
+  const seen = new Set();
+  const entries = [];
+  dirs.forEach(dir => {
+    if (!fs.existsSync(dir)) return;
+    fs.readdirSync(dir).forEach(f => {
+      if (!f.endsWith(".json")) return;
+      const id = f.replace(/\.json$/, "");
+      if (seen.has(id)) return;
+      seen.add(id);
+      entries.push({ dir, file: f });
+    });
+  });
+  return entries.map(({ dir, file }) => {
+    try { return JSON.parse(fs.readFileSync(path.join(dir, file), "utf8")); }
+    catch { return null; }
+  }).filter(Boolean);
+}
+
+function readScene(tenantId, id) {
+  const primary = scenePath(tenantId, id);
+  const legacy = path.join(legacySceneDir(tenantId), `${id}.json`);
+  const file = fs.existsSync(primary) ? primary : legacy;
+  if (!file || !fs.existsSync(file)) return null;
+  try { return JSON.parse(fs.readFileSync(file, "utf8")); }
+  catch { return null; }
+}
+
+function writeScene(tenantId, data) {
+  const dir = ensureSceneDir(tenantId);
+  const file = scenePath(tenantId, data.id);
+  fs.writeFileSync(file, JSON.stringify(data, null, 2));
+  return data;
+}
+
+function deleteScene(tenantId, id) {
+  const existing = readScene(tenantId, id);
+  [scenePath(tenantId, id), path.join(legacySceneDir(tenantId), `${id}.json`)]
+    .forEach(file => { if (fs.existsSync(file)) fs.unlinkSync(file); });
+  const noteName = typeof existing?.notes === "string" ? existing.notes : "";
+  if (noteName && isSafeName(noteName)) {
+    const file = notePath(tenantId, noteName);
+    if (fs.existsSync(file)) {
+      try { fs.unlinkSync(file); } catch (err) {
+        logger.error("Failed to delete scene note during scene removal", { tenantId, sceneId: id, err: err?.message });
+      }
+    }
+  }
 }
 
 function loadConfig(tenantId) {
@@ -875,6 +1053,59 @@ function removeThumbnail(tenantId, name) {
   }
 }
 
+function removeImageFromScenes(tenantId, imageName) {
+  const scenes = listScenes(tenantId);
+  let updated = 0;
+  scenes.forEach(scene => {
+    if (!Array.isArray(scene.images) || scene.images.length === 0) return;
+    const filtered = scene.images.filter(img => img?.name !== imageName);
+    if (filtered.length === scene.images.length) return;
+    // réindexation simple pour conserver un ordre cohérent
+    scene.images = filtered.map((img, idx) => ({ ...img, order: idx + 1 }));
+    scene.updatedAt = Math.floor(Date.now() / 1000);
+    try {
+      writeScene(tenantId, scene);
+      updated++;
+    } catch (err) {
+      logger.error("Failed to update scene after image delete", { tenantId, sceneId: scene.id, imageName, err: err?.message });
+    }
+  });
+  return updated;
+}
+
+function removeAudioFromScenes(tenantId, audioName) {
+  const scenes = listScenes(tenantId);
+  let updated = 0;
+  scenes.forEach(scene => {
+    if (!Array.isArray(scene.audio) || scene.audio.length === 0) return;
+    const filtered = scene.audio.filter(a => {
+      const name = typeof a === "string" ? a : a?.name;
+      return name !== audioName;
+    });
+    if (filtered.length === scene.audio.length) return;
+    scene.audio = filtered.map((item, idx) => {
+      if (typeof item === "string") return { name: item, order: idx + 1 };
+      return { ...item, order: idx + 1 };
+    });
+    scene.updatedAt = Math.floor(Date.now() / 1000);
+    try {
+      writeScene(tenantId, scene);
+      updated++;
+    } catch (err) {
+      logger.error("Failed to update scene after audio delete", { tenantId, sceneId: scene.id, audioName, err: err?.message });
+    }
+  });
+  return updated;
+}
+
+function tenantNotesDir(tenantId) {
+  return path.join(TENANTS_DIR, tenantId, "notes");
+}
+
+function notePath(tenantId, name) {
+  return path.join(tenantNotesDir(tenantId), name);
+}
+
 function audioOrderFile(tenantId) {
   return path.join(TENANTS_DIR, tenantId, "audio-order.json");
 }
@@ -1158,7 +1389,9 @@ app.delete("/api/:tenantId/images/:name", requireLogin, (req, res) => {
   order = order.filter(o => o !== name);
   fs.writeFileSync(orderFile, JSON.stringify(order, null, 2));
 
-  res.json({ success: true });
+  const scenesUpdated = removeImageFromScenes(tenantId, name);
+
+  res.json({ success: true, scenesUpdated });
 });
 
 //------------------------------------------------------------
@@ -1246,7 +1479,8 @@ app.delete("/api/:tenantId/audio/:name", requireLogin, (req, res) => {
   }
   const order = readAudioOrder(tenantId).filter(n => n !== name);
   writeAudioOrder(tenantId, order);
-  return res.json({ success: true });
+  const scenesUpdated = removeAudioFromScenes(tenantId, name);
+  return res.json({ success: true, scenesUpdated });
 });
 
 app.put("/api/:tenantId/audio/order", requireLogin, (req, res) => {
@@ -1328,6 +1562,59 @@ app.put("/api/:tenantId/session/hourglass", requireLogin, (req, res) => {
   res.json(sessionData.hourglass);
 });
 
+// Session-scoped GM state (timer / hourglass) --------------------------------
+app.get("/api/tenant/:tenant/sessions/:id/gm-state", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  const { id } = req.params;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const session = readSessionFile(tenantId, id);
+  if (!session) return res.status(404).json({ error: "Session not found" });
+  return res.json({
+    timer: { ...DEFAULT_TENANT_SESSION.timer, ...(session.timer || {}) },
+    hourglass: { ...DEFAULT_TENANT_SESSION.hourglass, ...(session.hourglass || {}) }
+  });
+});
+
+app.put("/api/tenant/:tenant/sessions/:id/timer", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  const { id } = req.params;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const session = readSessionFile(tenantId, id);
+  if (!session) return res.status(404).json({ error: "Session not found" });
+  const { running, elapsedMs, startedAt } = req.body || {};
+  session.timer = {
+    running: !!running,
+    elapsedMs: typeof elapsedMs === "number" && elapsedMs >= 0 ? elapsedMs : 0,
+    startedAt: startedAt || null
+  };
+  session.updatedAt = Math.floor(Date.now() / 1000);
+  writeSessionFile(tenantId, session);
+  res.json(session.timer);
+});
+
+app.put("/api/tenant/:tenant/sessions/:id/hourglass", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  const { id } = req.params;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const session = readSessionFile(tenantId, id);
+  if (!session) return res.status(404).json({ error: "Session not found" });
+  const { durationSeconds, showTimer } = req.body || {};
+  const current = session.hourglass || { ...DEFAULT_TENANT_SESSION.hourglass };
+  session.hourglass = {
+    durationSeconds: typeof durationSeconds === "number" && durationSeconds > 0 ? durationSeconds : current.durationSeconds,
+    showTimer: showTimer === undefined ? current.showTimer : !!showTimer
+  };
+  session.updatedAt = Math.floor(Date.now() / 1000);
+  writeSessionFile(tenantId, session);
+  res.json(session.hourglass);
+});
+
 // Notes autosave (Markdown)
 app.get("/api/:tenantId/session/notes", requireLogin, (req, res) => {
   const { tenantId } = req.params;
@@ -1365,6 +1652,644 @@ app.put("/api/:tenantId/session/notes", requireLogin, (req, res) => {
   sessionData.notes = { noteId, history };
   writeTenantSession(tenantId, sessionData);
   res.json({ id: noteId });
+});
+
+//------------------------------------------------------------
+//  SCENARIOS
+//------------------------------------------------------------
+function sanitizeScenarioInput(body = {}, existing = null) {
+  const now = Math.floor(Date.now() / 1000);
+  const base = existing ? { ...existing } : {
+    id: `sc_${Date.now()}`,
+    tenantId: body.tenantId,
+    title: "",
+    sessions: [],
+    createdAt: now,
+    updatedAt: now
+  };
+  const payload = { ...base };
+  if (typeof body.title === "string") payload.title = body.title.trim().slice(0, 200);
+  if (Array.isArray(body.sessions)) payload.sessions = body.sessions.map(String);
+  delete payload.description;
+  delete payload.format;
+  payload.updatedAt = now;
+  return payload;
+}
+
+function ensureDefaultSessionForScenario(tenantId, scenario) {
+  if (!tenantId || !scenario || !scenario.id) return scenario;
+  try {
+    if (Array.isArray(scenario.sessions) && scenario.sessions.length > 0) return scenario;
+    const sessionId = `sess_${Date.now()}`;
+    const now = Math.floor(Date.now() / 1000);
+    const sessionPayload = {
+      id: sessionId,
+      tenantId,
+      title: "Session 1",
+      parentScenario: scenario.id,
+      createdAt: now,
+      updatedAt: now
+    };
+    writeSessionFile(tenantId, sessionPayload);
+    ensureDefaultSceneForSession(tenantId, sessionPayload);
+    const updatedScenario = { ...scenario, sessions: [sessionId], updatedAt: now };
+    writeScenario(tenantId, updatedScenario);
+    return updatedScenario;
+  } catch (err) {
+    logger.error("ensureDefaultSessionForScenario failed", { tenantId, scenarioId: scenario?.id, err: err?.message });
+    return scenario;
+  }
+}
+
+function touchScenarioUpdated(tenantId, scenarioId) {
+  if (!tenantId || !scenarioId) return;
+  const scenario = readScenario(tenantId, scenarioId);
+  if (!scenario) return;
+  scenario.updatedAt = Math.floor(Date.now() / 1000);
+  writeScenario(tenantId, scenario);
+}
+
+function touchScenarioFromSession(tenantId, sessionId) {
+  if (!tenantId || !sessionId) return;
+  const session = readSessionFile(tenantId, sessionId);
+  if (session?.parentScenario) {
+    touchScenarioUpdated(tenantId, session.parentScenario);
+  }
+}
+
+function touchSessionUpdated(tenantId, sessionId) {
+  if (!tenantId || !sessionId) return;
+  const session = readSessionFile(tenantId, sessionId);
+  if (!session) return;
+  session.updatedAt = Math.floor(Date.now() / 1000);
+  writeSessionFile(tenantId, session);
+}
+
+function attachSessionToScenario(tenantId, sessionPayload, previousScenarioId = null) {
+  if (!sessionPayload?.parentScenario) return;
+  const targetId = sessionPayload.parentScenario;
+  try {
+    const scenario = readScenario(tenantId, targetId);
+    if (scenario) {
+      const sessions = Array.isArray(scenario.sessions) ? [...scenario.sessions] : [];
+      if (!sessions.includes(sessionPayload.id)) sessions.push(sessionPayload.id);
+      scenario.sessions = sessions;
+      scenario.updatedAt = Math.floor(Date.now() / 1000);
+      writeScenario(tenantId, scenario);
+    }
+    if (previousScenarioId && previousScenarioId !== targetId) {
+      const prev = readScenario(tenantId, previousScenarioId);
+      if (prev && Array.isArray(prev.sessions)) {
+        prev.sessions = prev.sessions.filter(s => s !== sessionPayload.id);
+        writeScenario(tenantId, prev);
+      }
+    }
+    touchScenarioUpdated(tenantId, targetId);
+  } catch (err) {
+    logger.error("attachSessionToScenario failed", { tenantId, sessionId: sessionPayload?.id, err: err?.message });
+  }
+}
+
+app.get("/api/tenant/:tenant/scenarios", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  try {
+    const list = listScenarios(tenantId);
+    res.json(list);
+  } catch (err) {
+    logger.error("List scenarios failed", { tenantId, err: err?.message });
+    res.status(500).json({ error: "Impossible de lister les scénarios" });
+  }
+});
+
+app.get("/api/tenant/:tenant/scenarios/:id", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  const { id } = req.params;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const scenario = readScenario(tenantId, id);
+  if (!scenario) return res.status(404).json({ error: "Scenario not found" });
+  res.json(scenario);
+});
+
+app.post("/api/tenant/:tenant/scenarios", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const payload = sanitizeScenarioInput({ ...req.body, tenantId });
+  if (!payload.title) return res.status(400).json({ error: "Titre requis" });
+  const stored = ensureDefaultSessionForScenario(tenantId, payload);
+  writeScenario(tenantId, stored);
+  res.status(201).json(stored);
+});
+
+app.put("/api/tenant/:tenant/scenarios/:id", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  const { id } = req.params;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const existing = readScenario(tenantId, id);
+  if (!existing) return res.status(404).json({ error: "Scenario not found" });
+  const payload = sanitizeScenarioInput({ ...req.body, tenantId }, existing);
+  payload.id = existing.id;
+  payload.tenantId = tenantId;
+  payload.createdAt = existing.createdAt || payload.createdAt;
+  writeScenario(tenantId, payload);
+  res.json(payload);
+});
+
+app.delete("/api/tenant/:tenant/scenarios/:id", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  const { id } = req.params;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const existing = readScenario(tenantId, id);
+  if (!existing) return res.status(404).json({ error: "Scenario not found" });
+  deleteScenario(tenantId, id);
+  // cascade delete sessions and scenes linked to this scenario
+  try {
+    const sessions = listSessions(tenantId).filter(s => s.parentScenario === id);
+    sessions.forEach(sess => {
+      const scenes = listScenes(tenantId).filter(sc => sc.parentSession === sess.id);
+      scenes.forEach(sc => deleteScene(tenantId, sc.id));
+      deleteSessionFile(tenantId, sess.id);
+    });
+  } catch (err) {
+    logger.error("Cascade delete for scenario failed", { tenantId, scenarioId: id, err: err?.message });
+  }
+  res.json({ success: true });
+});
+
+//------------------------------------------------------------
+//  SESSIONS (scénarios)
+//------------------------------------------------------------
+function sanitizeSessionInput(body = {}, existing = null) {
+  const now = Math.floor(Date.now() / 1000);
+  const base = existing ? { ...existing } : {
+    id: `sess_${Date.now()}`,
+    tenantId: body.tenantId,
+    title: '',
+    parentScenario: null,
+    createdAt: now,
+    updatedAt: now,
+    timer: { ...DEFAULT_TENANT_SESSION.timer },
+    hourglass: { ...DEFAULT_TENANT_SESSION.hourglass },
+    tensionEnabled: true,
+    tensionFont: 'Audiowide',
+    tensionColors: {
+      level1: '#37aa32',
+      level2: '#f8d718',
+      level3: '#f39100',
+      level4: '#e63027',
+      level5: '#3a3a39'
+    },
+    tensionLabels: {
+      level1: '0',
+      level2: '-5',
+      level3: '+5',
+      level4: '+10',
+      level5: '+15'
+    },
+    tensionAudio: {
+      level1: null,
+      level2: null,
+      level3: null,
+      level4: null,
+      level5: null
+    }
+  };
+  const payload = { ...base };
+  if (typeof body.title === "string") payload.title = body.title.trim().slice(0, 200);
+  if (typeof body.parentScenario === "string") {
+    const v = body.parentScenario.trim();
+    payload.parentScenario = v || null;
+  }
+  if (typeof body.tensionEnabled === "boolean") {
+    payload.tensionEnabled = body.tensionEnabled;
+  }
+  if (typeof body.tensionFont === "string") {
+    payload.tensionFont = body.tensionFont.trim().slice(0, 80);
+  }
+  const sanitizeColor = (hex, fallback) => {
+    const h = (hex || '').toString().trim().toLowerCase();
+    const normalized = h.startsWith('#') ? h : `#${h}`;
+    const short = normalized.match(/^#([0-9a-f]{3})$/i);
+    if (short) {
+      const c = short[1];
+      return `#${c[0]}${c[0]}${c[1]}${c[1]}${c[2]}${c[2]}`.toLowerCase();
+    }
+    return /^#([0-9a-f]{6})$/i.test(normalized) ? normalized : fallback;
+  };
+  const sanitizeLabel = (val, fb) => {
+    if (typeof val !== "string") return fb;
+    const s = val.trim().slice(0, 4);
+    return s.length ? s : fb;
+  };
+  const defaultsColors = payload.tensionColors || {};
+  const defaultsLabels = payload.tensionLabels || {};
+  if (body.tensionColors && typeof body.tensionColors === "object") {
+    payload.tensionColors = {
+      level1: sanitizeColor(body.tensionColors.level1, defaultsColors.level1),
+      level2: sanitizeColor(body.tensionColors.level2, defaultsColors.level2),
+      level3: sanitizeColor(body.tensionColors.level3, defaultsColors.level3),
+      level4: sanitizeColor(body.tensionColors.level4, defaultsColors.level4),
+      level5: sanitizeColor(body.tensionColors.level5, defaultsColors.level5)
+    };
+  }
+  if (body.tensionLabels && typeof body.tensionLabels === "object") {
+    payload.tensionLabels = {
+      level1: sanitizeLabel(body.tensionLabels.level1, defaultsLabels.level1),
+      level2: sanitizeLabel(body.tensionLabels.level2, defaultsLabels.level2),
+      level3: sanitizeLabel(body.tensionLabels.level3, defaultsLabels.level3),
+      level4: sanitizeLabel(body.tensionLabels.level4, defaultsLabels.level4),
+      level5: sanitizeLabel(body.tensionLabels.level5, defaultsLabels.level5)
+    };
+  }
+  if (body.tensionAudio && typeof body.tensionAudio === "object") {
+    payload.tensionAudio = {
+      level1: typeof body.tensionAudio.level1 === "string" ? body.tensionAudio.level1 : null,
+      level2: typeof body.tensionAudio.level2 === "string" ? body.tensionAudio.level2 : null,
+      level3: typeof body.tensionAudio.level3 === "string" ? body.tensionAudio.level3 : null,
+      level4: typeof body.tensionAudio.level4 === "string" ? body.tensionAudio.level4 : null,
+      level5: typeof body.tensionAudio.level5 === "string" ? body.tensionAudio.level5 : null
+    };
+  }
+  delete payload.description;
+  delete payload.date;
+  delete payload.format;
+  payload.updatedAt = now;
+  if (!payload.timer) payload.timer = { ...DEFAULT_TENANT_SESSION.timer };
+  if (!payload.hourglass) payload.hourglass = { ...DEFAULT_TENANT_SESSION.hourglass };
+  return payload;
+}
+
+app.get("/api/tenant/:tenant/sessions", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  try {
+    const list = listSessions(tenantId);
+    res.json(list);
+  } catch (err) {
+    logger.error("List sessions failed", { tenantId, err: err?.message });
+    res.status(500).json({ error: "Impossible de lister les sessions" });
+  }
+});
+
+app.get("/api/tenant/:tenant/sessions/:id", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  const { id } = req.params;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const session = readSessionFile(tenantId, id);
+  if (!session) return res.status(404).json({ error: "Session not found" });
+  res.json(session);
+});
+
+app.post("/api/tenant/:tenant/sessions", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const payload = sanitizeSessionInput({ ...req.body, tenantId });
+  if (!payload.title) return res.status(400).json({ error: "Titre requis" });
+  writeSessionFile(tenantId, payload);
+  attachSessionToScenario(tenantId, payload);
+  ensureDefaultSceneForSession(tenantId, payload);
+  res.status(201).json(payload);
+});
+
+app.put("/api/tenant/:tenant/sessions/:id", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  const { id } = req.params;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const existing = readSessionFile(tenantId, id);
+  if (!existing) return res.status(404).json({ error: "Session not found" });
+  const payload = sanitizeSessionInput({ ...req.body, tenantId }, existing);
+  payload.id = existing.id;
+  payload.tenantId = tenantId;
+  payload.createdAt = existing.createdAt || payload.createdAt;
+  writeSessionFile(tenantId, payload);
+  attachSessionToScenario(tenantId, payload, existing.parentScenario);
+  res.json(payload);
+});
+
+app.delete("/api/tenant/:tenant/sessions/:id", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  const { id } = req.params;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const existing = readSessionFile(tenantId, id);
+  if (!existing) return res.status(404).json({ error: "Session not found" });
+  deleteSessionFile(tenantId, id);
+  if (existing.parentScenario) {
+    const scenario = readScenario(tenantId, existing.parentScenario);
+    if (scenario && Array.isArray(scenario.sessions)) {
+      scenario.sessions = scenario.sessions.filter(s => s !== id);
+      scenario.updatedAt = Math.floor(Date.now() / 1000);
+      writeScenario(tenantId, scenario);
+    }
+  }
+  try {
+    const scenes = listScenes(tenantId).filter(sc => sc.parentSession === id);
+    scenes.forEach(sc => deleteScene(tenantId, sc.id));
+  } catch (err) {
+    logger.error("Cascade delete scenes for session failed", { tenantId, sessionId: id, err: err?.message });
+  }
+  touchScenarioUpdated(tenantId, existing.parentScenario);
+  res.json({ success: true });
+});
+
+//------------------------------------------------------------
+//  SCENES (sessions)
+//------------------------------------------------------------
+
+function sanitizeSceneInput(body = {}, existing = null) {
+  const now = Math.floor(Date.now() / 1000);
+  const base = existing ? { ...existing } : {
+    id: `scene_${Date.now()}`,
+    tenantId: body.tenantId,
+    title: '',
+    parentSession: null,
+    order: 0,
+    images: [],
+    audio: [],
+    tension: null,
+    notes: null,
+    createdAt: now,
+    updatedAt: now
+  };
+  const payload = { ...base };
+  if (typeof body.title === "string") payload.title = body.title.trim().slice(0, 200);
+  if (typeof body.parentSession === "string") {
+    const v = body.parentSession.trim();
+    payload.parentSession = v || null;
+  }
+  if (typeof body.order === "number") payload.order = body.order;
+  if (Array.isArray(body.images)) {
+    payload.images = body.images
+      .map((item, idx) => {
+        if (typeof item === "string") return { name: item, order: idx + 1 };
+        const name = typeof item?.name === "string" ? item.name : "";
+        const order = typeof item?.order === "number" ? item.order : idx + 1;
+        if (!name) return null;
+        return { name, order };
+      })
+      .filter(Boolean);
+  }
+  if (Array.isArray(body.audio)) {
+    payload.audio = body.audio
+      .map((item, idx) => {
+        if (typeof item === "string") return { name: item, order: idx + 1 };
+        const name = typeof item?.name === "string" ? item.name : "";
+        if (!name) return null;
+        const order = typeof item?.order === "number" ? item.order : idx + 1;
+        return { name, order };
+      })
+      .filter(Boolean)
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+  }
+  if (body.tension !== undefined) payload.tension = body.tension;
+  if (typeof body.notes === "string") payload.notes = body.notes;
+  delete payload.description;
+  delete payload.format;
+  payload.updatedAt = now;
+  if (!existing && (!payload.order || payload.order <= 0)) {
+    try {
+      const siblings = listScenes(payload.tenantId).filter(s => s.parentSession === payload.parentSession);
+      payload.order = siblings.length + 1;
+    } catch {}
+  }
+  return payload;
+}
+
+function ensureDefaultSceneForSession(tenantId, sessionPayload) {
+  const parentId = sessionPayload?.id;
+  if (!tenantId || !parentId) return;
+  try {
+    const scenes = listScenes(tenantId).filter(s => s.parentSession === parentId);
+    if (scenes.length > 0) return;
+    const now = Math.floor(Date.now() / 1000);
+    const scene = {
+      id: `scene_${Date.now()}`,
+      tenantId,
+      title: "Scène 1" || 'Nouvelle scène',
+      parentSession: parentId,
+      order: 1,
+      images: [],
+      audio: [],
+      tension: null,
+      notes: null,
+      createdAt: now,
+      updatedAt: now
+    };
+    writeScene(tenantId, scene);
+  } catch (err) {
+    logger.error("ensureDefaultSceneForSession failed", { tenantId, sessionId: parentId, err: err?.message });
+  }
+}
+
+app.get("/api/tenant/:tenant/scenes", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  try {
+    const list = listScenes(tenantId);
+    res.json(list);
+  } catch (err) {
+    logger.error("List scenes failed", { tenantId, err: err?.message });
+    res.status(500).json({ error: "Impossible de lister les scènes" });
+  }
+});
+
+app.get("/api/tenant/:tenant/scenes/:id", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  const { id } = req.params;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const scene = readScene(tenantId, id);
+  if (!scene) return res.status(404).json({ error: "Scene not found" });
+  res.json(scene);
+});
+
+app.post("/api/tenant/:tenant/scenes", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const payload = sanitizeSceneInput({ ...req.body, tenantId });
+  if (!payload.title) return res.status(400).json({ error: "Titre requis" });
+  writeScene(tenantId, payload);
+  touchSessionUpdated(tenantId, payload.parentSession);
+  touchScenarioFromSession(tenantId, payload.parentSession);
+  res.status(201).json(payload);
+});
+
+app.put("/api/tenant/:tenant/scenes/:id", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  const { id } = req.params;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const existing = readScene(tenantId, id);
+  if (!existing) return res.status(404).json({ error: "Scene not found" });
+  const payload = sanitizeSceneInput({ ...req.body, tenantId }, existing);
+  payload.id = existing.id;
+  payload.tenantId = tenantId;
+  payload.createdAt = existing.createdAt || payload.createdAt;
+  writeScene(tenantId, payload);
+  touchSessionUpdated(tenantId, payload.parentSession);
+  touchScenarioFromSession(tenantId, payload.parentSession);
+  res.json(payload);
+});
+
+app.delete("/api/tenant/:tenant/scenes/:id", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  const { id } = req.params;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const existing = readScene(tenantId, id);
+  if (!existing) return res.status(404).json({ error: "Scene not found" });
+  deleteScene(tenantId, id);
+  touchSessionUpdated(tenantId, existing.parentSession);
+  touchScenarioFromSession(tenantId, existing.parentSession);
+  res.json({ success: true });
+});
+
+// Scene note (markdown file)
+app.get("/api/tenant/:tenant/scenes/:id/note", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  const { id } = req.params;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const scene = readScene(tenantId, id);
+  if (!scene) return res.status(404).json({ error: "Scene not found" });
+
+  const rawNotes = typeof scene.notes === "string" ? scene.notes : "";
+  let name = "";
+  let content = "";
+  if (rawNotes && rawNotes.length < 500 && isSafeName(rawNotes)) {
+    name = rawNotes;
+    const file = notePath(tenantId, name);
+    if (fs.existsSync(file)) {
+      try { content = fs.readFileSync(file, "utf8"); } catch (_) { content = ""; }
+    }
+  } else if (rawNotes) {
+    // legacy inline note content
+    content = rawNotes;
+  }
+  return res.json({ name, content });
+});
+
+app.put("/api/tenant/:tenant/scenes/:id/note", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  const { id } = req.params;
+  const content = typeof req.body?.content === "string" ? req.body.content : "";
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const scene = readScene(tenantId, id);
+  if (!scene) return res.status(404).json({ error: "Scene not found" });
+
+  const dir = tenantNotesDir(tenantId);
+  try { fs.mkdirSync(dir, { recursive: true }); } catch (_) {}
+
+  const baseId = sanitizeFilename(scene.id || "scene", "scene");
+  let noteName = `${baseId}.md`;
+  if (!noteName || !isSafeName(noteName)) {
+    const base = sanitizeFilename(scene.title || scene.id || "note", "note");
+    noteName = uniqueFilename(dir, base, ".md");
+  }
+  const filePath = notePath(tenantId, noteName);
+  try {
+    fs.writeFileSync(filePath, content || "", "utf8");
+    const updated = { ...scene, notes: noteName, updatedAt: Math.floor(Date.now() / 1000) };
+    writeScene(tenantId, updated);
+    touchSessionUpdated(tenantId, scene.parentSession);
+    touchScenarioFromSession(tenantId, scene.parentSession);
+    return res.json({ success: true, name: noteName });
+  } catch (err) {
+    logger.error("Failed to write scene note", { tenantId, sceneId: id, err: err?.message });
+    // fallback: store inline to avoid data loss but do not fail the client
+    const updated = { ...scene, notes: content, updatedAt: Math.floor(Date.now() / 1000) };
+    try { writeScene(tenantId, updated); } catch (_) {}
+    touchSessionUpdated(tenantId, scene.parentSession);
+    touchScenarioFromSession(tenantId, scene.parentSession);
+    return res.json({ success: true, name: noteName || "", inline: true });
+  }
+});
+
+app.delete("/api/tenant/:tenant/scenes/:id/note", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  const { id } = req.params;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const scene = readScene(tenantId, id);
+  if (!scene) return res.status(404).json({ error: "Scene not found" });
+
+  const noteName = typeof scene.notes === "string" ? scene.notes : "";
+  if (noteName && isSafeName(noteName)) {
+    const file = notePath(tenantId, noteName);
+    if (fs.existsSync(file)) {
+      try { fs.unlinkSync(file); } catch (e) {
+        logger.error("Failed to delete scene note file", { tenantId, sceneId: id, err: e?.message });
+      }
+    }
+  }
+  const updated = { ...scene, notes: null, updatedAt: Math.floor(Date.now() / 1000) };
+  writeScene(tenantId, updated);
+  touchSessionUpdated(tenantId, scene.parentSession);
+  touchScenarioFromSession(tenantId, scene.parentSession);
+  return res.json({ success: true });
+});
+
+//------------------------------------------------------------
+//  SCENES (sessions)
+//------------------------------------------------------------
+
+app.put("/api/tenant/:tenant/scenes/reorder", requireLogin, (req, res) => {
+  const tenantId = req.params.tenant;
+  if (tenantId !== req.session.user.tenantId) {
+    return res.status(403).json({ error: "Forbidden tenant" });
+  }
+  const orderArr = Array.isArray(req.body.order) ? req.body.order.map(String) : [];
+  try {
+    const list = listScenes(tenantId);
+    const indexMap = new Map(orderArr.map((id, idx) => [id, idx + 1]));
+    const touchedSessions = new Set();
+    const updated = list.map(scene => {
+      if (indexMap.has(scene.id)) {
+        scene.order = indexMap.get(scene.id);
+        if (scene.parentSession) touchedSessions.add(scene.parentSession);
+      }
+      return scene;
+    });
+    updated.forEach(scene => writeScene(tenantId, scene));
+    touchedSessions.forEach(sessionId => {
+      touchSessionUpdated(tenantId, sessionId);
+    });
+    touchedSessions.forEach(sessionId => touchScenarioFromSession(tenantId, sessionId));
+    res.json({ success: true });
+  } catch (err) {
+    logger.error("Reorder scenes failed", { tenantId, err: err?.message });
+    res.status(500).json({ error: "Impossible de réordonner les scènes" });
+  }
 });
 
 //------------------------------------------------------------
@@ -1532,6 +2457,69 @@ app.get("/t/:tenantId/audio/:name", (req, res) => {
   res.sendFile(file);
 });
 
+app.get("/t/:tenantId/notes/:name", (req, res) => {
+  const { tenantId, name } = req.params;
+  if (!req.session?.user || req.session.user.tenantId !== tenantId) {
+    return res.status(403).send("Forbidden tenant");
+  }
+  if (!isSafeName(name)) return res.status(400).send("Invalid name");
+  const file = path.join(TENANTS_DIR, tenantId, "notes", name);
+  if (!fs.existsSync(file)) {
+    return res.status(404).send("Note not found");
+  }
+  res.type("text/markdown");
+  res.sendFile(file);
+});
+
+app.put("/t/:tenantId/notes/:name", (req, res) => {
+  const { tenantId, name } = req.params;
+  if (!req.session?.user || req.session.user.tenantId !== tenantId) {
+    return res.status(403).send("Forbidden tenant");
+  }
+  if (!isSafeName(name)) return res.status(400).send("Invalid name");
+  const notesDir = path.join(TENANTS_DIR, tenantId, "notes");
+  if (!fs.existsSync(notesDir)) fs.mkdirSync(notesDir, { recursive: true });
+  const content = typeof req.body?.content === "string" ? req.body.content : "";
+  fs.writeFileSync(path.join(notesDir, name), content, "utf8");
+  res.json({ ok: true });
+});
+
+app.delete("/t/:tenantId/notes/:name", (req, res) => {
+  const { tenantId, name } = req.params;
+  if (!req.session?.user || req.session.user.tenantId !== tenantId) {
+    return res.status(403).send("Forbidden tenant");
+  }
+  if (!isSafeName(name)) return res.status(400).send("Invalid name");
+  const file = path.join(TENANTS_DIR, tenantId, "notes", name);
+  if (fs.existsSync(file)) {
+    fs.unlinkSync(file);
+  }
+  res.json({ ok: true });
+});
+
+app.get("/t/:tenantId/api/notes", (req, res) => {
+  const { tenantId } = req.params;
+  if (!req.session?.user || req.session.user.tenantId !== tenantId) {
+    return res.status(403).send("Forbidden tenant");
+  }
+  const dir = path.join(TENANTS_DIR, tenantId, "notes");
+  if (!fs.existsSync(dir)) return res.json([]);
+  try {
+    const files = fs.readdirSync(dir)
+      .filter((f) => /\.md$/i.test(f) && isSafeName(f));
+    const list = files.map((name) => {
+      const stat = fs.statSync(path.join(dir, name));
+      return {
+        name,
+        updatedAt: stat.mtimeMs
+      };
+    });
+    res.json(list);
+  } catch (e) {
+    res.status(500).json({ error: "Cannot read notes" });
+  }
+});
+
 app.get("/t/:tenantId/api/images", async (req, res) => {
   const tenantId = req.params.tenantId;
   const base = path.join(TENANTS_DIR, tenantId);
@@ -1544,16 +2532,15 @@ app.get("/t/:tenantId/api/images", async (req, res) => {
 
   const files = fs.readdirSync(dir)
     .filter(f => /\.(png|jpg|jpeg|webp)$/i.test(f))
-    .filter(f => !hidden.includes(f))
-    .sort((a, b) => order.indexOf(a) - order.indexOf(b))
-    .map(f => f);
+    .sort((a, b) => order.indexOf(a) - order.indexOf(b));
 
   await ensureThumbnails(tenantId, files);
 
   const list = files.map(f => ({
     name: f,
     url: `/t/${tenantId}/images/${f}`,
-    thumbUrl: `/t/${tenantId}/thumbs/${f}`
+    thumbUrl: `/t/${tenantId}/thumbs/${f}`,
+    hidden: hidden.includes(f)
   }));
 
   res.json(list);
@@ -1609,16 +2596,27 @@ wss.on("connection", (ws, req) => {
     if (!ws.meta || !ws.meta.tenantId) return;
 
     if (msg.type === "tension:update" && typeof msg.level === "string") {
-      broadcastTenant(ws.meta.tenantId, { type: "tension:update", level: msg.level });
+      const payload = { type: "tension:update", level: msg.level };
+      if (typeof msg.sessionId === "string") payload.sessionId = msg.sessionId;
+      broadcastTenant(ws.meta.tenantId, payload);
     }
-    if (msg.type === "slideshow:update" && typeof msg.index === "number") {
-      broadcastTenant(ws.meta.tenantId, { type: "slideshow:update", index: msg.index });
+    if (msg.type === "slideshow:update" && (typeof msg.index === "number" || typeof msg.name === "string")) {
+      const payload = { type: "slideshow:update" };
+      if (typeof msg.index === "number") payload.index = msg.index;
+      if (typeof msg.name === "string") payload.name = msg.name;
+      if (typeof msg.sessionId === "string") payload.sessionId = msg.sessionId;
+      broadcastTenant(ws.meta.tenantId, payload);
     }
     if (msg.type === "hourglass:command" && typeof msg.action === "string") {
       const payload = { type: "hourglass:command", action: msg.action };
       if (typeof msg.durationSeconds === "number") payload.durationSeconds = msg.durationSeconds;
       if (typeof msg.visible === "boolean") payload.visible = msg.visible;
       if (typeof msg.show === "boolean") payload.show = msg.show;
+      broadcastTenant(ws.meta.tenantId, payload);
+    }
+    if (msg.type === "tension:config" && msg.config && typeof msg.config === "object") {
+      const payload = { type: "tension:config", config: msg.config };
+      if (typeof msg.sessionId === "string") payload.sessionId = msg.sessionId;
       broadcastTenant(ws.meta.tenantId, payload);
     }
   });

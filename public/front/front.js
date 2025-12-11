@@ -22,67 +22,48 @@ if (!TENANT) {
 // API publique tenantisée
 const API_IMAGES = `/t/${TENANT}/api/images`;
 
-// ---------------------------------------------------------
-//  CARROUSEL
-// ---------------------------------------------------------
-let carouselImages = [];
-let carouselIndex = 0;
-
 const zone1Img = document.getElementById("zone1-img");
 const photoNumber = document.getElementById("photo-number");
+const photoLoader = document.getElementById("photo-loader");
+const photoWrapper = document.getElementById("photo-wrapper");
 
-// ---------------------------------------------------------
-//  CHARGEMENT DES IMAGES
-// ---------------------------------------------------------
-async function loadCarouselImages() {
+function showPhotoLoader(show) {
+  if (!photoLoader || !photoWrapper) return;
+  photoLoader.classList.toggle("hidden", !show);
+  photoWrapper.classList.toggle("opacity-50", show);
+}
 
+async function loadInitialImage() {
   try {
+    showPhotoLoader(true);
     const res = await fetch(API_IMAGES);
     const data = await res.json();
-
     // data = liste des images visibles déjà filtrées côté serveur
-    carouselImages = data.map(img => img.url);
-
-    if (carouselImages.length === 0) {
-      zone1Img.src = "";
-      photoNumber.textContent = "—";
-      return;
-    }
-
-    if (pendingSlideIndex !== null) {
-      setSlideIndex(pendingSlideIndex);
-      pendingSlideIndex = null;
+    const fallback = data && data.length ? data[0] : null;
+    if (pendingSlideName) {
+      const found = (data || []).find(img => img.name === pendingSlideName);
+      applySlide(found);
+      pendingSlideName = null;
     } else {
-      carouselIndex = 0;
-      updateCarousel();
+      applySlide(fallback);
     }
-
   } catch (err) {
     console.error("❌ Erreur chargement images :", err);
+  } finally {
+    showPhotoLoader(false);
   }
 }
 
-function updateCarousel() {
-  zone1Img.src = carouselImages[carouselIndex];
-  photoNumber.textContent = carouselIndex + 1;
+function applySlide(img) {
+  if (!img || !img.url) {
+    showPhotoLoader(false);
+    return;
+  }
+  showPhotoLoader(true);
+  zone1Img.src = img.url;
+  photoNumber.textContent = img.name || "—";
+  zone1Img.onload = () => showPhotoLoader(false);
 }
-
-// ---------------------------------------------------------
-//  FLECHES ← →
-// ---------------------------------------------------------
-document.getElementById("carousel-prev").onclick = () => {
-  if (slideshowControlled) return;
-  if (!carouselImages.length) return;
-  carouselIndex = (carouselIndex - 1 + carouselImages.length) % carouselImages.length;
-  updateCarousel();
-};
-
-document.getElementById("carousel-next").onclick = () => {
-  if (slideshowControlled) return;
-  if (!carouselImages.length) return;
-  carouselIndex = (carouselIndex + 1) % carouselImages.length;
-  updateCarousel();
-};
 
 // ---------------------------------------------------------
 //  BARRE DE TENSION
@@ -90,11 +71,11 @@ document.getElementById("carousel-next").onclick = () => {
 const items = document.querySelectorAll(".tension-item");
 const zone1 = document.getElementById("zone1");
 const tensionBar = document.querySelector(".tension-bar");
+const SESSION_ID = new URLSearchParams(window.location.search).get("session") || null;
 let tensionEnabled = true;
 let tensionFont = "Audiowide";
 let gmControlled = true;
 let slideshowControlled = false;
-let pendingSlideIndex = null;
 let tensionSocket = null;
 let tensionSocketTimer = null;
 const defaultZoneBorder = { top: "13px", right: "30px", bottom: "13px", left: "30px" };
@@ -124,6 +105,8 @@ let hourglass = null;
 const hourglassTimeEl = document.getElementById("hourglass-time");
 let hourglassVisible = false;
 let hourglassShowTimer = false;
+let configRequestRetries = 0;
+let pendingSlideName = null;
 
 function readableTextColor(bgColor) {
   const match = (bgColor || "").match(/(\d+)\D+(\d+)\D+(\d+)/);
@@ -248,15 +231,17 @@ function selectTensionLevel(level) {
   playTensionAudio(target.dataset.level);
 }
 
-function setSlideIndex(idx) {
-  if (!carouselImages.length) {
-    pendingSlideIndex = idx;
-    return;
-  }
-  const len = carouselImages.length;
-  const safeIndex = ((idx % len) + len) % len;
-  carouselIndex = safeIndex;
-  updateCarousel();
+function setSlideByName(name) {
+  if (!name) return;
+  pendingSlideName = name;
+  // charge l'image demandée directement depuis l'API
+  fetch(API_IMAGES)
+    .then(res => res.json())
+    .then(data => {
+      const found = Array.isArray(data) ? data.find(img => img.name === name) : null;
+      if (found) applySlide(found);
+    })
+    .catch(() => {});
 }
 
 function setupTensionSocket() {
@@ -269,27 +254,49 @@ function setupTensionSocket() {
   const ws = new WebSocket(`${proto}://${location.host}/ws?tenantId=${encodeURIComponent(TENANT)}&role=front`);
   tensionSocket = ws;
   ws.onopen = () => {
+    console.log("[Front][WS] open");
     setGmControlled(true);
     slideshowControlled = true;
+    // demande la config tension et l'index du diaporama de la session courante au GM
+    ws.send(JSON.stringify({ type: "tension:request", sessionId: SESSION_ID || null }));
+    ws.send(JSON.stringify({ type: "slideshow:request", sessionId: SESSION_ID || null }));
     if (tensionSocketTimer) {
       clearTimeout(tensionSocketTimer);
       tensionSocketTimer = null;
     }
   };
   ws.onclose = () => {
+    console.log("[Front][WS] close");
     slideshowControlled = false;
     tensionSocketTimer = setTimeout(setupTensionSocket, 2000);
   };
-  ws.onerror = () => ws.close();
+  ws.onerror = (err) => {
+    console.warn("[Front][WS] error", err);
+    ws.close();
+  };
   ws.onmessage = (evt) => {
     try {
       const data = JSON.parse(evt.data || "{}");
+      // si un id de session est fourni, ne traiter que la session demandée en paramètre d'URL
+      if (data.sessionId && SESSION_ID && data.sessionId !== SESSION_ID) {
+        return;
+      }
+      console.log("[Front][WS] message", data);
       if (data.type === "tension:update" && data.level) {
         selectTensionLevel(data.level);
       }
-      if (data.type === "slideshow:update" && typeof data.index === "number") {
+      if (data.type === "tension:config" && data.config) {        
+        applyTensionState(data.config.tensionEnabled);
+        applyTensionFont(data.config.tensionFont);
+        applyTensionColors(data.config.tensionColors);
+        applyTensionLabels(data.config.tensionLabels);
+        tensionAudio = { ...tensionAudio, ...(data.config.tensionAudio || {}) };
+      }
+      if (data.type === "slideshow:update" && data.name) {
         slideshowControlled = true;
-        setSlideIndex(data.index);
+        setSlideByName(data.name);
+        configRequestRetries = 0;
+        console.log("[Front][Slideshow] applied", { name: data.name });
       }
       if (data.type === "hourglass:command" && data.action) {
         applyHourglassCommand(data);
@@ -316,6 +323,22 @@ async function loadTensionConfig() {
     applyTensionFont("Audiowide");
     applyTensionColors(defaultTensionColors);
     applyTensionLabels(defaultTensionLabels);
+  }
+}
+
+async function loadSessionConfig() {
+  if (!SESSION_ID) return;
+  try {
+    const res = await fetch(`/api/tenant/${encodeURIComponent(TENANT)}/sessions/${encodeURIComponent(SESSION_ID)}`);
+    if (!res.ok) throw new Error("Session fetch failed");
+    const data = await res.json();
+    applyTensionState(data.tensionEnabled);
+    applyTensionFont(data.tensionFont);
+    applyTensionColors(data.tensionColors);
+    applyTensionLabels(data.tensionLabels);
+    tensionAudio = { ...tensionAudio, ...(data.tensionAudio || {}) };
+  } catch (err) {
+    console.warn("Front session tension config unavailable", err);
   }
 }
 
@@ -387,12 +410,28 @@ function applyHourglassCommand(cmd) {
   updateHourglassTime();
 }
 
+function requestRemoteConfig() {
+  if (tensionSocket && tensionSocket.readyState === WebSocket.OPEN) {
+    tensionSocket.send(JSON.stringify({ type: "tension:request", sessionId: SESSION_ID || null }));
+    tensionSocket.send(JSON.stringify({ type: "slideshow:request", sessionId: SESSION_ID || null }));
+    configRequestRetries = 0;
+    return;
+  }
+  if (configRequestRetries < 5) {
+    configRequestRetries += 1;
+    setTimeout(requestRemoteConfig, 800);
+  }
+}
+
 // ---------------------------------------------------------
 // INIT
 // ---------------------------------------------------------
 setGmControlled(true);
-loadTensionConfig().then(() => {
-  setupTensionSocket();
-  loadCarouselImages();
-  initHourglass();
-});
+loadTensionConfig()
+  .then(() => loadSessionConfig())
+  .finally(() => {
+    setupTensionSocket();
+    loadInitialImage();
+    initHourglass();
+    requestRemoteConfig();
+  });
