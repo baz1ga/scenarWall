@@ -1,75 +1,85 @@
-<!DOCTYPE html>
-<html lang="fr" x-data="gamesPage()" x-init="init()" :class="theme" x-bind="rootShell()">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Parties en cours - ScenarWall</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="/assets/css/tailwind.css">
-</head>
-<body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100">
-  <div id="app" class="min-h-screen" x-cloak>
-    <main class="max-w-5xl mx-auto px-4 py-8 space-y-6">
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100 inline-flex items-center gap-2">
-            <i class="fa-solid fa-gamepad"></i>
-            Parties en cours
-          </h1>
-          <p class="text-sm text-slate-500 dark:text-slate-400">Vue admin des sessions actives (GM / Front)</p>
+<div id="page-content" x-data="gamesPage()" x-init="init()" class="space-y-6 max-w-6xl mx-auto" x-cloak>
+  <style>
+    :root {
+      --games-accent: #f59e0b; /* amber-400 */
+      --games-accent-strong: #d97706; /* amber-600 */
+    }
+    .games-text { color: var(--games-accent); }
+    .games-bg { background-color: var(--games-accent); color: #fff; border-color: var(--games-accent); }
+  </style>
+
+
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <h1 class="text-2xl font-semibold flex items-center gap-2 games-text">
+          <i class="fa-solid fa-dice"></i> Parties jouées
+        </h1>        
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <input type="text" x-model="searchTerm" placeholder="Rechercher un tenant..." class="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--games-accent)] focus:border-[var(--games-accent)]">
+        <div class="flex items-center gap-2">
+          <button class="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                  @click="fetchStates()">
+            <i class="fa-solid fa-rotate"></i> Rafraîchir
+          </button>
+          <button class="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                  @click="window.dispatchEvent(new CustomEvent('open-all-tenants', { detail: true }))">
+            Tout déplier
+          </button>
+          <button class="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                  @click="window.dispatchEvent(new CustomEvent('open-all-tenants', { detail: false }))">
+            Tout plier
+          </button>
         </div>
       </div>
+    </div>
 
-      <div class="bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
-          <thead class="bg-slate-100 dark:bg-slate-900 text-left text-xs uppercase tracking-wide text-slate-600 dark:text-slate-400">
-            <tr>
-              <th class="px-4 py-3">Tenant</th>
-              <th class="px-4 py-3">Session</th>
-              <th class="px-4 py-3">Durée</th>
-              <th class="px-4 py-3">Front</th>
-              <th class="px-4 py-3">GM</th>
-              <th class="px-4 py-3">Santé</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100 dark:divide-slate-800" x-show="states.length">
-            <template x-for="state in states" :key="state.tenantId + '-' + state.sessionId">
-              <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/60">
-                <td class="px-4 py-3 font-mono text-xs" x-text="state.tenantId"></td>
-                <td class="px-4 py-3 font-mono text-xs" x-text="state.sessionId"></td>
-                <td class="px-4 py-3 text-sm" x-text="formatDuration(state)"></td>
-                <td class="px-4 py-3 text-sm">
-                  <span class="inline-flex items-center gap-2">
-                    <span class="h-2.5 w-2.5 rounded-full" :class="state.front === 'online' ? 'bg-emerald-500' : 'bg-rose-500'"></span>
-                    <span x-text="state.front"></span>
-                  </span>
-                </td>
-                <td class="px-4 py-3 text-sm">
-                  <span class="inline-flex items-center gap-2">
-                    <span class="h-2.5 w-2.5 rounded-full" :class="state.gm === 'online' ? 'bg-emerald-500' : 'bg-rose-500'"></span>
-                    <span x-text="state.gm"></span>
-                  </span>
-                </td>
-                <td class="px-4 py-3 text-sm">
-                  <span class="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs font-semibold"
-                        :class="state.front === 'online' && state.gm === 'online' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'">
-                    <i :class="state.front === 'online' && state.gm === 'online' ? 'fa-solid fa-circle-check' : 'fa-solid fa-triangle-exclamation'"></i>
-                    <span x-text="state.front === 'online' && state.gm === 'online' ? 'OK' : 'Dégradé'"></span>
-                  </span>
-                </td>
-              </tr>
-            </template>
-          </tbody>
-          <tbody x-show="!states.length">
-            <tr>
-              <td colspan="6" class="px-4 py-6 text-center text-sm text-slate-500 dark:text-slate-400">Aucune session active</td>
-            </tr>
-          </tbody>
-        </table>
+    <template x-if="groupedRuns().length === 0">
+      <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm p-6 text-center text-sm text-slate-500 dark:text-slate-400">
+        Aucune partie jouée
       </div>
-    </main>
-  </div>
+    </template>
 
-  <script type="module" src="/admin/games/games.js"></script>
-</body>
-</html>
+    <template x-for="tenant in filteredTenants()" :key="tenant.tenantId">
+      <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm overflow-hidden max-w-3xl mx-auto"
+           x-data="{ open: false }"
+           :class="tenant.tenantId === tenantId ? 'border-[var(--games-accent)] ring-2 ring-[var(--games-accent)] ring-offset-2 ring-offset-slate-50 dark:ring-offset-slate-900' : ''"
+           @open-all-tenants.window="open = $event.detail">
+        <button class="w-full bg-slate-100 dark:bg-slate-900 px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200 flex items-center justify-between"
+                @click="open = !open">
+          <span class="inline-flex items-center gap-2">
+            <i class="fa-solid fa-folder"></i>
+            <span>Tenant : <span class="font-mono text-xs" x-text="tenant.tenantId"></span></span>
+          </span>
+          <i :class="open ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down'"></i>
+        </button>
+        <div class="divide-y divide-slate-200 dark:divide-slate-800" x-show="open" x-transition>
+          <template x-for="session in tenant.sessions" :key="tenant.tenantId + '-' + session.sessionId">
+            <div>
+              <div class="px-4 py-2 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/40 flex items-center gap-2">
+                <i class="fa-regular fa-rectangle-list"></i>
+                <span class="font-mono text-[11px]" x-text="session.sessionId"></span>
+              </div>
+              <div class="divide-y divide-slate-100 dark:divide-slate-800">
+                <template x-for="run in session.runs" :key="run.createdAt + '-' + run.updatedAt">
+                  <div class="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-900/60">
+                    <span class="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs font-semibold"
+                          :class="run.front === run.gm ? 'text-emerald-700' : 'text-rose-700'">
+                      <i :class="run.front === run.gm ? 'fa-solid fa-circle-check' : 'fa-solid fa-triangle-exclamation'"></i>                      
+                    </span>
+                    <div class="flex-1 grid grid-cols-2 gap-3">
+                      <div class="text-sm" x-text="new Date(run.createdAt).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })"></div>
+                      <div class="text-sm font-semibold" x-text="formatDuration(run)"></div>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </template>
+</div>
+
+<script src="/admin/js/layout-loader.js"></script>
+<script type="module" src="/admin/games/games.js" data-page-script></script>

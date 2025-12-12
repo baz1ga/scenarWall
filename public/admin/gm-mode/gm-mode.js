@@ -968,9 +968,21 @@ export function gmDashboard() {
         // ignore
       }
     },
-    openFront() {
+    async openFront() {
       if (!this.tenantId) return;
       const sessionParam = this.selectedSessionId ? `?session=${encodeURIComponent(this.selectedSessionId)}` : '';
+
+      try {
+        await fetch(`/api/tenant/${this.tenantId}/session-runs`, {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId: this.selectedSessionId })
+        });
+      } catch (e) {
+        console.error('[GM] failed to start session run', e);
+      }
+
       window.open(`/t/${this.tenantId}/front${sessionParam}`, '_blank');
     },
 

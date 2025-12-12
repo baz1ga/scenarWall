@@ -711,17 +711,89 @@ function getPublicGlobalConfig() {
   };
 }
 
-// Session state persistence (presence heartbeat)
+// Session runs persistence (historique des parties)
+function normalizeSessionRuns(raw) {
+  if (!Array.isArray(raw)) return [];
+
+  // Already tenant grouped ? [{tenantId, sessions:[{sessionId,runs:[]}]}]
+  const looksTenantGrouped = raw.length && raw[0] && Array.isArray(raw[0].sessions);
+  if (looksTenantGrouped) {
+    return raw.map(t => ({
+      tenantId: t.tenantId,
+      sessions: Array.isArray(t.sessions) ? t.sessions.map(s => ({
+        sessionId: s.sessionId,
+        runs: Array.isArray(s.runs) ? s.runs.slice() : []
+      })) : []
+    }));
+  }
+
+  // Session grouped format [{tenantId, sessionId, runs:[...]}]
+  const looksSessionGrouped = raw.length && raw[0] && Array.isArray(raw[0].runs) && raw[0].sessionId;
+  if (looksSessionGrouped) {
+    const tmap = new Map();
+    raw.forEach(s => {
+      if (!s || !s.tenantId || !s.sessionId) return;
+      if (!tmap.has(s.tenantId)) tmap.set(s.tenantId, { tenantId: s.tenantId, sessions: [] });
+      tmap.get(s.tenantId).sessions.push({
+        sessionId: s.sessionId,
+        runs: Array.isArray(s.runs) ? s.runs.slice() : []
+      });
+    });
+    return Array.from(tmap.values());
+  }
+
+  // Legacy flat -> group
+  const tmap = new Map();
+  raw.forEach(r => {
+    if (!r || !r.tenantId || !r.sessionId) return;
+    if (!tmap.has(r.tenantId)) tmap.set(r.tenantId, { tenantId: r.tenantId, sessions: [] });
+    const tenant = tmap.get(r.tenantId);
+    let session = tenant.sessions.find(s => s.sessionId === r.sessionId);
+    if (!session) {
+      session = { sessionId: r.sessionId, runs: [] };
+      tenant.sessions.push(session);
+    }
+    session.runs.push({
+      front: r.front || "offline",
+      gm: r.gm || "offline",
+      lastFrontPing: r.lastFrontPing || null,
+      lastGmPing: r.lastGmPing || null,
+      createdAt: r.createdAt || Date.now(),
+      updatedAt: r.updatedAt || r.createdAt || Date.now()
+    });
+  });
+  return Array.from(tmap.values()).map(t => {
+    t.sessions.forEach(s => s.runs.sort((a, b) => Number(a.createdAt || 0) - Number(b.createdAt || 0)));
+    return t;
+  });
+}
+
+function flattenRuns(groups) {
+  const flat = [];
+  (groups || []).forEach(t => {
+    (t.sessions || []).forEach(s => {
+      (s.runs || []).forEach(r => flat.push({ tenantId: t.tenantId, sessionId: s.sessionId, ...r }));
+    });
+  });
+  return flat;
+}
+
 function loadSessionStates() {
   if (!fs.existsSync(SESSION_STATES_FILE)) {
     fs.writeFileSync(SESSION_STATES_FILE, JSON.stringify([], null, 2));
   }
   try {
-    return JSON.parse(fs.readFileSync(SESSION_STATES_FILE, "utf8")) || [];
+    const data = JSON.parse(fs.readFileSync(SESSION_STATES_FILE, "utf8")) || [];
+    return normalizeSessionRuns(data);
   } catch (err) {
     logger.error("Failed to read session-states, reset", { err: err?.message });
     return [];
   }
+}
+
+function reloadSessionRuns() {
+  sessionRuns = loadSessionStates();
+  return sessionRuns;
 }
 
 function saveSessionStates(states) {
@@ -733,22 +805,50 @@ function saveSessionStates(states) {
 }
 
 function presenceStateToArray() {
-  const arr = [];
-  presenceState.forEach((sessions, tenantId) => {
-    sessions.forEach((state, sessionId) => {
-      arr.push({
-        tenantId,
-        sessionId,
-        front: state.front,
-        gm: state.gm,
-        lastFrontPing: state.lastFrontPing || null,
-        lastGmPing: state.lastGmPing || null,
-        createdAt: state.createdAt || null,
-        updatedAt: state.updatedAt || null
-      });
-    });
-  });
-  return arr;
+  return flattenRuns(sessionRuns);
+}
+
+function ensureTenantSession(tenantId, sessionId) {
+  let tenant = sessionRuns.find(t => t.tenantId === tenantId);
+  if (!tenant) {
+    tenant = { tenantId, sessions: [] };
+    sessionRuns.push(tenant);
+  }
+  let session = tenant.sessions.find(s => s.sessionId === sessionId);
+  if (!session) {
+    session = { sessionId, runs: [] };
+    tenant.sessions.push(session);
+  }
+  return session;
+}
+
+function appendSessionRun(tenantId, sessionId, data = {}) {
+  if (!tenantId || !sessionId) return null;
+  const now = Date.now();
+  const run = {
+    front: data.front || "offline",
+    gm: data.gm || "offline",
+    lastFrontPing: data.lastFrontPing || null,
+    lastGmPing: data.lastGmPing || null,
+    createdAt: data.createdAt || now,
+    updatedAt: data.updatedAt || now
+  };
+  const session = ensureTenantSession(tenantId, sessionId);
+  session.runs.push(run);
+  saveSessionStates(sessionRuns);
+  return run;
+}
+
+function updateLatestRun(tenantId, sessionId, patch = {}) {
+  const session = ensureTenantSession(tenantId, sessionId);
+  if (!session.runs || !session.runs.length) {
+    return appendSessionRun(tenantId, sessionId, patch);
+  }
+  const run = session.runs[session.runs.length - 1];
+  Object.assign(run, patch);
+  run.updatedAt = patch.updatedAt || Date.now();
+  saveSessionStates(sessionRuns);
+  return run;
 }
 
 function getTenantQuota(tenantId) {
@@ -2624,19 +2724,29 @@ function broadcastTenant(tenantId, payload) {
 // In-memory presence state
 const presenceState = new Map(); // key: tenantId -> Map(sessionId -> { front: 'online'|'offline', gm: 'online'|'offline', lastFrontPing, lastGmPing, createdAt, updatedAt })
 const PRESENCE_TTL = 16000; // ms
+let sessionRuns = loadSessionStates(); // historique des runs
 
-// hydrate presence from disk (all start offline)
-(loadSessionStates() || []).forEach(row => {
-  if (!row || !row.tenantId || !row.sessionId) return;
-  const state = getSessionState(row.tenantId, row.sessionId);
-  if (!state) return;
-  state.front = "offline";
-  state.gm = "offline";
-  state.lastFrontPing = row.lastFrontPing || null;
-  state.lastGmPing = row.lastGmPing || null;
-  state.createdAt = row.createdAt || Date.now();
-  state.updatedAt = Date.now();
-});
+// hydrate presence map with latest known status per session (offline by default)
+(() => {
+  const latestBySession = new Map();
+  (flattenRuns(sessionRuns) || []).forEach(run => {
+    if (!run || !run.tenantId || !run.sessionId) return;
+    const key = `${run.tenantId}::${run.sessionId}`;
+    const existing = latestBySession.get(key);
+    if (!existing || (run.updatedAt || 0) > (existing.updatedAt || 0)) {
+      latestBySession.set(key, run);
+    }
+  });
+  latestBySession.forEach(run => {
+    const state = getSessionState(run.tenantId, run.sessionId);
+    state.front = run.front || "offline";
+    state.gm = run.gm || "offline";
+    state.lastFrontPing = run.lastFrontPing || null;
+    state.lastGmPing = run.lastGmPing || null;
+    state.createdAt = run.createdAt || Date.now();
+    state.updatedAt = run.updatedAt || Date.now();
+  });
+})();
 
 function getSessionState(tenantId, sessionId) {
   if (!tenantId || !sessionId) return null;
@@ -2656,6 +2766,8 @@ function getSessionState(tenantId, sessionId) {
 function updatePresence(tenantId, sessionId, role, status) {
   const state = getSessionState(tenantId, sessionId);
   if (!state) return;
+  const prevFront = state.front;
+  const prevGm = state.gm;
   const wasOnlinePair = state.front === "online" && state.gm === "online";
   if (role === "front") {
     state.front = status;
@@ -2666,6 +2778,19 @@ function updatePresence(tenantId, sessionId, role, status) {
     state.lastGmPing = status === "online" ? Date.now() : state.lastGmPing || Date.now();
   }
   state.updatedAt = Date.now();
+
+  // Si le GM vient de passer offline -> online, on démarre un nouveau run
+  if (role === "gm" && prevGm !== "online" && status === "online") {
+    appendSessionRun(tenantId, sessionId, {
+      gm: "online",
+      front: state.front,
+      lastFrontPing: state.lastFrontPing,
+      lastGmPing: state.lastGmPing,
+      createdAt: state.updatedAt,
+      updatedAt: state.updatedAt
+    });
+  }
+
   broadcastTenant(tenantId, {
     type: "presence:update",
     sessionId,
@@ -2676,7 +2801,13 @@ function updatePresence(tenantId, sessionId, role, status) {
     createdAt: state.createdAt,
     updatedAt: state.updatedAt
   });
-  saveSessionStates(presenceStateToArray());
+  updateLatestRun(tenantId, sessionId, {
+    front: state.front,
+    gm: state.gm,
+    lastFrontPing: state.lastFrontPing,
+    lastGmPing: state.lastGmPing,
+    updatedAt: state.updatedAt
+  });
 }
 
 function markOfflineIfStale(now = Date.now()) {
@@ -2703,7 +2834,13 @@ function markOfflineIfStale(now = Date.now()) {
           createdAt: state.createdAt,
           updatedAt: state.updatedAt
         });
-        saveSessionStates(presenceStateToArray());
+        updateLatestRun(tenantId, sessionId, {
+          front: state.front,
+          gm: state.gm,
+          lastFrontPing: state.lastFrontPing,
+          lastGmPing: state.lastGmPing,
+          updatedAt: state.updatedAt
+        });
       }
     });
   });
@@ -2722,7 +2859,31 @@ app.get("/api/tenant/:tenantId/session-states", requireLogin, (req, res) => {
 
 // Liste complète des états de sessions (superadmin)
 app.get("/api/admin/session-states", requireGodMode, (req, res) => {
-  res.json(presenceStateToArray());
+  // Recharge depuis le disque pour refléter les modifications manuelles éventuelles
+  const fresh = reloadSessionRuns();
+  res.json(JSON.parse(JSON.stringify(fresh)));
+});
+
+// Démarre un nouveau run de session (clic sur "Présenter")
+app.post("/api/tenant/:tenantId/session-runs", requireLogin, (req, res) => {
+  const { tenantId } = req.params;
+  const { sessionId } = req.body || {};
+  if (!sessionId) return res.status(400).json({ error: "sessionId is required" });
+
+  const now = Date.now();
+  const run = appendSessionRun(tenantId, sessionId, {
+    gm: "online",
+    front: "offline",
+    lastGmPing: now,
+    lastFrontPing: null,
+    createdAt: now,
+    updatedAt: now
+  });
+
+  // Synchronise aussi l'état en mémoire et notifie
+  updatePresence(tenantId, sessionId, "gm", "online");
+
+  res.json(run);
 });
 
 wss.on("connection", (ws, req) => {
