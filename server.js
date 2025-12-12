@@ -25,6 +25,7 @@ const FAVICONS_DIR = path.join(PUBLIC_DIR, "assets", "favicons");
 const FRONT_FILE = path.join(PUBLIC_DIR, "front", "index.html");
 const GLOBAL_FILE = path.join(DATA_DIR, "global.json");
 const SESSION_STATES_FILE = path.join(DATA_DIR, "session-states.json");
+const TENSION_DEFAULT_FILE = path.join(DATA_DIR, "tension-default.json");
 // (history removed)
 const LOG_DIR = path.join(DATA_DIR, "logs");
 const CSRF_COOKIE = "XSRF-TOKEN";
@@ -111,24 +112,22 @@ const DEFAULT_GLOBAL = {
   defaultQuotaMB: 100 // seul champ persistant dans global.json
 };
 const DEFAULT_DISCORD_SCOPES = ["identify"];
-const DEFAULT_TENSION_COLORS = {
-  level1: "#37aa32",
-  level2: "#f8d718",
-  level3: "#f39100",
-  level4: "#e63027",
-  level5: "#3a3a39"
-};
-const DEFAULT_TENSION_LABELS = {
-  level1: "0",
-  level2: "-5",
-  level3: "+5",
-  level4: "+10",
-  level5: "+15"
-};
-const DEFAULT_CONFIG = {
+const FALLBACK_TENSION_DEFAULTS = {
   tensionEnabled: true,
-  tensionColors: { ...DEFAULT_TENSION_COLORS },
-  tensionLabels: { ...DEFAULT_TENSION_LABELS },
+  tensionColors: {
+    level1: "#37aa32",
+    level2: "#f8d718",
+    level3: "#f39100",
+    level4: "#e63027",
+    level5: "#3a3a39"
+  },
+  tensionLabels: {
+    level1: "0",
+    level2: "-5",
+    level3: "+5",
+    level4: "+10",
+    level5: "+15"
+  },
   tensionFont: null,
   tensionAudio: {
     level1: null,
@@ -136,7 +135,70 @@ const DEFAULT_CONFIG = {
     level3: null,
     level4: null,
     level5: null
-  },
+  }
+};
+
+function loadTensionDefaults() {
+  const validateColors = (src) => {
+    const s = typeof src === "object" && src ? src : {};
+    const def = FALLBACK_TENSION_DEFAULTS.tensionColors;
+    return {
+      level1: typeof s.level1 === "string" ? s.level1 : def.level1,
+      level2: typeof s.level2 === "string" ? s.level2 : def.level2,
+      level3: typeof s.level3 === "string" ? s.level3 : def.level3,
+      level4: typeof s.level4 === "string" ? s.level4 : def.level4,
+      level5: typeof s.level5 === "string" ? s.level5 : def.level5
+    };
+  };
+  const validateLabels = (src) => {
+    const s = typeof src === "object" && src ? src : {};
+    const def = FALLBACK_TENSION_DEFAULTS.tensionLabels;
+    const trim = (v, f) => (typeof v === "string" && v.trim().length ? v.trim().slice(0, 4) : f);
+    return {
+      level1: trim(s.level1, def.level1),
+      level2: trim(s.level2, def.level2),
+      level3: trim(s.level3, def.level3),
+      level4: trim(s.level4, def.level4),
+      level5: trim(s.level5, def.level5)
+    };
+  };
+  const validateAudio = (src) => {
+    const s = typeof src === "object" && src ? src : {};
+    const out = {};
+    ["level1", "level2", "level3", "level4", "level5"].forEach(l => {
+      out[l] = typeof s[l] === "string" ? s[l] : null;
+    });
+    return out;
+  };
+
+  if (!fs.existsSync(TENSION_DEFAULT_FILE)) {
+    fs.writeFileSync(TENSION_DEFAULT_FILE, JSON.stringify(FALLBACK_TENSION_DEFAULTS, null, 2));
+    return FALLBACK_TENSION_DEFAULTS;
+  }
+  try {
+    const data = JSON.parse(fs.readFileSync(TENSION_DEFAULT_FILE, "utf8")) || {};
+    return {
+      tensionEnabled: data.tensionEnabled !== undefined ? !!data.tensionEnabled : FALLBACK_TENSION_DEFAULTS.tensionEnabled,
+      tensionColors: validateColors(data.tensionColors),
+      tensionLabels: validateLabels(data.tensionLabels),
+      tensionFont: data.tensionFont || null,
+      tensionAudio: validateAudio(data.tensionAudio)
+    };
+  } catch {
+    return FALLBACK_TENSION_DEFAULTS;
+  }
+}
+
+const TENSION_DEFAULTS = loadTensionDefaults();
+const DEFAULT_TENSION_COLORS = TENSION_DEFAULTS.tensionColors;
+const DEFAULT_TENSION_LABELS = TENSION_DEFAULTS.tensionLabels;
+
+const DEFAULT_CONFIG = {
+  tensionEnabled: TENSION_DEFAULTS.tensionEnabled,
+  tensionColors: { ...DEFAULT_TENSION_COLORS },
+  tensionLabels: { ...DEFAULT_TENSION_LABELS },
+  tensionFont: TENSION_DEFAULTS.tensionFont,
+  tensionAudio: { ...TENSION_DEFAULTS.tensionAudio },
   quotaMB: null
 };
 const DEFAULT_TENANT_SESSION = {
