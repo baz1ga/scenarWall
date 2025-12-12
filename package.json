@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "dev:server": "nodemon --ignore data/users.json --ignore data/sessions.json --ignore data/tenants/ server.js",
+    "dev:server": "nodemon --ignore data/users.json --ignore data/sessions.json --ignore data/session-states.json --ignore data/session-history.json --ignore data/tenants/ server.js",
     "tailwind:build": "npx tailwindcss -c tailwind.config.js -i ./src/tailwind.css -o ./public/assets/css/tailwind.css",
     "tailwind:watch": "npx tailwindcss -c tailwind.config.js -i ./src/tailwind.css -o ./public/assets/css/tailwind.css --watch",
     "dev": "npm-run-all --parallel tailwind:watch dev:server"

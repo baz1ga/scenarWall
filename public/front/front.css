@@ -36,6 +36,37 @@ body.front {
   overflow: hidden;
 }
 
+/* util */
+.hidden {
+  display: none !important;
+}
+
+/* Avertissement GM offline */
+#gm-offline-banner {
+  position: fixed;
+  inset: 0;
+  background: #0d1117;
+  color: #e5e7eb;
+  font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+}
+#gm-offline-banner .title {
+  font-size: 20px;
+  font-weight: 700;
+}
+#gm-offline-banner .subtitle {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+
 /* Zone 1 : image */
 .zone1 {
   width: 100%;

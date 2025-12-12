@@ -78,6 +78,11 @@ let gmControlled = true;
 let slideshowControlled = false;
 let tensionSocket = null;
 let tensionSocketTimer = null;
+let presencePing = null;
+let gmOnline = false;
+let gmWarningTimer = null;
+const gmOfflineBanner = document.getElementById("gm-offline-banner");
+
 const defaultZoneBorder = { top: "13px", right: "30px", bottom: "13px", left: "30px" };
 const defaultTensionColors = {
   level1: "#37aa32",
@@ -257,18 +262,29 @@ function setupTensionSocket() {
     console.log("[Front][WS] open");
     setGmControlled(true);
     slideshowControlled = true;
+    ws.send(JSON.stringify({ type: "presence:hello", sessionId: SESSION_ID || null }));
+    presencePing = setInterval(() => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: "presence:hello", sessionId: SESSION_ID || null }));
+      }
+    }, 8000);
     // demande la config tension et l'index du diaporama de la session courante au GM
     ws.send(JSON.stringify({ type: "tension:request", sessionId: SESSION_ID || null }));
     ws.send(JSON.stringify({ type: "slideshow:request", sessionId: SESSION_ID || null }));
     if (tensionSocketTimer) {
       clearTimeout(tensionSocketTimer);
       tensionSocketTimer = null;
-    }
+    };
   };
   ws.onclose = () => {
     console.log("[Front][WS] close");
     slideshowControlled = false;
-    tensionSocketTimer = setTimeout(setupTensionSocket, 2000);
+    gmOnline = false;
+    if (presencePing) {
+      clearInterval(presencePing);
+      presencePing = null;
+    }
+    tensionSocketTimer = setTimeout(setupTensionSocket, 2000);;
   };
   ws.onerror = (err) => {
     console.warn("[Front][WS] error", err);
@@ -282,6 +298,10 @@ function setupTensionSocket() {
         return;
       }
       console.log("[Front][WS] message", data);
+      if (data.type === "presence:update") {
+        gmOnline = data.gm === "online";
+        handleGmOnlineChange(gmOnline);
+      }
       if (data.type === "tension:update" && data.level) {
         selectTensionLevel(data.level);
       }
@@ -434,4 +454,22 @@ loadTensionConfig()
     loadInitialImage();
     initHourglass();
     requestRemoteConfig();
+    handleGmOnlineChange(false);
   });
+
+function handleGmOnlineChange(isOnline) {
+  if (gmWarningTimer) {
+    clearTimeout(gmWarningTimer);
+    gmWarningTimer = null;
+  }
+  if (isOnline) {
+    if (gmOfflineBanner) gmOfflineBanner.classList.add("hidden");
+    return;
+  }
+  gmWarningTimer = setTimeout(() => {
+    if (gmOfflineBanner) gmOfflineBanner.classList.remove("hidden");
+    if (zone1Img) zone1Img.src = "";
+    photoNumber.textContent = "";
+    items.forEach(i => i.classList.remove("selected"));
+  }, 5000);
+}

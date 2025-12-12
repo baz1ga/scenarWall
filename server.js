@@ -24,6 +24,8 @@ const TENANTS_DIR = path.join(DATA_DIR, "tenants");
 const FAVICONS_DIR = path.join(PUBLIC_DIR, "assets", "favicons");
 const FRONT_FILE = path.join(PUBLIC_DIR, "front", "index.html");
 const GLOBAL_FILE = path.join(DATA_DIR, "global.json");
+const SESSION_STATES_FILE = path.join(DATA_DIR, "session-states.json");
+// (history removed)
 const LOG_DIR = path.join(DATA_DIR, "logs");
 const CSRF_COOKIE = "XSRF-TOKEN";
 if (!fs.existsSync(LOG_DIR)) fs.mkdirSync(LOG_DIR, { recursive: true });
@@ -707,6 +709,46 @@ function getPublicGlobalConfig() {
     apiBase: config.apiBase || null,
     pixabayKey: ENV_GLOBAL.pixabayKey || null
   };
+}
+
+// Session state persistence (presence heartbeat)
+function loadSessionStates() {
+  if (!fs.existsSync(SESSION_STATES_FILE)) {
+    fs.writeFileSync(SESSION_STATES_FILE, JSON.stringify([], null, 2));
+  }
+  try {
+    return JSON.parse(fs.readFileSync(SESSION_STATES_FILE, "utf8")) || [];
+  } catch (err) {
+    logger.error("Failed to read session-states, reset", { err: err?.message });
+    return [];
+  }
+}
+
+function saveSessionStates(states) {
+  try {
+    fs.writeFileSync(SESSION_STATES_FILE, JSON.stringify(states, null, 2));
+  } catch (err) {
+    logger.error("Failed to write session-states", { err: err?.message });
+  }
+}
+
+function presenceStateToArray() {
+  const arr = [];
+  presenceState.forEach((sessions, tenantId) => {
+    sessions.forEach((state, sessionId) => {
+      arr.push({
+        tenantId,
+        sessionId,
+        front: state.front,
+        gm: state.gm,
+        lastFrontPing: state.lastFrontPing || null,
+        lastGmPing: state.lastGmPing || null,
+        createdAt: state.createdAt || null,
+        updatedAt: state.updatedAt || null
+      });
+    });
+  });
+  return arr;
 }
 
 function getTenantQuota(tenantId) {
@@ -2579,15 +2621,124 @@ function broadcastTenant(tenantId, payload) {
   });
 }
 
+// In-memory presence state
+const presenceState = new Map(); // key: tenantId -> Map(sessionId -> { front: 'online'|'offline', gm: 'online'|'offline', lastFrontPing, lastGmPing, createdAt, updatedAt })
+const PRESENCE_TTL = 16000; // ms
+
+// hydrate presence from disk (all start offline)
+(loadSessionStates() || []).forEach(row => {
+  if (!row || !row.tenantId || !row.sessionId) return;
+  const state = getSessionState(row.tenantId, row.sessionId);
+  if (!state) return;
+  state.front = "offline";
+  state.gm = "offline";
+  state.lastFrontPing = row.lastFrontPing || null;
+  state.lastGmPing = row.lastGmPing || null;
+  state.createdAt = row.createdAt || Date.now();
+  state.updatedAt = Date.now();
+});
+
+function getSessionState(tenantId, sessionId) {
+  if (!tenantId || !sessionId) return null;
+  if (!presenceState.has(tenantId)) presenceState.set(tenantId, new Map());
+  const sessions = presenceState.get(tenantId);
+  if (!sessions.has(sessionId)) sessions.set(sessionId, {
+    front: "offline",
+    gm: "offline",
+    lastFrontPing: null,
+    lastGmPing: null,
+    createdAt: Date.now(),
+    updatedAt: Date.now()
+  });
+  return sessions.get(sessionId);
+}
+
+function updatePresence(tenantId, sessionId, role, status) {
+  const state = getSessionState(tenantId, sessionId);
+  if (!state) return;
+  const wasOnlinePair = state.front === "online" && state.gm === "online";
+  if (role === "front") {
+    state.front = status;
+    state.lastFrontPing = status === "online" ? Date.now() : state.lastFrontPing || Date.now();
+  }
+  if (role === "gm") {
+    state.gm = status;
+    state.lastGmPing = status === "online" ? Date.now() : state.lastGmPing || Date.now();
+  }
+  state.updatedAt = Date.now();
+  broadcastTenant(tenantId, {
+    type: "presence:update",
+    sessionId,
+    front: state.front,
+    gm: state.gm,
+    lastFrontPing: state.lastFrontPing,
+    lastGmPing: state.lastGmPing,
+    createdAt: state.createdAt,
+    updatedAt: state.updatedAt
+  });
+  saveSessionStates(presenceStateToArray());
+}
+
+function markOfflineIfStale(now = Date.now()) {
+  presenceState.forEach((sessions, tenantId) => {
+    sessions.forEach((state, sessionId) => {
+      let changed = false;
+      if (state.front === "online" && (!state.lastFrontPing || now - state.lastFrontPing > PRESENCE_TTL)) {
+        state.front = "offline";
+        changed = true;
+      }
+      if (state.gm === "online" && (!state.lastGmPing || now - state.lastGmPing > PRESENCE_TTL)) {
+        state.gm = "offline";
+        changed = true;
+      }
+      if (changed) {
+        state.updatedAt = Date.now();
+        broadcastTenant(tenantId, {
+          type: "presence:update",
+          sessionId,
+          front: state.front,
+          gm: state.gm,
+          lastFrontPing: state.lastFrontPing,
+          lastGmPing: state.lastGmPing,
+          createdAt: state.createdAt,
+          updatedAt: state.updatedAt
+        });
+        saveSessionStates(presenceStateToArray());
+      }
+    });
+  });
+}
+
+setInterval(() => markOfflineIfStale(), 5000);
+
+// ------------------------------------------------------------
+//  API: SESSION STATES
+// ------------------------------------------------------------
+app.get("/api/tenant/:tenantId/session-states", requireLogin, (req, res) => {
+  const { tenantId } = req.params;
+  const states = presenceStateToArray().filter(s => s.tenantId === tenantId);
+  res.json(states);
+});
+
 wss.on("connection", (ws, req) => {
   try {
     const urlObj = new URL(req.url, `http://${req.headers.host}`);
     ws.meta = {
       tenantId: urlObj.searchParams.get("tenantId") || null,
-      role: urlObj.searchParams.get("role") || "front"
+      role: urlObj.searchParams.get("role") || "front",
+      sessionId: null
     };
   } catch {
-    ws.meta = { tenantId: null, role: "front" };
+    ws.meta = { tenantId: null, role: "front", sessionId: null };
+  }
+
+  function counterpartOnline(sessionId) {
+    if (!sessionId || !ws.meta.tenantId) return false;
+    const state = getSessionState(ws.meta.tenantId, sessionId);
+    if (!state) return false;
+    if (ws.meta.role === "gm") return state.front === "online";
+    if (ws.meta.role === "front") return state.gm === "online";
+    return false;
   }
 
   ws.on("message", data => {
@@ -2595,19 +2746,30 @@ wss.on("connection", (ws, req) => {
     try { msg = JSON.parse(data.toString()); } catch { return; }
     if (!ws.meta || !ws.meta.tenantId) return;
 
+    if (msg.type === "presence:hello" && typeof msg.sessionId === "string") {
+      ws.meta.sessionId = msg.sessionId;
+      updatePresence(ws.meta.tenantId, msg.sessionId, ws.meta.role, "online");
+      return;
+    }
+
+    const sessionId = typeof msg.sessionId === "string" ? msg.sessionId : null;
+
     if (msg.type === "tension:update" && typeof msg.level === "string") {
+      if (sessionId && !counterpartOnline(sessionId)) return;
       const payload = { type: "tension:update", level: msg.level };
-      if (typeof msg.sessionId === "string") payload.sessionId = msg.sessionId;
+      if (sessionId) payload.sessionId = sessionId;
       broadcastTenant(ws.meta.tenantId, payload);
     }
     if (msg.type === "slideshow:update" && (typeof msg.index === "number" || typeof msg.name === "string")) {
+      if (sessionId && !counterpartOnline(sessionId)) return;
       const payload = { type: "slideshow:update" };
       if (typeof msg.index === "number") payload.index = msg.index;
       if (typeof msg.name === "string") payload.name = msg.name;
-      if (typeof msg.sessionId === "string") payload.sessionId = msg.sessionId;
+      if (sessionId) payload.sessionId = sessionId;
       broadcastTenant(ws.meta.tenantId, payload);
     }
     if (msg.type === "hourglass:command" && typeof msg.action === "string") {
+      if (sessionId && !counterpartOnline(sessionId)) return;
       const payload = { type: "hourglass:command", action: msg.action };
       if (typeof msg.durationSeconds === "number") payload.durationSeconds = msg.durationSeconds;
       if (typeof msg.visible === "boolean") payload.visible = msg.visible;
@@ -2615,9 +2777,16 @@ wss.on("connection", (ws, req) => {
       broadcastTenant(ws.meta.tenantId, payload);
     }
     if (msg.type === "tension:config" && msg.config && typeof msg.config === "object") {
+      if (sessionId && !counterpartOnline(sessionId)) return;
       const payload = { type: "tension:config", config: msg.config };
-      if (typeof msg.sessionId === "string") payload.sessionId = msg.sessionId;
+      if (sessionId) payload.sessionId = sessionId;
       broadcastTenant(ws.meta.tenantId, payload);
+    }
+  });
+
+  ws.on("close", () => {
+    if (ws.meta && ws.meta.tenantId && ws.meta.sessionId) {
+      updatePresence(ws.meta.tenantId, ws.meta.sessionId, ws.meta.role, "offline");
     }
   });
 });

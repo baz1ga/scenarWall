@@ -15,11 +15,14 @@ export function gmDashboard() {
     currentSession: null,
     showLeaveModal: false,
     leaveTarget: '',
+    frontOnline: false,
+    presenceBySession: {},
     scenes: [],
     sceneLoading: false,
     sceneError: '',
     selectedSceneId: '',
     currentScene: null,
+    frontOnline: false,
     sceneCarouselIndex: 0,
     playlist: [],
     playlistLoading: false,
@@ -161,6 +164,10 @@ export function gmDashboard() {
     async selectSession(id, { preferredScene } = {}) {
       if (!id || !this.tenantId) return;
       this.selectedSessionId = id;
+      this.frontOnline = false;
+      if (this.presenceBySession[id] !== undefined) {
+        this.frontOnline = !!this.presenceBySession[id];
+      }
       this.selectedTension = '';
       this.currentSession = this.sessions.find(s => s.id === id) || null;
       this.scenarioId = this.currentSession?.parentScenario || '';
@@ -172,6 +179,7 @@ export function gmDashboard() {
       await this.loadSessionData();
       await this.loadScenesForSession(id, preferredScene);
       this.fulfillPendingRequests();
+      this.sendPresenceHello();
     },
     async loadSessionData() {
       if (!this.tenantId || !this.selectedSessionId) return;
@@ -833,6 +841,10 @@ export function gmDashboard() {
         this.socket.close();
         this.socket = null;
       }
+      if (this._presenceTimer) {
+        clearInterval(this._presenceTimer);
+        this._presenceTimer = null;
+      }
       const proto = location.protocol === 'https:' ? 'wss' : 'ws';
       const ws = new WebSocket(`${proto}://${location.host}/ws?tenantId=${encodeURIComponent(this.tenantId)}&role=gm`);
       this.socket = ws;
@@ -841,6 +853,11 @@ export function gmDashboard() {
           clearTimeout(this.socketTimer);
           this.socketTimer = null;
         }
+        // send presence for current session if any
+        if (this.selectedSessionId) {
+          this.sendPresenceHello();
+        }
+        this._presenceTimer = setInterval(() => this.sendPresenceHello(), 8000);
         if (this.selectedSessionId) {
           this.sendTensionConfig();
           this.sendSlideshow(this.slideshowIndex);
@@ -851,6 +868,10 @@ export function gmDashboard() {
         }
       };
       ws.onclose = () => {
+        if (this._presenceTimer) {
+          clearInterval(this._presenceTimer);
+          this._presenceTimer = null;
+        }
         this.socketTimer = setTimeout(() => this.connectSocket(), 2000);
       };
       ws.onerror = () => {
@@ -859,6 +880,17 @@ export function gmDashboard() {
       ws.onmessage = (evt) => {
         try {
           const msg = JSON.parse(evt.data || '{}');
+          if (msg.type === 'presence:update' && msg.sessionId === this.selectedSessionId) {
+            const wasOnline = this.frontOnline;
+            this.frontOnline = msg.front === 'online';
+            this.presenceBySession[msg.sessionId] = msg.front === 'online';
+            if (this.frontOnline && !wasOnline) {
+              this.sendTensionConfig();
+              this.sendSlideshow(this.slideshowIndex);
+            }
+          } else if (msg.type === 'presence:update' && msg.sessionId) {
+            this.presenceBySession[msg.sessionId] = msg.front === 'online';
+          }
           if (msg.type === 'tension:request') {
             if (!msg.sessionId || msg.sessionId === this.selectedSessionId) {
               this.sendTensionConfig();
@@ -879,9 +911,18 @@ export function gmDashboard() {
       };
     },
 
+    sendPresenceHello() {
+      if (!this.socket || this.socket.readyState !== WebSocket.OPEN) return;
+      if (!this.selectedSessionId) return;
+      try {
+        this.socket.send(JSON.stringify({ type: 'presence:hello', sessionId: this.selectedSessionId }));
+      } catch (_) {}
+    },
+
     sendTension(levelKey) {
       if (!this.selectedSessionId) return;
       if (!this.socket || this.socket.readyState !== WebSocket.OPEN) return;
+      if (!this.frontOnline) return;
       try {
         this.socket.send(JSON.stringify({ type: 'tension:update', level: levelKey, sessionId: this.selectedSessionId }));
       } catch (e) {
@@ -892,6 +933,7 @@ export function gmDashboard() {
       if (!this.selectedSessionId) return;
       if (!this.socket || this.socket.readyState !== WebSocket.OPEN) return;
       if (!this.slideshowImages.length) return;
+      if (!this.frontOnline) return;
       const len = this.slideshowImages.length;
       const safeIndex = len > 0 ? Math.min(Math.max(index, 0), len - 1) : 0;
       const slide = len > 0 ? (this.slideshowImages[safeIndex] || null) : null;
@@ -915,7 +957,7 @@ export function gmDashboard() {
 
     async playTension(levelKey) {
       this.selectedTension = levelKey;
-       this.sendTension(levelKey);
+      this.sendTension(levelKey);
       const name = this.tensionAudio[levelKey];
       if (!name) return;
       if (!this.tenantAudio.length) {

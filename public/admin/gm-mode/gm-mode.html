@@ -143,11 +143,16 @@
           <i class="fa-solid fa-stopwatch text-indigo-500 text-lg"></i>
           <span class="tracking-tight" x-text="`${timerParts().h}:${timerParts().m}:${timerParts().s}`"></span>
         </div>
-      <button class="inline-flex items-center gap-2 rounded-lg border border-indigo-500 bg-indigo-500 text-white font-semibold px-4 py-2 text-sm hover:bg-indigo-400 dark:bg-slate-900 dark:border-indigo-500 dark:text-indigo-100 dark:hover:bg-slate-800 transition"
+      <button class="inline-flex items-center gap-2 rounded-lg border font-semibold px-4 py-2 text-sm transition"
+              :class="frontOnline ? 'border-slate-300 bg-slate-100 text-slate-400 cursor-not-allowed' : 'border-indigo-500 bg-indigo-500 text-white hover:bg-indigo-400 dark:bg-slate-900 dark:border-indigo-500 dark:text-indigo-100 dark:hover:bg-slate-800'"
               @click="openFront"
+              :disabled="frontOnline"
               x-show="selectedSessionId">
         <i class="fa-solid fa-film"></i>
         <span>Présenter</span>
+        <span class="inline-flex items-center">
+          <span class="h-2.5 w-2.5 rounded-full" :class="frontOnline ? 'bg-emerald-500' : 'bg-rose-500'"></span>
+        </span>
       </button>
       </div>
     </div>
