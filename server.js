@@ -854,14 +854,19 @@ function updateLatestRun(tenantId, sessionId, patch = {}) {
 function getTenantQuota(tenantId) {
   const globalConfig = getGlobalConfig();
   const config = loadConfig(tenantId);
-  const hasOverride = Object.prototype.hasOwnProperty.call(config, "quotaMB") && config.quotaMB !== null && config.quotaMB !== undefined;
+  const userQuotaInfo = getTenantUserQuotaInfo(tenantId);
+  const hasUserOverride = userQuotaInfo.quotaMB !== undefined && userQuotaInfo.quotaMB !== null;
+  const hasConfigOverride = Object.prototype.hasOwnProperty.call(config, "quotaMB") && config.quotaMB !== null && config.quotaMB !== undefined;
 
-  let quotaMB = hasOverride ? config.quotaMB : globalConfig.defaultQuotaMB;
+  let quotaMB = hasUserOverride ? userQuotaInfo.quotaMB : (hasConfigOverride ? config.quotaMB : globalConfig.defaultQuotaMB);
+  let override = hasUserOverride || hasConfigOverride;
+
   if (quotaMB === null || quotaMB === undefined || typeof quotaMB !== "number" || Number.isNaN(quotaMB)) {
     quotaMB = globalConfig.defaultQuotaMB;
+    override = false;
   }
 
-  return { quotaMB, override: hasOverride };
+  return { quotaMB, override };
 }
 
 function dirSize(dir, filter) {
@@ -918,6 +923,33 @@ function getUsers() {
 
 function saveUsers(users) {
   fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+}
+
+function getTenantUserQuotaInfo(tenantId) {
+  const users = getUsers();
+  let quota = undefined;
+  users.forEach(u => {
+    if (u?.tenantId === tenantId && quota === undefined) {
+      quota = u.quotaMB;
+    }
+  });
+  return { quotaMB: quota, users };
+}
+
+function setTenantUserQuota(tenantId, quotaMB) {
+  const { users } = getTenantUserQuotaInfo(tenantId);
+  let touched = false;
+  const updated = users.map(u => {
+    if (u?.tenantId === tenantId) {
+      touched = true;
+      return { ...u, quotaMB };
+    }
+    return u;
+  });
+  if (touched) {
+    saveUsers(updated);
+  }
+  return touched;
 }
 
 //------------------------------------------------------------
@@ -1394,17 +1426,20 @@ app.put("/api/:tenantId/quota", requireLogin, (req, res) => {
   if (tenantId !== req.session.user.tenantId)
     return res.status(403).json({ error: "Forbidden tenant" });
 
-  const config = loadConfig(tenantId);
-
   if (quotaMB === null || quotaMB === undefined || quotaMB === "") {
+    setTenantUserQuota(tenantId, null);
+    const config = loadConfig(tenantId);
     config.quotaMB = null;
+    saveConfig(tenantId, config);
   } else if (typeof quotaMB === "number" && quotaMB > 0) {
-    config.quotaMB = quotaMB;
+    setTenantUserQuota(tenantId, quotaMB);
+    const config = loadConfig(tenantId);
+    config.quotaMB = null; // on migre vers users.json
+    saveConfig(tenantId, config);
   } else {
     return res.status(400).json({ error: "quotaMB must be a positive number or null" });
   }
 
-  saveConfig(tenantId, config);
   const updated = getTenantQuota(tenantId);
   const usageBytes = getTenantUsageBytes(tenantId);
 
@@ -2517,17 +2552,20 @@ app.put("/api/godmode/tenant-quota", requireGodMode, (req, res) => {
   const tenantDir = path.join(TENANTS_DIR, tenantId);
   if (!fs.existsSync(tenantDir)) return res.status(404).json({ error: "Tenant not found" });
 
-  const config = loadConfig(tenantId);
-
   if (quotaMB === null || quotaMB === undefined || quotaMB === "") {
+    setTenantUserQuota(tenantId, null);
+    const config = loadConfig(tenantId);
     config.quotaMB = null;
+    saveConfig(tenantId, config);
   } else if (typeof quotaMB === "number" && quotaMB > 0) {
-    config.quotaMB = quotaMB;
+    setTenantUserQuota(tenantId, quotaMB);
+    const config = loadConfig(tenantId);
+    config.quotaMB = null; // migration users.json
+    saveConfig(tenantId, config);
   } else {
     return res.status(400).json({ error: "quotaMB must be a positive number or null" });
   }
 
-  saveConfig(tenantId, config);
   const updated = getTenantQuota(tenantId);
   const usageBytes = getTenantUsageBytes(tenantId);
 
