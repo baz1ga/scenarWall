@@ -85,14 +85,14 @@ const gmOfflineBanner = document.getElementById("gm-offline-banner");
 let tensionConfigReceived = false;
 
 const defaultZoneBorder = { top: "13px", right: "30px", bottom: "13px", left: "30px" };
-const defaultTensionColors = {
+let defaultTensionColors = {
   level1: "#37aa32",
   level2: "#f8d718",
   level3: "#f39100",
   level4: "#e63027",
   level5: "#3a3a39"
 };
-const defaultTensionLabels = {
+let defaultTensionLabels = {
   level1: "0",
   level2: "-5",
   level3: "+5",
@@ -363,7 +363,7 @@ async function loadTensionConfig() {
   } catch (err) {
     console.warn("Using default tension config", err);
     applyTensionState(true);
-    applyTensionFont("Audiowide");
+    applyTensionFont(tensionFont || "Audiowide");
     applyTensionColors(defaultTensionColors);
     applyTensionLabels(defaultTensionLabels);
   }
@@ -387,6 +387,21 @@ async function loadSessionConfig() {
 
 function playTensionAudio(level) {
   // Lecture audio désactivée côté front
+}
+
+async function loadTensionDefaults() {
+  try {
+    const res = await fetch("/api/tension-default");
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.tensionColors) defaultTensionColors = { ...defaultTensionColors, ...data.tensionColors };
+      if (data?.tensionLabels) defaultTensionLabels = { ...defaultTensionLabels, ...data.tensionLabels };
+      if (data?.tensionFont) tensionFont = data.tensionFont;
+      if (data?.tensionAudio) tensionAudio = { ...tensionAudio, ...data.tensionAudio };
+    }
+  } catch (e) {
+    // keep local defaults
+  }
 }
 
 // ---------------------------------------------------------
@@ -470,7 +485,8 @@ function requestRemoteConfig() {
 // INIT
 // ---------------------------------------------------------
 setGmControlled(true);
-loadTensionConfig()
+loadTensionDefaults()
+  .then(() => loadTensionConfig())
   .then(() => loadSessionConfig())
   .finally(() => {
     setupTensionSocket();

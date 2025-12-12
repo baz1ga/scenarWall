@@ -23,7 +23,8 @@ const DATA_DIR = path.join(__dirname, "data");
 const TENANTS_DIR = path.join(DATA_DIR, "tenants");
 const FAVICONS_DIR = path.join(PUBLIC_DIR, "assets", "favicons");
 const FRONT_FILE = path.join(PUBLIC_DIR, "front", "index.html");
-const GLOBAL_FILE = path.join(DATA_DIR, "global.json");
+const GLOBAL_FILE = path.join(DATA_DIR, "default-quota.json");
+const LEGACY_GLOBAL_FILE = path.join(DATA_DIR, "global.json");
 const SESSION_STATES_FILE = path.join(DATA_DIR, "session-states.json");
 const TENSION_DEFAULT_FILE = path.join(DATA_DIR, "tension-default.json");
 // (history removed)
@@ -439,6 +440,10 @@ const USERS_FILE = path.join(DATA_DIR, "users.json");
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR);
 if (!fs.existsSync(USERS_FILE)) fs.writeFileSync(USERS_FILE, "[]");
+// Migration ancien nom global.json -> default-quota.json
+if (!fs.existsSync(GLOBAL_FILE) && fs.existsSync(LEGACY_GLOBAL_FILE)) {
+  try { fs.renameSync(LEGACY_GLOBAL_FILE, GLOBAL_FILE); } catch {}
+}
 if (!fs.existsSync(GLOBAL_FILE)) fs.writeFileSync(GLOBAL_FILE, JSON.stringify({ defaultQuotaMB: DEFAULT_GLOBAL.defaultQuotaMB }, null, 2));
 if (!fs.existsSync(SESSIONS_FILE)) fs.writeFileSync(SESSIONS_FILE, "{}");
 if (!fs.existsSync(TENANTS_DIR)) fs.mkdirSync(TENANTS_DIR);
@@ -1187,6 +1192,11 @@ app.get("/api/auth/discord/callback", async (req, res) => {
     logger.error("Discord OAuth error", { reqId: req.id, err: err?.message, stack: err?.stack });
     res.status(500).send("Erreur OAuth Discord");
   }
+});
+
+// Tension defaults (communes)
+app.get("/api/tension-default", (req, res) => {
+  res.json(TENSION_DEFAULTS);
 });
 
 //------------------------------------------------------------
