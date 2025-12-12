@@ -893,6 +893,7 @@ export function gmDashboard() {
           }
           if (msg.type === 'tension:request') {
             if (!msg.sessionId || msg.sessionId === this.selectedSessionId) {
+              // toujours renvoyer la config (même si déjà envoyée) pour resynchroniser
               this.sendTensionConfig();
             } else {
               this._pendingTensionSessionId = msg.sessionId;

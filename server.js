@@ -2777,7 +2777,7 @@ wss.on("connection", (ws, req) => {
       broadcastTenant(ws.meta.tenantId, payload);
     }
     if (msg.type === "tension:config" && msg.config && typeof msg.config === "object") {
-      if (sessionId && !counterpartOnline(sessionId)) return;
+      // On autorise le config même si le pair n'est pas détecté online, pour resynchroniser au front
       const payload = { type: "tension:config", config: msg.config };
       if (sessionId) payload.sessionId = sessionId;
       broadcastTenant(ws.meta.tenantId, payload);
