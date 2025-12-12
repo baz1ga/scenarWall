@@ -82,6 +82,7 @@ let presencePing = null;
 let gmOnline = false;
 let gmWarningTimer = null;
 const gmOfflineBanner = document.getElementById("gm-offline-banner");
+let tensionConfigReceived = false;
 
 const defaultZoneBorder = { top: "13px", right: "30px", bottom: "13px", left: "30px" };
 const defaultTensionColors = {
@@ -263,6 +264,7 @@ function setupTensionSocket() {
     setGmControlled(true);
     slideshowControlled = true;
     ws.send(JSON.stringify({ type: "presence:hello", sessionId: SESSION_ID || null }));
+    console.log("[Front][WS] send tension:request");
     presencePing = setInterval(() => {
       if (ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ type: "presence:hello", sessionId: SESSION_ID || null }));
@@ -271,6 +273,24 @@ function setupTensionSocket() {
     // demande la config tension et l'index du diaporama de la session courante au GM
     ws.send(JSON.stringify({ type: "tension:request", sessionId: SESSION_ID || null }));
     ws.send(JSON.stringify({ type: "slideshow:request", sessionId: SESSION_ID || null }));
+    setTimeout(() => {
+      if (!tensionConfigReceived && ws.readyState === WebSocket.OPEN) {
+        console.log("[Front][WS] retry tension:request (startup)");
+        ws.send(JSON.stringify({ type: "tension:request", sessionId: SESSION_ID || null }));
+      }
+    }, 600);
+    setTimeout(() => {
+      if (!tensionConfigReceived && ws.readyState === WebSocket.OPEN) {
+        console.log("[Front][WS] retry tension:request (startup 2)");
+        ws.send(JSON.stringify({ type: "tension:request", sessionId: SESSION_ID || null }));
+      }
+    }, 1500);
+    setTimeout(() => {
+      if (!tensionConfigReceived && ws.readyState === WebSocket.OPEN) {
+        console.log("[Front][WS] retry tension:request (startup 3)");
+        ws.send(JSON.stringify({ type: "tension:request", sessionId: SESSION_ID || null }));
+      }
+    }, 2000);
     if (tensionSocketTimer) {
       clearTimeout(tensionSocketTimer);
       tensionSocketTimer = null;
@@ -306,12 +326,14 @@ function setupTensionSocket() {
         selectTensionLevel(data.level);
       }
       if (data.type === "tension:config" && data.config) {        
+        console.log("[Front][WS] tension:config", data);
         applyTensionState(data.config.tensionEnabled);
         applyTensionFont(data.config.tensionFont);
         applyTensionColors(data.config.tensionColors);
         applyTensionLabels(data.config.tensionLabels);
         tensionAudio = { ...tensionAudio, ...(data.config.tensionAudio || {}) };
         configRequestRetries = 0;
+        tensionConfigReceived = true;
       }
       if (data.type === "slideshow:update" && data.name) {
         slideshowControlled = true;
@@ -432,7 +454,7 @@ function applyHourglassCommand(cmd) {
 }
 
 function requestRemoteConfig() {
-  if (tensionSocket && tensionSocket.readyState === WebSocket.OPEN) {
+  if (tensionSocket && tensionSocket.readyState === WebSocket.OPEN && !tensionConfigReceived) {
     tensionSocket.send(JSON.stringify({ type: "tension:request", sessionId: SESSION_ID || null }));
     tensionSocket.send(JSON.stringify({ type: "slideshow:request", sessionId: SESSION_ID || null }));
     configRequestRetries = 0;

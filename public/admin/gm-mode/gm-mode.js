@@ -899,6 +899,9 @@ export function gmDashboard() {
             if (this.frontOnline && !wasOnline) {
               this.sendTensionConfig();
               this.sendSlideshow(this.slideshowIndex);
+              if (this.selectedTension) {
+                this.sendTension(this.selectedTension);
+              }
             }
             if (!this.frontOnline && this.timerRunning) {
               this.stopTimer();
