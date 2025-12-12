@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="fr" x-data="gamesPage()" x-init="init()" :class="theme" x-bind="rootShell()">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parties en cours - ScenarWall</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/tailwind.css">
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+  <div id="app" class="min-h-screen" x-cloak>
+    <main class="max-w-5xl mx-auto px-4 py-8 space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100 inline-flex items-center gap-2">
+            <i class="fa-solid fa-gamepad"></i>
+            Parties en cours
+          </h1>
+          <p class="text-sm text-slate-500 dark:text-slate-400">Vue admin des sessions actives (GM / Front)</p>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+        <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-800">
+          <thead class="bg-slate-100 dark:bg-slate-900 text-left text-xs uppercase tracking-wide text-slate-600 dark:text-slate-400">
+            <tr>
+              <th class="px-4 py-3">Tenant</th>
+              <th class="px-4 py-3">Session</th>
+              <th class="px-4 py-3">Durée</th>
+              <th class="px-4 py-3">Front</th>
+              <th class="px-4 py-3">GM</th>
+              <th class="px-4 py-3">Santé</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800" x-show="states.length">
+            <template x-for="state in states" :key="state.tenantId + '-' + state.sessionId">
+              <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/60">
+                <td class="px-4 py-3 font-mono text-xs" x-text="state.tenantId"></td>
+                <td class="px-4 py-3 font-mono text-xs" x-text="state.sessionId"></td>
+                <td class="px-4 py-3 text-sm" x-text="formatDuration(state)"></td>
+                <td class="px-4 py-3 text-sm">
+                  <span class="inline-flex items-center gap-2">
+                    <span class="h-2.5 w-2.5 rounded-full" :class="state.front === 'online' ? 'bg-emerald-500' : 'bg-rose-500'"></span>
+                    <span x-text="state.front"></span>
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-sm">
+                  <span class="inline-flex items-center gap-2">
+                    <span class="h-2.5 w-2.5 rounded-full" :class="state.gm === 'online' ? 'bg-emerald-500' : 'bg-rose-500'"></span>
+                    <span x-text="state.gm"></span>
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-sm">
+                  <span class="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs font-semibold"
+                        :class="state.front === 'online' && state.gm === 'online' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'">
+                    <i :class="state.front === 'online' && state.gm === 'online' ? 'fa-solid fa-circle-check' : 'fa-solid fa-triangle-exclamation'"></i>
+                    <span x-text="state.front === 'online' && state.gm === 'online' ? 'OK' : 'Dégradé'"></span>
+                  </span>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+          <tbody x-show="!states.length">
+            <tr>
+              <td colspan="6" class="px-4 py-6 text-center text-sm text-slate-500 dark:text-slate-400">Aucune session active</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="/admin/games/games.js"></script>
+</body>
+</html>

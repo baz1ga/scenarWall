@@ -2720,6 +2720,11 @@ app.get("/api/tenant/:tenantId/session-states", requireLogin, (req, res) => {
   res.json(states);
 });
 
+// Liste complète des états de sessions (superadmin)
+app.get("/api/admin/session-states", requireGodMode, (req, res) => {
+  res.json(presenceStateToArray());
+});
+
 wss.on("connection", (ws, req) => {
   try {
     const urlObj = new URL(req.url, `http://${req.headers.host}`);
