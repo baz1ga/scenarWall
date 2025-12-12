@@ -2810,8 +2810,22 @@ app.get("/t/:tenantId/api/images", async (req, res) => {
   const base = path.join(TENANTS_DIR, tenantId);
 
   const dir = path.join(base, "images");
-  const order = JSON.parse(fs.readFileSync(path.join(base, "order.json")));
-  const hidden = JSON.parse(fs.readFileSync(path.join(base, "hidden.json")));
+  const order = readImageOrder(tenantId);
+  const hiddenFile = path.join(base, "images", "images-hidden.json");
+  const legacyHidden = path.join(base, "images-hidden.json");
+  if (!fs.existsSync(hiddenFile) && fs.existsSync(legacyHidden)) {
+    try { fs.renameSync(legacyHidden, hiddenFile); } catch {}
+  }
+  let hidden = [];
+  try {
+    if (fs.existsSync(hiddenFile)) {
+      hidden = JSON.parse(fs.readFileSync(hiddenFile, "utf8")) || [];
+    } else {
+      fs.writeFileSync(hiddenFile, "[]");
+    }
+  } catch {
+    hidden = [];
+  }
 
   if (!fs.existsSync(dir)) return res.json([]);
 
