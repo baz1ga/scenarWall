@@ -56,6 +56,14 @@ export function sessionViewSection(baseInit) {
       level4: '+10',
       level5: '+15'
     },
+    defaultTensionFont: 'Audiowide',
+    defaultTensionAudio: {
+      level1: null,
+      level2: null,
+      level3: null,
+      level4: null,
+      level5: null
+    },
     tensionColors: {
       level1: '#37aa32',
       level2: '#f8d718',
@@ -174,6 +182,24 @@ export function sessionViewSection(baseInit) {
       { id: 'notes', label: 'Notes' }
     ],
     showTension: false,
+    async loadDefaultTension() {
+      try {
+        const res = await fetch(`${this.API}/api/tension-default`, { headers: this.headersAuth() });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Defaults');
+        this.defaultTensionColors = this.normalizeTensionColors(data.tensionColors || {});
+        this.defaultTensionLabels = this.normalizeTensionLabels(data.tensionLabels || {});
+        this.defaultTensionFont = data.tensionFont || this.defaultTensionFont;
+        this.defaultTensionAudio = this.normalizeTensionAudio(data.tensionAudio);
+        this.tensionColors = { ...this.defaultTensionColors };
+        this.tensionLabels = { ...this.defaultTensionLabels };
+        this.tensionFont = this.defaultTensionFont;
+        this.tensionAudio = { ...this.defaultTensionAudio };
+        this.tensionEnabled = data.tensionEnabled !== undefined ? !!data.tensionEnabled : this.tensionEnabled;
+      } catch (err) {
+        console.warn('[Tension] default load failed', err?.message);
+      }
+    },
 
     async init() {
       if (typeof baseInit === 'function') {
@@ -189,6 +215,7 @@ export function sessionViewSection(baseInit) {
         return;
       }
       try {
+        await this.loadDefaultTension();
         await this.fetchSession(sessionId);
         await this.fetchScenes(sessionId);
         await this.refreshTenantImages();
@@ -1014,18 +1041,60 @@ export function sessionViewSection(baseInit) {
         level5: clamp(src.level5, this.defaultTensionLabels.level5),
       };
     },
+    normalizeTensionAudio(audios) {
+      const levels = ['level1', 'level2', 'level3', 'level4', 'level5'];
+      const src = (typeof audios === 'object' && audios) ? audios : {};
+      const out = {};
+      levels.forEach(l => {
+        out[l] = (typeof src[l] === 'string' && src[l].trim().length) ? src[l] : null;
+      });
+      return out;
+    },
     loadTensionFromSession(session) {
       const colors = this.normalizeTensionColors(session?.tensionColors);
       const labels = this.normalizeTensionLabels(session?.tensionLabels);
+      const audios = this.normalizeTensionAudio(session?.tensionAudio);
       this.tensionEnabled = session?.tensionEnabled !== false;
-      this.tensionFont = session?.tensionFont || 'Audiowide';
+      this.tensionFont = session?.tensionFont || this.defaultTensionFont;
       this.tensionColors = colors;
       this.tensionLabels = labels;
-      this.tensionAudio = session?.tensionAudio || { ...this.tensionAudio };
+      this.tensionAudio = audios;
     },
     queueSaveTension() {
       if (this.tensionSaveTimer) clearTimeout(this.tensionSaveTimer);
       this.tensionSaveTimer = setTimeout(() => this.saveSessionTension(), 600);
+    },
+    resetTensionDefaults() {
+      // Revenir aux valeurs par défaut chargées depuis /api/tension-default
+      this.tensionEnabled = true;
+      this.tensionFont = this.defaultTensionFont;
+      this.tensionColors = { ...this.defaultTensionColors };
+      this.tensionLabels = { ...this.defaultTensionLabels };
+      this.tensionAudio = { ...this.defaultTensionAudio };
+      this.tensionSaving = true;
+      if (!this.tenantId || !this.session?.id) {
+        this.tensionSaving = false;
+        return;
+      }
+      fetch(`${this.API}/api/tenant/${this.tenantId}/sessions/${encodeURIComponent(this.session.id)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', ...this.headersAuth() },
+        body: JSON.stringify({ resetTensionDefaults: true })
+      })
+        .then(res => res.json().then(data => ({ ok: res.ok, data })).catch(() => ({ ok: res.ok, data: {} })))
+        .then(({ ok, data }) => {
+          if (!ok) throw new Error(data.error || 'Réinitialisation tension');
+          this.session = { ...this.session, ...data };
+          this.tensionMessage = 'Tension réinitialisée.';
+          this.tensionStatus = 'ok';
+        })
+        .catch(err => {
+          this.tensionMessage = err?.message || 'Erreur tension';
+          this.tensionStatus = 'error';
+        })
+        .finally(() => {
+          this.tensionSaving = false;
+        });
     },
     async saveSessionTension() {
       if (!this.tenantId || !this.session?.id) return;

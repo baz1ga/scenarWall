@@ -127,35 +127,40 @@
                 <p class="text-xs text-slate-500 dark:text-slate-400">Activez et personnalisez les niveaux.</p>
               </div>
               <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" class="sr-only peer" x-model="tensionEnabled" @change="saveSessionTension">
+                <input type="checkbox" class="sr-only peer" x-model="tensionEnabled">
                 <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:bg-rose-600 transition"></div>
                 <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition peer-checked:translate-x-5"></div>
               </label>
+              <button class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                      @click="resetTensionDefaults">
+                <i class="fa-solid fa-rotate-left"></i>
+                <span>Réinitialiser</span>
+              </button>
             </div>
 
             <div class="grid gap-3 sm:grid-cols-2">
             <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-900/20">
-              <input type="radio" class="text-rose-600" name="tensionFont" value="Audiowide" x-model="tensionFont" @change="saveSessionTension">
+                <input type="radio" class="text-rose-600" name="tensionFont" value="Audiowide" x-model="tensionFont">
               <span style="font-family: 'Audiowide', sans-serif;" class="text-base">Futuriste (Audiowide)</span>
             </label>
           <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-900/20">
-            <input type="radio" class="text-rose-600" name="tensionFont" value="Metal Mania" x-model="tensionFont" @change="saveSessionTension">
+            <input type="radio" class="text-rose-600" name="tensionFont" value="Metal Mania" x-model="tensionFont">
             <span style="font-family: 'Metal Mania', cursive;" class="text-base">Horrifique (Metal Mania)</span>
           </label>
           <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-900/20">
-            <input type="radio" class="text-rose-600" name="tensionFont" value="Rye" x-model="tensionFont" @change="saveSessionTension">
+            <input type="radio" class="text-rose-600" name="tensionFont" value="Rye" x-model="tensionFont">
             <span style="font-family: 'Rye', cursive;" class="text-base">Saloon (Rye)</span>
           </label>
           <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-900/20">
-            <input type="radio" class="text-rose-600" name="tensionFont" value="Share Tech Mono" x-model="tensionFont" @change="saveSessionTension">
+            <input type="radio" class="text-rose-600" name="tensionFont" value="Share Tech Mono" x-model="tensionFont">
             <span style="font-family: 'Share Tech Mono', monospace;" class="text-base">Techno (Share Tech Mono)</span>
           </label>
           <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-900/20">
-            <input type="radio" class="text-rose-600" name="tensionFont" value="Bangers" x-model="tensionFont" @change="saveSessionTension">
+            <input type="radio" class="text-rose-600" name="tensionFont" value="Bangers" x-model="tensionFont">
             <span style="font-family: 'Bangers', cursive;" class="text-base">Cartoon (Bangers)</span>
           </label>
           <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-900/20">
-            <input type="radio" class="text-rose-600" name="tensionFont" value="Great Vibes" x-model="tensionFont" @change="saveSessionTension">
+            <input type="radio" class="text-rose-600" name="tensionFont" value="Great Vibes" x-model="tensionFont">
             <span style="font-family: 'Great Vibes', cursive;" class="text-base">Manuscrit (Great Vibes)</span>
           </label>
             </div>
@@ -168,20 +173,22 @@
                 <div class="ml-auto flex items-center gap-3 flex-wrap justify-end">
                   <div class="flex items-center gap-2">
                     <span class="text-xs text-slate-500 dark:text-slate-400">Label</span>
-                    <input type="text" maxlength="4" class="w-20 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1 text-sm text-slate-900 dark:text-slate-100" x-model="tensionLabels[level]" @change="queueSaveTension">
+                    <input type="text" maxlength="4" class="w-20 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1 text-sm text-slate-900 dark:text-slate-100" x-model="tensionLabels[level]">
                   </div>
                   <div class="flex items-center gap-2">
                     <span class="text-xs text-slate-500 dark:text-slate-400">Couleur</span>
-                    <input type="color" class="h-9 w-12 rounded border border-slate-300 dark:border-slate-700 bg-transparent cursor-pointer" x-model="tensionColors[level]" @change="queueSaveTension">
+                    <input type="color" class="h-9 w-12 rounded border border-slate-300 dark:border-slate-700 bg-transparent cursor-pointer" x-model="tensionColors[level]">
                   </div>
                 <div class="flex items-center gap-2 min-w-[180px]">
                     <span class="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">Audio</span>
                     <select class="flex-1 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1 text-sm text-slate-900 dark:text-slate-100"
-                            x-model="tensionAudio[level]"
-                            @change="queueSaveTension">
+                            x-model="tensionAudio[level]">
                       <option :value="null">Aucun</option>
+                      <template x-if="tensionAudio[level] && !tenantAudio.some(a => a.name === tensionAudio[level])">
+                        <option :value="tensionAudio[level]" :selected="true" x-text="`${tensionAudio[level]} (manquant)`"></option>
+                      </template>
                       <template x-for="audio in tenantAudio" :key="audio.name">
-                        <option :value="audio.name" x-text="audio.name"></option>
+                        <option :value="audio.name" :selected="tensionAudio[level] === audio.name" x-text="audio.name"></option>
                       </template>
                     </select>
                   </div>

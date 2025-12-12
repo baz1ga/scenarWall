@@ -25,8 +25,10 @@ const FAVICONS_DIR = path.join(PUBLIC_DIR, "assets", "favicons");
 const FRONT_FILE = path.join(PUBLIC_DIR, "front", "index.html");
 const GLOBAL_FILE = path.join(DATA_DIR, "default-quota.json");
 const LEGACY_GLOBAL_FILE = path.join(DATA_DIR, "global.json");
-const SESSION_STATES_FILE = path.join(DATA_DIR, "session-states.json");
-const TENSION_DEFAULT_FILE = path.join(DATA_DIR, "tension-default.json");
+const SESSION_STATES_FILE = path.join(DATA_DIR, "run-states.json");
+const LEGACY_SESSION_STATES_FILE = path.join(DATA_DIR, "session-states.json");
+const TENSION_DEFAULT_FILE = path.join(DATA_DIR, "default-tension.json");
+const LEGACY_TENSION_DEFAULT_FILE = path.join(DATA_DIR, "tension-default.json");
 // (history removed)
 const LOG_DIR = path.join(DATA_DIR, "logs");
 const CSRF_COOKIE = "XSRF-TOKEN";
@@ -172,6 +174,10 @@ function loadTensionDefaults() {
     return out;
   };
 
+  // Migration ancien nom
+  if (!fs.existsSync(TENSION_DEFAULT_FILE) && fs.existsSync(LEGACY_TENSION_DEFAULT_FILE)) {
+    try { fs.renameSync(LEGACY_TENSION_DEFAULT_FILE, TENSION_DEFAULT_FILE); } catch {}
+  }
   if (!fs.existsSync(TENSION_DEFAULT_FILE)) {
     fs.writeFileSync(TENSION_DEFAULT_FILE, JSON.stringify(FALLBACK_TENSION_DEFAULTS, null, 2));
     return FALLBACK_TENSION_DEFAULTS;
@@ -444,7 +450,6 @@ if (!fs.existsSync(USERS_FILE)) fs.writeFileSync(USERS_FILE, "[]");
 if (!fs.existsSync(GLOBAL_FILE) && fs.existsSync(LEGACY_GLOBAL_FILE)) {
   try { fs.renameSync(LEGACY_GLOBAL_FILE, GLOBAL_FILE); } catch {}
 }
-if (!fs.existsSync(GLOBAL_FILE)) fs.writeFileSync(GLOBAL_FILE, JSON.stringify({ defaultQuotaMB: DEFAULT_GLOBAL.defaultQuotaMB }, null, 2));
 if (!fs.existsSync(SESSIONS_FILE)) fs.writeFileSync(SESSIONS_FILE, "{}");
 if (!fs.existsSync(TENANTS_DIR)) fs.mkdirSync(TENANTS_DIR);
 
@@ -592,6 +597,9 @@ function ensureSessionDir(tenantId) {
 
 function applySessionRuntimeDefaults(session) {
   if (!session || typeof session !== "object") return session;
+  const mergedTensionColors = normalizeTensionColors(session.tensionColors || DEFAULT_CONFIG.tensionColors);
+  const mergedTensionLabels = normalizeTensionLabels(session.tensionLabels || DEFAULT_CONFIG.tensionLabels);
+  const mergedTensionAudio = normalizeTensionAudio(session.tensionAudio || DEFAULT_CONFIG.tensionAudio);
   return {
     ...session,
     timer: {
@@ -601,7 +609,12 @@ function applySessionRuntimeDefaults(session) {
     hourglass: {
       ...DEFAULT_TENANT_SESSION.hourglass,
       ...(session.hourglass || {})
-    }
+    },
+    tensionEnabled: session.tensionEnabled !== undefined ? !!session.tensionEnabled : DEFAULT_CONFIG.tensionEnabled,
+    tensionFont: session.tensionFont || DEFAULT_CONFIG.tensionFont || null,
+    tensionColors: mergedTensionColors,
+    tensionLabels: mergedTensionLabels,
+    tensionAudio: mergedTensionAudio
   };
 }
 
@@ -628,7 +641,8 @@ function readSessionFile(tenantId, id) {
 function writeSessionFile(tenantId, data) {
   const dir = ensureSessionDir(tenantId);
   const file = sessionPath(tenantId, data.id);
-  const payload = applySessionRuntimeDefaults(data);
+  // On n'écrit que les valeurs fournies, les defaults runtime sont appliqués en lecture.
+  const payload = { ...data };
   fs.writeFileSync(file, JSON.stringify(payload, null, 2));
   return data;
 }
@@ -732,7 +746,6 @@ function loadConfig(tenantId) {
 
 function getGlobalConfig() {
   if (!fs.existsSync(GLOBAL_FILE)) {
-    fs.writeFileSync(GLOBAL_FILE, JSON.stringify({ defaultQuotaMB: DEFAULT_GLOBAL.defaultQuotaMB }, null, 2));
     return { ...DEFAULT_GLOBAL };
   }
 
@@ -741,20 +754,19 @@ function getGlobalConfig() {
     const defaultQuotaMB = (typeof data.defaultQuotaMB === "number" && data.defaultQuotaMB > 0)
       ? data.defaultQuotaMB
       : DEFAULT_GLOBAL.defaultQuotaMB;
-    const merged = { defaultQuotaMB };
-
-    // Les valeurs sensibles ou gérées par l'env sont ignorées depuis le fichier.
-    merged.apiBase = ENV_GLOBAL.apiBase !== null ? ENV_GLOBAL.apiBase : null;
-    merged.pixabayKey = ENV_GLOBAL.pixabayKey !== null ? ENV_GLOBAL.pixabayKey : null;
-    merged.discordClientId = ENV_GLOBAL.discordClientId !== null ? ENV_GLOBAL.discordClientId : null;
-    merged.discordClientSecret = ENV_GLOBAL.discordClientSecret !== null ? ENV_GLOBAL.discordClientSecret : null;
-    merged.discordRedirectUri = ENV_GLOBAL.discordRedirectUri !== null ? ENV_GLOBAL.discordRedirectUri : null;
-    merged.allowedGuildId = null;
-    merged.discordScopes = (ENV_GLOBAL.discordScopes && ENV_GLOBAL.discordScopes.length)
-      ? ENV_GLOBAL.discordScopes
-      : DEFAULT_DISCORD_SCOPES;
-
-    return merged;
+    // Seul le quota par défaut peut provenir du fichier. Les autres valeurs viennent des env/fallbacks.
+    return {
+      defaultQuotaMB,
+      apiBase: ENV_GLOBAL.apiBase !== null ? ENV_GLOBAL.apiBase : null,
+      pixabayKey: ENV_GLOBAL.pixabayKey !== null ? ENV_GLOBAL.pixabayKey : null,
+      discordClientId: ENV_GLOBAL.discordClientId !== null ? ENV_GLOBAL.discordClientId : null,
+      discordClientSecret: ENV_GLOBAL.discordClientSecret !== null ? ENV_GLOBAL.discordClientSecret : null,
+      discordRedirectUri: ENV_GLOBAL.discordRedirectUri !== null ? ENV_GLOBAL.discordRedirectUri : null,
+      allowedGuildId: null,
+      discordScopes: (ENV_GLOBAL.discordScopes && ENV_GLOBAL.discordScopes.length)
+        ? ENV_GLOBAL.discordScopes
+        : DEFAULT_DISCORD_SCOPES
+    };
   } catch (err) {
     logger.error("Failed to read global config, using defaults", { err: err?.message });
     return {
@@ -847,7 +859,13 @@ function flattenRuns(groups) {
 
 function loadSessionStates() {
   if (!fs.existsSync(SESSION_STATES_FILE)) {
-    fs.writeFileSync(SESSION_STATES_FILE, JSON.stringify([], null, 2));
+    // migration depuis l'ancien nom
+    if (fs.existsSync(LEGACY_SESSION_STATES_FILE)) {
+      try { fs.renameSync(LEGACY_SESSION_STATES_FILE, SESSION_STATES_FILE); } catch {}
+    }
+    if (!fs.existsSync(SESSION_STATES_FILE)) {
+      fs.writeFileSync(SESSION_STATES_FILE, JSON.stringify([], null, 2));
+    }
   }
   try {
     const data = JSON.parse(fs.readFileSync(SESSION_STATES_FILE, "utf8")) || [];
@@ -1144,9 +1162,9 @@ app.get("/api/auth/discord/callback", async (req, res) => {
       fs.mkdirSync(path.join(dir, "images"));
       fs.mkdirSync(path.join(dir, "thumbs"));
       fs.mkdirSync(path.join(dir, "audio"));
-      fs.writeFileSync(path.join(dir, "order.json"), "[]");
-      fs.writeFileSync(path.join(dir, "audio-order.json"), "[]");
-      fs.writeFileSync(path.join(dir, "hidden.json"), "[]");
+      fs.writeFileSync(path.join(dir, "images", "images-order.json"), "[]");
+      fs.writeFileSync(path.join(dir, "audio", "audio-order.json"), "[]");
+      fs.writeFileSync(path.join(dir, "images", "images-hidden.json"), "[]");
       fs.writeFileSync(path.join(dir, "config.json"), JSON.stringify(DEFAULT_CONFIG, null, 2));
 
       user = {
@@ -1353,17 +1371,46 @@ function notePath(tenantId, name) {
 }
 
 function audioOrderFile(tenantId) {
-  return path.join(TENANTS_DIR, tenantId, "audio-order.json");
+  return path.join(TENANTS_DIR, tenantId, "audio", "audio-order.json");
 }
 
 function readAudioOrder(tenantId) {
   const file = audioOrderFile(tenantId);
+  const legacy = path.join(TENANTS_DIR, tenantId, "audio-order.json");
+  const audioDir = path.join(TENANTS_DIR, tenantId, "audio");
+  if (!fs.existsSync(audioDir)) fs.mkdirSync(audioDir, { recursive: true });
+  if (!fs.existsSync(file)) {
+    if (fs.existsSync(legacy)) {
+      try { fs.renameSync(legacy, file); } catch {}
+    }
+  }
   if (!fs.existsSync(file)) fs.writeFileSync(file, "[]");
   return JSON.parse(fs.readFileSync(file, "utf8"));
 }
 
 function writeAudioOrder(tenantId, order) {
   fs.writeFileSync(audioOrderFile(tenantId), JSON.stringify(order, null, 2));
+}
+
+function imageOrderFile(tenantId) {
+  const imagesDir = path.join(TENANTS_DIR, tenantId, "images");
+  if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
+  const file = path.join(imagesDir, "images-order.json");
+  const legacy = path.join(TENANTS_DIR, tenantId, "order.json");
+  if (!fs.existsSync(file) && fs.existsSync(legacy)) {
+    try { fs.renameSync(legacy, file); } catch {}
+  }
+  if (!fs.existsSync(file)) fs.writeFileSync(file, "[]");
+  return file;
+}
+
+function readImageOrder(tenantId) {
+  const file = imageOrderFile(tenantId);
+  return JSON.parse(fs.readFileSync(file, "utf8"));
+}
+
+function writeImageOrder(tenantId, order) {
+  fs.writeFileSync(imageOrderFile(tenantId), JSON.stringify(order, null, 2));
 }
 
 //------------------------------------------------------------
@@ -1380,8 +1427,16 @@ app.get("/api/tenant/:tenant/images", requireLogin, async (req, res) => {
   }
 
   const dir = path.join(TENANTS_DIR, tenantId, "images");
-  const order = JSON.parse(fs.readFileSync(path.join(TENANTS_DIR, tenantId, "order.json"), "utf8"));
-  const hidden = JSON.parse(fs.readFileSync(path.join(TENANTS_DIR, tenantId, "hidden.json"), "utf8"));
+  const order = readImageOrder(tenantId);
+  const hiddenPath = path.join(TENANTS_DIR, tenantId, "images", "images-hidden.json");
+  const legacyHidden = path.join(TENANTS_DIR, tenantId, "images-hidden.json");
+  if (!fs.existsSync(hiddenPath)) {
+    if (fs.existsSync(legacyHidden)) {
+      try { fs.renameSync(legacyHidden, hiddenPath); } catch {}
+    }
+  }
+  if (!fs.existsSync(hiddenPath)) fs.writeFileSync(hiddenPath, "[]");
+  const hidden = JSON.parse(fs.readFileSync(hiddenPath, "utf8"));
 
   if (!fs.existsSync(dir)) {
     return res.json([]);
@@ -1425,7 +1480,7 @@ app.post("/api/:tenantId/images/upload", requireLogin, (req, res) => {
     }
 
     const base = path.join(TENANTS_DIR, tenantId);
-    const orderFile = path.join(base, "order.json");
+    const orderFile = imageOrderFile(tenantId);
     const uploadedPath = req.file.path || path.join(base, "images", req.file.filename);
 
     const { quotaMB } = getTenantQuota(tenantId);
@@ -1439,7 +1494,6 @@ app.post("/api/:tenantId/images/upload", requireLogin, (req, res) => {
     }
 
     const order = JSON.parse(fs.readFileSync(orderFile));
-
     order.push(req.file.filename);
     fs.writeFileSync(orderFile, JSON.stringify(order, null, 2));
 
@@ -1459,10 +1513,7 @@ app.put("/api/:tenantId/images/order", requireLogin, (req, res) => {
   const orderInput = Array.isArray(req.body.order) ? req.body.order : [];
   const order = orderInput.filter(isSafeName);
 
-  fs.writeFileSync(
-    path.join(TENANTS_DIR, tenantId, "order.json"),
-    JSON.stringify(order, null, 2)
-  );
+  writeImageOrder(tenantId, order);
 
   res.json({ success: true });
 });
@@ -1582,7 +1633,7 @@ app.put("/api/:tenantId/images/hide/:name", requireLogin, (req, res) => {
     return res.status(403).json({ error: "Forbidden tenant" });
   if (!isSafeName(name)) return res.status(400).json({ error: "Invalid name" });
 
-  const file = path.join(TENANTS_DIR, tenantId, "hidden.json");
+  const file = path.join(TENANTS_DIR, tenantId, "images", "images-hidden.json");
   let hidden = JSON.parse(fs.readFileSync(file));
 
   if (!hidden.includes(name)) hidden.push(name);
@@ -1600,7 +1651,7 @@ app.put("/api/:tenantId/images/show/:name", requireLogin, (req, res) => {
     return res.status(403).json({ error: "Forbidden tenant" });
   if (!isSafeName(name)) return res.status(400).json({ error: "Invalid name" });
 
-  const file = path.join(TENANTS_DIR, tenantId, "hidden.json");
+  const file = path.join(TENANTS_DIR, tenantId, "images", "images-hidden.json");
   let hidden = JSON.parse(fs.readFileSync(file));
 
   hidden = hidden.filter(h => h !== name);
@@ -1619,8 +1670,8 @@ app.delete("/api/:tenantId/images/:name", requireLogin, (req, res) => {
   if (!isSafeName(name)) return res.status(400).json({ error: "Invalid name" });
 
   const base = path.join(TENANTS_DIR, tenantId);
-  const hiddenFile = path.join(base, "hidden.json");
-  const orderFile = path.join(base, "order.json");
+  const hiddenFile = path.join(base, "images", "images-hidden.json");
+  const orderFile = imageOrderFile(tenantId);
   const imagesDir = path.join(base, "images");
 
   let hidden = JSON.parse(fs.readFileSync(hiddenFile));
@@ -2088,30 +2139,7 @@ function sanitizeSessionInput(body = {}, existing = null) {
     createdAt: now,
     updatedAt: now,
     timer: { ...DEFAULT_TENANT_SESSION.timer },
-    hourglass: { ...DEFAULT_TENANT_SESSION.hourglass },
-    tensionEnabled: true,
-    tensionFont: 'Audiowide',
-    tensionColors: {
-      level1: '#37aa32',
-      level2: '#f8d718',
-      level3: '#f39100',
-      level4: '#e63027',
-      level5: '#3a3a39'
-    },
-    tensionLabels: {
-      level1: '0',
-      level2: '-5',
-      level3: '+5',
-      level4: '+10',
-      level5: '+15'
-    },
-    tensionAudio: {
-      level1: null,
-      level2: null,
-      level3: null,
-      level4: null,
-      level5: null
-    }
+    hourglass: { ...DEFAULT_TENANT_SESSION.hourglass }
   };
   const payload = { ...base };
   if (typeof body.title === "string") payload.title = body.title.trim().slice(0, 200);
@@ -2169,12 +2197,17 @@ function sanitizeSessionInput(body = {}, existing = null) {
       level5: typeof body.tensionAudio.level5 === "string" ? body.tensionAudio.level5 : null
     };
   }
+  if (body.resetTensionDefaults === true) {
+    delete payload.tensionEnabled;
+    delete payload.tensionFont;
+    delete payload.tensionColors;
+    delete payload.tensionLabels;
+    delete payload.tensionAudio;
+  }
   delete payload.description;
   delete payload.date;
   delete payload.format;
   payload.updatedAt = now;
-  if (!payload.timer) payload.timer = { ...DEFAULT_TENANT_SESSION.timer };
-  if (!payload.hourglass) payload.hourglass = { ...DEFAULT_TENANT_SESSION.hourglass };
   return payload;
 }
 
