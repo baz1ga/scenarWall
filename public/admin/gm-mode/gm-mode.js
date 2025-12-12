@@ -613,6 +613,18 @@ export function gmDashboard() {
       this.stopTimerLoop();
       await this.saveTimer();
     },
+    async stopTimer() {
+      if (!this.selectedSessionId) return;
+      if (!this.timerRunning) return;
+      const now = Date.now();
+      if (this.timerStartedAt) {
+        this.timerElapsedMs += now - this.timerStartedAt;
+      }
+      this.timerStartedAt = null;
+      this.timerRunning = false;
+      this.stopTimerLoop();
+      await this.saveTimer();
+    },
     async toggleTimer() {
       if (!this.selectedSessionId) return;
       if (!this.timerRunning) {
@@ -887,6 +899,9 @@ export function gmDashboard() {
             if (this.frontOnline && !wasOnline) {
               this.sendTensionConfig();
               this.sendSlideshow(this.slideshowIndex);
+            }
+            if (!this.frontOnline && this.timerRunning) {
+              this.stopTimer();
             }
           } else if (msg.type === 'presence:update' && msg.sessionId) {
             this.presenceBySession[msg.sessionId] = msg.front === 'online';

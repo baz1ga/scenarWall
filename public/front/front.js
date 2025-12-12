@@ -311,6 +311,7 @@ function setupTensionSocket() {
         applyTensionColors(data.config.tensionColors);
         applyTensionLabels(data.config.tensionLabels);
         tensionAudio = { ...tensionAudio, ...(data.config.tensionAudio || {}) };
+        configRequestRetries = 0;
       }
       if (data.type === "slideshow:update" && data.name) {
         slideshowControlled = true;
