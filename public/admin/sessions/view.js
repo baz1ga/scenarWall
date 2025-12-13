@@ -1050,6 +1050,18 @@ export function sessionViewSection(baseInit) {
       });
       return out;
     },
+    isSameTensionColors(a, b) {
+      const levels = ['level1', 'level2', 'level3', 'level4', 'level5'];
+      return levels.every(l => (a?.[l] || '') === (b?.[l] || ''));
+    },
+    isSameTensionLabels(a, b) {
+      const levels = ['level1', 'level2', 'level3', 'level4', 'level5'];
+      return levels.every(l => (a?.[l] || '') === (b?.[l] || ''));
+    },
+    isSameTensionAudio(a, b) {
+      const levels = ['level1', 'level2', 'level3', 'level4', 'level5'];
+      return levels.every(l => (a?.[l] || null) === (b?.[l] || null));
+    },
     loadTensionFromSession(session) {
       const colors = this.normalizeTensionColors(session?.tensionColors);
       const labels = this.normalizeTensionLabels(session?.tensionLabels);
@@ -1107,16 +1119,24 @@ export function sessionViewSection(baseInit) {
         if (!audios[k]) audios[k] = null;
       });
       try {
+        const payload = { tensionEnabled: this.tensionEnabled };
+        const hasCustom =
+          this.tensionFont !== this.defaultTensionFont ||
+          !this.isSameTensionColors(colors, this.defaultTensionColors) ||
+          !this.isSameTensionLabels(labels, this.defaultTensionLabels) ||
+          !this.isSameTensionAudio(audios, this.defaultTensionAudio);
+        if (hasCustom) {
+          payload.tensionFont = this.tensionFont;
+          payload.tensionColors = colors;
+          payload.tensionLabels = labels;
+          payload.tensionAudio = audios;
+        } else {
+          payload.clearTension = true;
+        }
         const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/sessions/${encodeURIComponent(this.session.id)}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', ...this.headersAuth() },
-          body: JSON.stringify({
-            tensionEnabled: this.tensionEnabled,
-            tensionFont: this.tensionFont,
-            tensionColors: colors,
-            tensionLabels: labels,
-            tensionAudio: audios
-          })
+          body: JSON.stringify(payload)
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || 'Sauvegarde tension');

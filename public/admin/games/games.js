@@ -8,6 +8,7 @@ export function gamesPage() {
     section: 'games',
     states: [],
     searchTerm: '',
+    hideShortRuns: true,
     async init() {
       if (typeof baseInit === 'function') {
         await baseInit.call(this);
@@ -47,12 +48,21 @@ export function gamesPage() {
       });
       return Array.from(tmap.values());
     },
+    filterRuns(runs = []) {
+      return runs.filter(r => {
+        if (!this.hideShortRuns) return true;
+        const start = Number(r.createdAt || 0);
+        const end = Number(r.updatedAt || 0);
+        if (!start || !end) return false;
+        return (end - start) >= 60000; // au moins 60s
+      });
+    },
     groupedRuns() {
       const groups = this.states.map(t => ({
         tenantId: t.tenantId,
         sessions: (t.sessions || []).map(s => ({
           sessionId: s.sessionId,
-          runs: (s.runs || []).slice().sort((a, b) => Number(b.updatedAt || 0) - Number(a.updatedAt || 0))
+          runs: this.filterRuns((s.runs || [])).slice().sort((a, b) => Number(b.updatedAt || 0) - Number(a.updatedAt || 0))
         })).sort((a, b) => a.sessionId.localeCompare(b.sessionId))
       })).sort((a, b) => a.tenantId.localeCompare(b.tenantId));
       return groups;
@@ -65,7 +75,7 @@ export function gamesPage() {
       const flat = [];
       (this.states || []).forEach(t => {
         (t.sessions || []).forEach(s => {
-          (s.runs || []).forEach(r => {
+          this.filterRuns(s.runs || []).forEach(r => {
             flat.push({
               tenantId: t.tenantId,
               sessionId: s.sessionId,

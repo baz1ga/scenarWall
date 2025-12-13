@@ -206,18 +206,29 @@ export function gallerySection() {
       this.visible = newVisibleList;
       await this.saveOrder();
     },
-    startDrag(index) {
+    startDrag(index, event) {
       this.dragIndex = index;
       this.dragOverIndex = index;
+      if (event?.dataTransfer) {
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', String(index));
+      }
     },
-    onDragOver(index) {
+    onDragOver(index, event) {
+      if (event) event.preventDefault();
       if (this.dragIndex === null) return;
       this.dragOverIndex = index;
     },
-    async onDrop(index) {
-      if (this.dragIndex === null) return;
+    async onDrop(index, event) {
+      if (event) event.preventDefault();
+      let from = this.dragIndex;
+      if (from === null && event?.dataTransfer) {
+        const parsed = Number(event.dataTransfer.getData('text/plain'));
+        if (!Number.isNaN(parsed)) from = parsed;
+      }
+      if (from === null) return;
       const list = [...this.visible];
-      const [moved] = list.splice(this.dragIndex, 1);
+      const [moved] = list.splice(from, 1);
       list.splice(index, 0, moved);
       this.dragIndex = null;
       this.dragOverIndex = null;

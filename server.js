@@ -2204,6 +2204,12 @@ function sanitizeSessionInput(body = {}, existing = null) {
     delete payload.tensionLabels;
     delete payload.tensionAudio;
   }
+  if (body.clearTension === true) {
+    delete payload.tensionFont;
+    delete payload.tensionColors;
+    delete payload.tensionLabels;
+    delete payload.tensionAudio;
+  }
   delete payload.description;
   delete payload.date;
   delete payload.format;

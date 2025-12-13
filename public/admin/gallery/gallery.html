@@ -50,10 +50,11 @@
                   <div
                     class="relative rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 overflow-hidden aspect-square transition-all group hover:-translate-y-0.5"
                     draggable="true"
-                    @dragstart="startDrag(index)"
+                    @dragstart="startDrag(index, $event)"
                     @dragend="endDrag()"
-                    @dragover.prevent="onDragOver(index)"
-                    @drop.prevent="onDrop(index)"
+                    @dragover.prevent="onDragOver(index, $event)"
+                    @dragenter.prevent="onDragOver(index, $event)"
+                    @drop.prevent="onDrop(index, $event)"
                     :class="[
                       'shadow-sm hover:shadow-md',
                       dragOverIndex === index ? 'gallery-ring ring-offset-2 ring-offset-slate-50 dark:ring-offset-slate-900 shadow-lg' : '',
@@ -81,7 +82,7 @@
                     </button>
                     <div class="absolute bottom-2 left-2 px-2 py-1 rounded-full bg-slate-900/80 text-white text-[11px] font-semibold shadow-sm">#<span x-text="index + 1"></span></div>
                     <div class="absolute inset-0">
-                      <img :src="img.thumbUrl || img.url" class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105 group-active:scale-[1.02]" @click="zoom(img.url)">
+                      <img :src="img.thumbUrl || img.url" draggable="false" class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105 group-active:scale-[1.02]" @click="zoom(img.url)">
                     </div>
                     <div class="absolute inset-0 bg-slate-900/15 dark:bg-slate-100/10 opacity-0 group-hover:opacity-100 transition flex items-center justify-center pointer-events-none text-[10px] font-semibold tracking-wide text-white">Glisser pour déplacer</div>
                     <div
