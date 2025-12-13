@@ -16,22 +16,22 @@
         </h1>        
       </div>
       <div class="flex flex-wrap items-center gap-2">
-        <input type="text" x-model="searchTerm" placeholder="Rechercher un tenant..." class="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--games-accent)] focus:border-[var(--games-accent)]">
+        <input type="text" x-model="searchTerm" placeholder="Rechercher un tenant..." class="rounded-lg border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--games-accent)] focus:border-[var(--games-accent)]">
         <div class="flex items-center gap-2">
-          <button class="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+          <button class="px-3 py-2 rounded-lg border border-slate-200 dark:border-gray-700 text-sm text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                   @click="fetchStates()">
             <i class="fa-solid fa-rotate"></i> Rafraîchir
           </button>
-          <label class="inline-flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 bg-white dark:bg-slate-950">
-            <input type="checkbox" class="rounded text-amber-500 border-slate-300 dark:border-slate-600"
+          <label class="inline-flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-gray-700 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-950">
+            <input type="checkbox" class="rounded text-amber-500 border-slate-300 dark:border-gray-600"
                    x-model="hideShortRuns">
             <span>Masquer &lt; 60s</span>
           </label>
-          <button class="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+          <button class="px-3 py-2 rounded-lg border border-slate-200 dark:border-gray-700 text-sm text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                   @click="window.dispatchEvent(new CustomEvent('open-all-tenants', { detail: true }))">
             Tout déplier
           </button>
-          <button class="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+          <button class="px-3 py-2 rounded-lg border border-slate-200 dark:border-gray-700 text-sm text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                   @click="window.dispatchEvent(new CustomEvent('open-all-tenants', { detail: false }))">
             Tout plier
           </button>
@@ -40,17 +40,17 @@
     </div>
 
     <template x-if="groupedRuns().length === 0">
-      <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm p-6 text-center text-sm text-slate-500 dark:text-slate-400">
+      <div class="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 shadow-sm p-6 text-center text-sm text-slate-500 dark:text-slate-400">
         Aucune partie jouée
       </div>
     </template>
 
     <template x-for="tenant in filteredTenants()" :key="tenant.tenantId">
-      <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm overflow-hidden max-w-3xl mx-auto"
+      <div class="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 shadow-sm overflow-hidden max-w-3xl mx-auto"
            x-data="{ open: false }"
            :class="tenant.tenantId === tenantId ? 'border-[var(--games-accent)] ring-2 ring-[var(--games-accent)] ring-offset-2 ring-offset-slate-50 dark:ring-offset-slate-900' : ''"
            @open-all-tenants.window="open = $event.detail">
-        <button class="w-full bg-slate-100 dark:bg-slate-900 px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200 flex items-center justify-between"
+        <button class="w-full bg-slate-100 dark:bg-gray-800 px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200 flex items-center justify-between"
                 @click="open = !open">
           <span class="inline-flex items-center gap-2">
             <i class="fa-solid fa-folder"></i>
@@ -61,7 +61,7 @@
         <div class="divide-y divide-slate-200 dark:divide-slate-800" x-show="open" x-transition>
           <template x-for="session in tenant.sessions" :key="tenant.tenantId + '-' + session.sessionId">
             <div>
-              <div class="px-4 py-2 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/40 flex items-center gap-2">
+              <div class="px-4 py-2 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-gray-800/40 flex items-center gap-2">
                 <i class="fa-regular fa-rectangle-list"></i>
                 <span class="font-mono text-[11px]" x-text="session.sessionId"></span>
               </div>

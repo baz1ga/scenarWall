@@ -6,10 +6,10 @@ module.exports = {
   safelist: [
     'dark:bg-slate-800',
     'dark:bg-slate-900',
-    'dark:bg-slate-950',
+    'dark:bg-gray-950',
     'dark:bg-transparent',
-    'dark:border-slate-700',
-    'dark:border-slate-800',
+    'dark:border-gray-700',
+    'dark:border-gray-800',
     'dark:hover:bg-slate-700',
     'dark:hover:bg-slate-800',
     'dark:text-emerald-100',

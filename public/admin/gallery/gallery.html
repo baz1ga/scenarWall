@@ -18,7 +18,7 @@
         </div>
         <div class="flex items-center gap-2">
           <button
-            class="inline-flex h-[34px] items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition disabled:opacity-40 disabled:cursor-not-allowed"
+            class="inline-flex h-[34px] items-center gap-2 rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition disabled:opacity-40 disabled:cursor-not-allowed"
             @click="hideSelectedVisible()"
             :disabled="galleryLoading || selectedVisible.length === 0"
             :title="selectedVisible.length === 0 ? 'Sélectionnez des images' : 'Mettre de coté'"
@@ -37,18 +37,18 @@
         </div>
       </div>
       <div class="space-y-2">
-          <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/40 p-4">
+          <div class="rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950/40 p-4">
             <template x-if="galleryLoading">
               <div class="text-sm text-slate-400">Chargement...</div>
             </template>
             <template x-if="!galleryLoading && visible.length === 0">
-              <div class="text-sm text-slate-600 dark:text-slate-400 border border-dashed border-slate-300 dark:border-slate-800 rounded-lg p-4">Aucune image.</div>
+              <div class="text-sm text-slate-600 dark:text-slate-400 border border-dashed border-slate-300 dark:border-gray-800 rounded-lg p-4">Aucune image.</div>
             </template>
 
               <div class="grid gap-2 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7">
                 <template x-for="(img, index) in visible" :key="img.name">
                   <div
-                    class="relative rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 overflow-hidden aspect-square transition-all group hover:-translate-y-0.5"
+                    class="relative rounded-lg border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 overflow-hidden aspect-square transition-all group hover:-translate-y-0.5"
                     draggable="true"
                     @dragstart="startDrag(index, $event)"
                     @dragend="endDrag()"
@@ -62,7 +62,7 @@
                     ]"
                   >
                     <div class="absolute top-2 right-2 z-20 flex items-center gap-2">
-                      <label class="h-8 w-8 flex items-center justify-center rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow cursor-pointer">
+                      <label class="h-8 w-8 flex items-center justify-center rounded-full bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 shadow cursor-pointer">
                         <input
                           type="checkbox"
                           class="h-4 w-4 rounded border border-slate-400 bg-white text-yellow-500 accent-yellow-500 cursor-pointer"
@@ -73,7 +73,7 @@
                       </label>
                     </div>
                     <button
-                      class="absolute top-2 left-2 h-7 w-7 flex items-center justify-center rounded-full bg-white/90 dark:bg-slate-900/90 text-slate-500 hover:text-yellow-600 cursor-grab select-none border border-slate-200 dark:border-slate-700 text-xs"
+                      class="absolute top-2 left-2 h-7 w-7 flex items-center justify-center rounded-full bg-white/90 dark:bg-gray-800/90 text-slate-500 hover:text-yellow-600 cursor-grab select-none border border-slate-200 dark:border-gray-700 text-xs"
                       :class="dragIndex === index ? 'cursor-grabbing text-yellow-600' : ''"
                       title="Glisser pour réordonner"
                       @mousedown.prevent
@@ -110,7 +110,7 @@
         </div>
         <div class="flex items-center gap-2">
           <button
-            class="btn-ghost inline-flex h-[34px] items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition disabled:opacity-40 disabled:cursor-not-allowed"
+            class="btn-ghost inline-flex h-[34px] items-center gap-2 rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition disabled:opacity-40 disabled:cursor-not-allowed"
             @click="showSelectedHidden()"
             :disabled="galleryLoading || selectedHidden.length === 0"
             :title="selectedHidden.length === 0 ? 'Sélectionnez des images' : 'Ajouter à la bibliothèque'"
@@ -119,7 +119,7 @@
             <span class="badge-count" x-text="selectedHidden.length" x-show="selectedHidden.length > 0"></span>
           </button>
           <button
-            class="btn-outline-rose inline-flex h-[34px] items-center gap-2 rounded-lg border border-rose-200 dark:border-rose-900 bg-white dark:bg-slate-950 px-3 py-1.5 text-xs text-rose-700 dark:text-rose-200 hover:bg-rose-50 dark:hover:bg-rose-950 transition disabled:opacity-40 disabled:cursor-not-allowed"
+            class="btn-outline-rose inline-flex h-[34px] items-center gap-2 rounded-lg border border-rose-200 dark:border-rose-900 bg-white dark:bg-gray-950 px-3 py-1.5 text-xs text-rose-700 dark:text-rose-200 hover:bg-rose-50 dark:hover:bg-rose-950 transition disabled:opacity-40 disabled:cursor-not-allowed"
             @click="deleteSelectedHidden()"
             :disabled="galleryLoading || selectedHidden.length === 0"
             :title="selectedHidden.length === 0 ? 'Sélectionnez des images' : 'Supprimer la sélection'"
@@ -130,19 +130,19 @@
         </div>
       </div>
       <div class="space-y-2">
-        <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/40 p-4">
+        <div class="rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950/40 p-4">
         <template x-if="galleryLoading">
           <div class="text-sm text-slate-400">Chargement...</div>
         </template>
         <template x-if="!galleryLoading && hidden.length === 0">
-          <div class="text-sm text-slate-600 dark:text-slate-400 border border-dashed border-slate-300 dark:border-slate-800 rounded-lg p-4">Aucune image.</div>
+          <div class="text-sm text-slate-600 dark:text-slate-400 border border-dashed border-slate-300 dark:border-gray-800 rounded-lg p-4">Aucune image.</div>
         </template>
 
           <div class="grid gap-2 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7">
             <template x-for="(img, index) in hidden" :key="img.name">
-              <div class="relative rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 overflow-hidden aspect-square transition-all group hover:-translate-y-0.5 shadow-sm hover:shadow-md">
+              <div class="relative rounded-lg border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 overflow-hidden aspect-square transition-all group hover:-translate-y-0.5 shadow-sm hover:shadow-md">
                 <div class="absolute top-2 right-2 z-20 flex items-center gap-2">
-                  <label class="h-8 w-8 flex items-center justify-center rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow cursor-pointer">
+                  <label class="h-8 w-8 flex items-center justify-center rounded-full bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 shadow cursor-pointer">
                     <input
                       type="checkbox"
                       class="h-4 w-4 rounded border border-slate-400 bg-white text-yellow-500 accent-yellow-500 cursor-pointer"
@@ -176,8 +176,8 @@
     @keydown.escape.window="closeUploadModal()"
   >
     <div class="absolute inset-0 bg-black/60" @click="closeUploadModal()"></div>
-    <div class="relative w-full max-w-3xl max-h-[800px] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 flex flex-col space-y-4 overflow-y-auto">
-      <div class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800">
+    <div class="relative w-full max-w-3xl max-h-[800px] rounded-2xl bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-800 shadow-2xl p-6 flex flex-col space-y-4 overflow-y-auto">
+      <div class="flex items-center gap-2 border-b border-slate-200 dark:border-gray-800">
         <button
           class="px-4 py-2 text-sm font-semibold"
           :class="uploadTab === 'drop' ? 'gallery-text border-b-2 gallery-border' : 'text-slate-500 dark:text-slate-400'"
@@ -224,7 +224,7 @@
           <input
             type="url"
             x-model="uploadUrl"
-            class="flex-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm focus:ring-2 focus:outline-none"
+            class="flex-1 rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm focus:ring-2 focus:outline-none"
             style="--tw-ring-color: var(--gallery-accent);"
             placeholder="Coller l'url de votre image ici"
           >
@@ -245,7 +245,7 @@
           <input
             type="text"
             x-model="pixabayQuery"
-            class="flex-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm focus:ring-2 focus:outline-none disabled:opacity-50"
+            class="flex-1 rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm focus:ring-2 focus:outline-none disabled:opacity-50"
             style="--tw-ring-color: var(--gallery-accent);"
             :placeholder="pixabayKey ? 'Rechercher sur Pixabay (ex: dungeon, cthulhu, orc...)' : 'Clé API manquante'"
             :disabled="!pixabayKey"
@@ -264,7 +264,7 @@
         <p class="text-xs" :class="pixabayStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'gallery-text'" x-text="pixabayMessage || (!pixabayKey ? `Clé API Pixabay manquante (variable d'environnement PIXABAY_KEY)` : '')"></p>
           <div class="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-3" x-show="pixabayResults.length > 0">
             <template x-for="img in pixabayResults" :key="img.id">
-              <div class="relative rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
+              <div class="relative rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-800 overflow-hidden shadow-sm">
                 <img :src="img.webformatURL" :alt="img.tags" class="h-32 w-full object-cover">
                 <button
                   class="absolute top-2 right-2 inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold bg-yellow-500 text-slate-900 hover:bg-yellow-400 shadow"
@@ -295,7 +295,7 @@
     @keydown.escape.window="closeConfirm()"
   >
     <div class="absolute inset-0 bg-black/60" @click="closeConfirm()"></div>
-    <div class="relative w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
+    <div class="relative w-full max-w-md rounded-2xl bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-800 shadow-2xl p-6 space-y-4">
       <div class="flex items-center gap-3">
         <div class="h-10 w-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-xl">
           <i class="fa-solid fa-triangle-exclamation"></i>
@@ -304,7 +304,7 @@
       </div>
       <p class="text-sm text-slate-600 dark:text-slate-300" x-text="confirmModal.message"></p>
       <div class="flex justify-end gap-2 pt-2">
-        <button class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800" @click="closeConfirm()">Annuler</button>
+        <button class="px-4 py-2 rounded-lg border border-slate-300 dark:border-gray-700 text-slate-700 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800" @click="closeConfirm()">Annuler</button>
         <button class="px-4 py-2 rounded-lg bg-rose-600 text-white font-semibold hover:bg-rose-500" @click="confirmYes()">Confirmer</button>
       </div>
     </div>
