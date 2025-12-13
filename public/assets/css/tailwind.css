@@ -1986,6 +1986,10 @@ video {
   padding-top: 23px;
 }
 
+.pt-\[5vh\]{
+  padding-top: 5vh;
+}
+
 .text-left{
   text-align: left;
 }
