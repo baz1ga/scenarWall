@@ -1,4 +1,4 @@
-<div id="page-content" x-data="notesPage()" x-init="init()" class="space-y-6 max-w-5xl mx-auto p-4" x-cloak>
+<div id="page-content" x-data="notesPage()" x-init="init()" class="space-y-6 max-w-7xl mx-auto" x-cloak>
   <style>
     :root {
       --notes-accent: #0284c7; /* sky-600 - better contrast */
@@ -8,13 +8,21 @@
     .notes-border { border-color: var(--notes-accent); }
     .notes-bg { background-color: var(--notes-accent); color: #fff; border-color: var(--notes-accent); }
   </style>
-
-  <div class="flex items-center justify-between">
-    <h1 class="text-2xl font-semibold inline-flex items-center gap-2 notes-text">
-      <i class="fa-solid fa-note-sticky"></i>
-      Notes
-    </h1>
-  </div>
+  
+  <section class="space-y-6">
+    <div class="flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <span class="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-sky-50 text-sky-600 dark:bg-sky-900/30">
+          <i class="fa-solid fa-note-sticky text-lg"></i>
+        </span>
+        <div>
+          <h1 class="text-2xl font-semibold inline-flex items-center gap-2 notes-text">
+            Notes
+          </h1>
+          <p class="text-sm text-slate-500 dark:text-slate-200">Consultez et gérez l’ensemble des notes par scénario et session.</p>
+        </div>
+      </div>
+    </div>
 
   <template x-if="loading">
     <div class="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-4 shadow-sm text-sm text-slate-600 dark:text-slate-300">
@@ -49,11 +57,11 @@
                       <span class="font-semibold text-slate-900 dark:text-slate-100 truncate" x-text="note.sceneTitle || note.name"></span>
                     </template>
                         <div class="flex items-center gap-2 text-xs shrink-0">
-                      <button class="inline-flex items-center gap-1 px-2 py-1 rounded border border-sky-200 text-sky-700 dark:border-gray-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-slate-800 transition"
+                      <button class="h-8 w-8 inline-flex items-center justify-center rounded-lg border notes-border notes-text hover:bg-lime-50 dark:hover:bg-lime-900/30 transition" 
                               @click="openEdit(note)">
                         <i class="fa-solid fa-pen"></i> 
                       </button>
-                      <button class="inline-flex items-center gap-1 px-2 py-1 rounded border border-rose-200 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition"
+                      <button class="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-rose-200 dark:border-rose-900 bg-white dark:bg-gray-950 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition"
                                   @click="openDelete(note)">
                             <i class="fa-solid fa-trash"></i> 
                           </button>
@@ -83,11 +91,11 @@
                           <span class="font-semibold text-slate-900 dark:text-slate-100 truncate" x-text="note.sceneTitle || note.name"></span>
                         </template>
                         <div class="flex items-center gap-2 text-xs shrink-0">
-                      <button class="inline-flex items-center gap-1 px-2 py-1 rounded border border-sky-200 text-sky-700 dark:border-gray-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-slate-800 transition"
+                      <button class="h-8 w-8 inline-flex items-center justify-center rounded-lg border notes-border notes-text hover:bg-lime-50 dark:hover:bg-lime-900/30 transition" 
                               @click="openEdit(note)">
                         <i class="fa-solid fa-pen"></i> 
                       </button>
-                      <button class="inline-flex items-center gap-1 px-2 py-1 rounded border border-rose-200 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition"
+                      <button class="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-rose-200 dark:border-rose-900 bg-white dark:bg-gray-950 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition"
                                   @click="openDelete(note)">
                             <i class="fa-solid fa-trash"></i> 
                           </button>
@@ -126,6 +134,7 @@
       </div>
     </div>
   </template>
+  </section>
 
   <div x-show="showEditModal" x-transition class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full mx-4 p-4 space-y-3">

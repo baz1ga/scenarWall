@@ -3,15 +3,15 @@
     <div class="rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-6 shadow-sm space-y-3">
       <div class="flex items-center justify-between gap-3">
         <div>
-          <p class="text-sm text-slate-500 dark:text-slate-400">Administration</p>
+          <p class="text-sm text-slate-500 dark:text-slate-200">Administration</p>
           <h1 class="text-2xl font-semibold text-slate-900 dark:text-slate-100">Bienvenue sur ScenarWall</h1>
         </div>
         <div class="hidden md:flex items-center gap-2" x-show="tenantId">
-          <div class="text-xs text-slate-500 dark:text-slate-400">Quota</div>
+          <div class="text-xs text-slate-500 dark:text-slate-200">Quota</div>
           <div class="w-40 h-2 rounded-full bg-slate-800 overflow-hidden">
             <div class="h-full bg-emerald-500" :style="`width:${quotaPercent}%`"></div>
           </div>
-          <div class="text-xs text-slate-500 dark:text-slate-400" x-text="quotaDisplay"></div>
+          <div class="text-xs text-slate-500 dark:text-slate-200" x-text="quotaDisplay"></div>
         </div>
       </div>
       <p class="text-sm text-slate-600 dark:text-slate-300">Sélectionnez un module pour gérer vos contenus.</p>
@@ -23,7 +23,7 @@
           <div class="h-10 w-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center"><i class="fa-solid fa-scroll"></i></div>
           <div>
             <div class="font-semibold text-slate-900 dark:text-slate-100">Scénarios</div>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Campagnes et one-shots.</p>
+            <p class="text-xs text-slate-500 dark:text-slate-200">Campagnes et one-shots.</p>
           </div>
         </div>
       </a>
@@ -32,7 +32,7 @@
           <div class="h-10 w-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center"><i class="fa-regular fa-image"></i></div>
           <div>
             <div class="font-semibold text-slate-900 dark:text-slate-100">Galerie</div>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Gérer les images visibles / cachées.</p>
+            <p class="text-xs text-slate-500 dark:text-slate-200">Gérer les images visibles / cachées.</p>
           </div>
         </div>
       </a>
@@ -41,7 +41,7 @@
           <div class="h-10 w-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center"><i class="fa-solid fa-music"></i></div>
           <div>
             <div class="font-semibold text-slate-900 dark:text-slate-100">Audio</div>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Uploader, renommer et ordonner.</p>
+            <p class="text-xs text-slate-500 dark:text-slate-200">Uploader, renommer et ordonner.</p>
           </div>
         </div>
       </a>
@@ -50,7 +50,7 @@
           <div class="h-10 w-10 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center"><i class="fa-solid fa-users"></i></div>
           <div>
             <div class="font-semibold text-slate-900 dark:text-slate-100">Utilisateurs</div>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Gestion quotas et accès.</p>
+            <p class="text-xs text-slate-500 dark:text-slate-200">Gestion quotas et accès.</p>
           </div>
         </div>
       </a>
@@ -59,7 +59,7 @@
           <div class="h-10 w-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center"><i class="fa-solid fa-hat-wizard"></i></div>
           <div>
             <div class="font-semibold text-slate-900 dark:text-slate-100">Game Master</div>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Tableau de bord live.</p>
+            <p class="text-xs text-slate-500 dark:text-slate-200">Tableau de bord live.</p>
           </div>
         </div>
       </a>

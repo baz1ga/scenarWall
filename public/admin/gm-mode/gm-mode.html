@@ -297,13 +297,13 @@
               <h3 class="text-lg font-semibold inline-flex items-center gap-2"><i class="fa-solid fa-image text-indigo-500"></i> Diaporama</h3>
             </div>
             <template x-if="slideshowLoading">
-              <p class="text-sm text-slate-500 dark:text-slate-400">Chargement des images...</p>
+              <p class="text-sm text-slate-500 dark:text-slate-200">Chargement des images...</p>
             </template>
             <template x-if="slideshowError">
               <p class="text-sm text-rose-500" x-text="slideshowError"></p>
             </template>
             <template x-if="!slideshowLoading && slideshowImages.length === 0 && !slideshowError && !hasNextScene">
-              <p class="text-sm text-slate-500 dark:text-slate-400">Aucune image disponible.</p>
+              <p class="text-sm text-slate-500 dark:text-slate-200">Aucune image disponible.</p>
             </template>
             <template x-if="!slideshowLoading && slideshowImages.length === 0 && hasNextScene && !slideshowError">
               <div class="grid grid-cols-3 gap-3 items-center h-[120px]">
@@ -371,10 +371,10 @@
           <div class="mt-3 rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 px-4 pt-4 pb-2 shadow-sm h-[325px]">
             <h3 class="text-lg font-semibold mb-1 inline-flex items-center gap-2"><i class="fa-solid fa-music text-indigo-500"></i> Playlist</h3>
             <template x-if="playlistLoading">
-              <p class="text-sm text-slate-500 dark:text-slate-400">Chargement...</p>
+              <p class="text-sm text-slate-500 dark:text-slate-200">Chargement...</p>
             </template>
             <template x-if="!playlistLoading && playlist.length === 0 && !playlistError">
-              <p class="text-sm text-slate-500 dark:text-slate-400">Aucun fichier audio.</p>
+              <p class="text-sm text-slate-500 dark:text-slate-200">Aucun fichier audio.</p>
             </template>
             <template x-if="playlistError">
               <p class="text-sm text-rose-500" x-text="playlistError"></p>
@@ -454,7 +454,7 @@
           </div>
           <div class="space-y-1">
             <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Quitter le mode Game Master ?</h2>
-            <p class="text-sm text-slate-600 dark:text-slate-400">Vous allez retourner sur la page de la session.</p>
+            <p class="text-sm text-slate-600 dark:text-slate-200">Vous allez retourner sur la page de la session.</p>
           </div>
         </div>
         <div class="flex items-center justify-end gap-2">
