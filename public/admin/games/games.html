@@ -22,74 +22,77 @@
         </div>
       </div>
       <div class="flex flex-wrap items-center gap-2">
-        <input type="text" x-model="searchTerm" placeholder="Rechercher un tenant..." class="rounded-lg border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--games-accent)] focus:border-[var(--games-accent)]">
-        <div class="flex items-center gap-2">
-          <button class="px-3 py-2 rounded-lg border border-slate-200 dark:border-gray-700 text-sm text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                  @click="fetchStates()">
-            <i class="fa-solid fa-rotate"></i> Rafraîchir
-          </button>
-          <label class="inline-flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-gray-700 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-950">
-            <input type="checkbox" class="rounded text-amber-500 border-slate-300 dark:border-gray-600"
-                   x-model="hideShortRuns">
-            <span>Masquer &lt; 60s</span>
-          </label>
-          <button class="px-3 py-2 rounded-lg border border-slate-200 dark:border-gray-700 text-sm text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                  @click="window.dispatchEvent(new CustomEvent('open-all-tenants', { detail: true }))">
-            Tout déplier
-          </button>
-          <button class="px-3 py-2 rounded-lg border border-slate-200 dark:border-gray-700 text-sm text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                  @click="window.dispatchEvent(new CustomEvent('open-all-tenants', { detail: false }))">
-            Tout plier
-          </button>
-        </div>
+        <button class="inline-flex items-center gap-2 h-10 rounded-lg border border-amber-400 text-slate-700 dark:text-slate-200 bg-white dark:bg-gray-900 px-3 text-sm hover:bg-amber-50 dark:hover:bg-amber-900/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                :disabled="loading"
+                @click="fetchStates()">
+          <i class="fa-solid fa-rotate" :class="loading ? 'animate-spin' : ''"></i>
+          <span x-text="loading ? 'Rafraîchissement...' : 'Rafraîchir'"></span>
+        </button>
+        <label class="inline-flex items-center gap-2 h-10 text-sm text-slate-700 dark:text-slate-200 border border-amber-400 dark:border-amber-500 rounded-lg px-3 bg-white dark:bg-gray-900 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition">
+          <input type="checkbox" class="rounded text-amber-500 border-slate-300 dark:border-gray-600"
+                 x-model="hideShortRuns">
+          <span>Masquer &lt; 5m</span>
+        </label>
       </div>
     </div>
 
-    <template x-if="groupedRuns().length === 0">
-      <div class="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 shadow-sm p-6 text-center text-sm text-slate-500 dark:text-slate-200">
-        Aucune partie jouée
-      </div>
-    </template>
+    <div class="flex flex-wrap items-center justify-center gap-3">
+      <input type="text" x-model="searchTerm" placeholder="Rechercher un tenant..." class="rounded-lg border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--games-accent)] focus:border-[var(--games-accent)] w-full sm:w-80 text-center">
+    </div>
 
-    <template x-for="tenant in filteredTenants()" :key="tenant.tenantId">
-      <div class="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 shadow-sm overflow-hidden max-w-3xl mx-auto"
-           x-data="{ open: false }"
-           :class="tenant.tenantId === tenantId ? 'border-[var(--games-accent)] ring-2 ring-[var(--games-accent)] ring-offset-2 ring-offset-slate-50 dark:ring-offset-slate-900' : ''"
-           @open-all-tenants.window="open = $event.detail">
-        <button class="w-full bg-slate-100 dark:bg-gray-800 px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200 flex items-center justify-between"
-                @click="open = !open">
-          <span class="inline-flex items-center gap-2">
-            <i class="fa-solid fa-folder"></i>
-            <span>Tenant : <span class="font-mono text-xs" x-text="tenant.tenantId"></span></span>
-          </span>
-          <i :class="open ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down'"></i>
-        </button>
-        <div class="divide-y divide-slate-200 dark:divide-slate-800" x-show="open" x-transition>
-          <template x-for="session in tenant.sessions" :key="tenant.tenantId + '-' + session.sessionId">
-            <div>
-              <div class="px-4 py-2 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-200 bg-slate-50 dark:bg-gray-800/40 flex items-center gap-2">
-                <i class="fa-regular fa-rectangle-list"></i>
-                <span class="font-mono text-[11px]" x-text="session.sessionId"></span>
-              </div>
-              <div class="divide-y divide-slate-100 dark:divide-slate-800">
-                <template x-for="run in session.runs" :key="run.createdAt + '-' + run.updatedAt">
-                  <div class="flex items-center gap-3 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-900/60">
-                    <span class="inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs font-semibold"
-                          :class="run.front === run.gm ? 'text-emerald-700' : 'text-rose-700'">
-                      <i :class="run.front === run.gm ? 'fa-solid fa-circle-check' : 'fa-solid fa-triangle-exclamation'"></i>                      
-                    </span>
-                    <div class="flex-1 grid grid-cols-2 gap-3">
-                      <div class="text-sm" x-text="new Date(run.createdAt).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })"></div>
-                      <div class="text-sm font-semibold" x-text="formatDuration(run)"></div>
-                    </div>
-                  </div>
-                </template>
-              </div>
+    <!-- Tableau runs -->
+    <div class="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 shadow-sm overflow-hidden max-w-4xl mx-auto">
+      <div class="relative">
+        <template x-if="loading">
+          <div class="absolute inset-0 bg-white/70 dark:bg-black/40 backdrop-blur-sm flex items-center justify-center z-10">
+            <div class="inline-flex items-center gap-2 text-amber-600">
+              <span class="h-6 w-6 rounded-full border-2 border-amber-500 border-t-transparent animate-spin"></span>
+              <span>Rafraîchissement...</span>
             </div>
-          </template>
-        </div>
+          </div>
+        </template>
+        <table class="min-w-full text-sm">
+          <thead class="bg-slate-100 dark:bg-gray-700 text-slate-800 dark:text-slate-50">
+            <tr>
+              <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('tenant')">
+                <div class="inline-flex items-center gap-2">Tenant <i :class="sortIcon('tenant','games')" class="text-xs games-text"></i></div>
+              </th>
+              <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('session')">
+                <div class="inline-flex items-center gap-2">Session <i :class="sortIcon('sessions','games')" class="text-xs games-text"></i></div>
+              </th>
+              <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('date')">
+                <div class="inline-flex items-center gap-2">Date <i :class="sortIcon('date','games')" class="text-xs games-text"></i></div>
+              </th>
+              <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('duration')">
+                <div class="inline-flex items-center gap-2">
+                  Durée <i :class="sortIcon('duration','games')" class="text-xs games-text"></i>
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <template x-if="flatRuns().length === 0">
+              <tr><td colspan="4" class="px-4 py-3 text-center text-slate-500 dark:text-slate-200">Aucune partie jouée</td></tr>
+            </template>
+            <template x-for="run in flatRuns()" :key="`${run.tenantId}-${run.sessionId}-${run.updatedAt || run.createdAt}`">
+              <tr class="border-t border-slate-200 dark:border-gray-800">
+                <td class="px-4 py-2">
+                  <div class="inline-flex items-center gap-2">
+                    <template x-if="run.tenantId === tenantId">
+                      <i class="fa-solid fa-crown text-amber-400"></i>
+                    </template>
+                    <span class="font-mono text-xs" x-text="run.tenantId"></span>
+                  </div>
+                </td>
+                <td class="px-4 py-2 font-mono text-xs" x-text="run.sessionId"></td>
+                <td class="px-4 py-2" x-text="new Date(run.updatedAt || run.createdAt || Date.now()).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })"></td>
+                <td class="px-4 py-2 font-semibold" x-text="formatDuration(run)"></td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
       </div>
-    </template>
+    </div>
   </section>
 </div>
 
