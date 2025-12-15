@@ -1,4 +1,4 @@
-<div id="page-content" x-data="notesPage()" x-init="init()" class="space-y-6 max-w-7xl mx-auto" x-cloak>
+<div id="page-content" x-data="notesPage()" x-init="init()" class="max-w-7xl mx-auto" x-cloak>
   <style>
     :root {
       --notes-accent: #0284c7; /* sky-600 - better contrast */
@@ -38,7 +38,7 @@
         </div>
       </template>
 
-      <div class="space-y-4">
+      <div class="space-y-4 max-w-4xl mx-auto">
         <template x-for="grp in groupedNotes().scenarios" :key="grp.scenario.id">
           <div class="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-4 shadow-sm space-y-3">
             <div class="text-lg font-semibold notes-text">

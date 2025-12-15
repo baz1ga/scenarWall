@@ -1,4 +1,4 @@
-<div id="page-content" x-data="audioPage()" x-init="init()" class="space-y-6 max-w-7xl mx-auto" x-cloak>
+<div id="page-content" x-data="audioPage()" x-init="init()" class="max-w-7xl mx-auto" x-cloak>
   <style>
     :root {
       --audio-accent: #65a30d; /* lime-600 */
@@ -38,7 +38,7 @@
     <template x-if="!audioLoading && audioFiles.length === 0">
       <div class="text-sm text-slate-600 dark:text-slate-200 border border-dashed border-slate-300 dark:border-gray-800 rounded-lg p-4">Aucun fichier audio.</div>
     </template>
-    <div class="space-y-2" x-show="!audioLoading && audioFiles.length > 0">
+    <div class="space-y-2 max-w-4xl mx-auto" x-show="!audioLoading && audioFiles.length > 0">
       <template x-for="(audio, index) in audioFiles" :key="audio.name">
         <div
           class="flex items-center gap-3 rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-3 transition"
@@ -89,7 +89,7 @@
     x-cloak
     @keydown.escape.window="closeRenameAudioModal()"
   >
-    <div class="absolute inset-0 bg-black/60" @click="closeRenameAudioModal()"></div>
+    <div class="fixed inset-0 bg-black/60" @click="closeRenameAudioModal()"></div>
     <div class="relative w-full max-w-md rounded-2xl bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-800 shadow-2xl p-6 space-y-4">
       <div class="flex items-center gap-3">
         <div class="h-10 w-10 rounded-full flex items-center justify-center text-xl audio-text" style="background: rgba(101,163,13,0.15);">
@@ -123,7 +123,7 @@
     x-cloak
     @keydown.escape.window="closeConfirm()"
   >
-    <div class="absolute inset-0 bg-black/60" @click="closeConfirm()"></div>
+    <div class="fixed inset-0 bg-black/60" @click="closeConfirm()"></div>
     <div class="relative w-full max-w-md rounded-2xl bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-800 shadow-2xl p-6 space-y-4">
       <div class="flex items-center gap-3">
         <div class="h-10 w-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-xl">

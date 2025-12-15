@@ -1,4 +1,4 @@
-<div id="page-content" x-data="scenariosListPage()" x-init="init()" class="space-y-6 max-w-7xl mx-auto" x-cloak>
+<div id="page-content" x-data="scenariosListPage()" x-init="init()" class="max-w-7xl mx-auto" x-cloak>
   <style>
     :root {
       --scenario-accent: #10b981; /* emerald-500 */
@@ -10,7 +10,7 @@
   </style>
   
   <section class="space-y-6">
-    <div class="flex items-center justify-between gap-3 mt-2">
+    <div class="flex items-center justify-between gap-3">
       <div class="flex items-center gap-3">
         <span class="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20">
           <i class="fa-solid fa-scroll text-xl"></i>
@@ -93,8 +93,9 @@
     </div>
 
     <template x-if="confirmModal.open">
-      <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center px-4">
-        <div class="bg-white dark:bg-gray-950 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-gray-800">
+      <div class="fixed inset-0 z-50 flex items-center justify-center px-4">
+        <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm"></div>
+        <div class="relative bg-white dark:bg-gray-950 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-gray-800">
           <div class="px-5 py-4 border-b border-slate-200 dark:border-gray-800 flex items-start gap-3">
             <div class="h-9 w-9 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-200 flex items-center justify-center">
               <i class="fa-solid fa-triangle-exclamation"></i>
@@ -115,8 +116,9 @@
     </template>
 
     <template x-if="createModal.open">
-      <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center px-4">
-        <div class="bg-white dark:bg-gray-950 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-gray-800 p-5 space-y-4">
+      <div class="fixed inset-0 z-50 flex items-center justify-center px-4">
+        <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm"></div>
+        <div class="relative bg-white dark:bg-gray-950 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-gray-800 p-5 space-y-4">
           <div class="space-y-1">
             <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Nouveau scénario</h3>          
           </div>
@@ -146,8 +148,9 @@
     </template>
 
     <template x-if="editModal.open">
-      <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center px-4">
-        <div class="bg-white dark:bg-gray-950 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-gray-800 p-5 space-y-4">
+      <div class="fixed inset-0 z-50 flex items-center justify-center px-4">
+        <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm"></div>
+        <div class="relative bg-white dark:bg-gray-950 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-gray-800 p-5 space-y-4">
           <div class="space-y-1">
             <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Éditer le scénario</h3>
           </div>
@@ -177,8 +180,9 @@
     </template>
 
     <template x-if="sessionModal.open">
-      <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center px-4">
-        <div class="bg-white dark:bg-gray-950 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-gray-800 p-5 space-y-4">
+      <div class="fixed inset-0 z-50 flex items-center justify-center px-4">
+        <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm"></div>
+        <div class="relative bg-white dark:bg-gray-950 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-gray-800 p-5 space-y-4">
           <div class="space-y-1">
             <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Nouvelle session</h3>          
           </div>

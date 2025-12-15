@@ -757,27 +757,27 @@ function getGlobalConfig() {
     // Seul le quota par défaut peut provenir du fichier. Les autres valeurs viennent des env/fallbacks.
     return {
       defaultQuotaMB,
-      apiBase: ENV_GLOBAL.apiBase !== null ? ENV_GLOBAL.apiBase : null,
-      pixabayKey: ENV_GLOBAL.pixabayKey !== null ? ENV_GLOBAL.pixabayKey : null,
-      discordClientId: ENV_GLOBAL.discordClientId !== null ? ENV_GLOBAL.discordClientId : null,
-      discordClientSecret: ENV_GLOBAL.discordClientSecret !== null ? ENV_GLOBAL.discordClientSecret : null,
-      discordRedirectUri: ENV_GLOBAL.discordRedirectUri !== null ? ENV_GLOBAL.discordRedirectUri : null,
-      allowedGuildId: null,
-      discordScopes: (ENV_GLOBAL.discordScopes && ENV_GLOBAL.discordScopes.length)
-        ? ENV_GLOBAL.discordScopes
-        : DEFAULT_DISCORD_SCOPES
+      //apiBase: ENV_GLOBAL.apiBase !== null ? ENV_GLOBAL.apiBase : null,
+      //pixabayKey: ENV_GLOBAL.pixabayKey !== null ? ENV_GLOBAL.pixabayKey : null,
+      //discordClientId: ENV_GLOBAL.discordClientId !== null ? ENV_GLOBAL.discordClientId : null,
+      //discordClientSecret: ENV_GLOBAL.discordClientSecret !== null ? ENV_GLOBAL.discordClientSecret : null,
+      //discordRedirectUri: ENV_GLOBAL.discordRedirectUri !== null ? ENV_GLOBAL.discordRedirectUri : null,
+      //allowedGuildId: null,
+      //discordScopes: (ENV_GLOBAL.discordScopes && ENV_GLOBAL.discordScopes.length)
+      //  ? ENV_GLOBAL.discordScopes
+      //  : DEFAULT_DISCORD_SCOPES
     };
   } catch (err) {
     logger.error("Failed to read global config, using defaults", { err: err?.message });
     return {
       defaultQuotaMB: DEFAULT_GLOBAL.defaultQuotaMB,
-      apiBase: ENV_GLOBAL.apiBase !== null ? ENV_GLOBAL.apiBase : null,
-      pixabayKey: ENV_GLOBAL.pixabayKey !== null ? ENV_GLOBAL.pixabayKey : null,
-      discordClientId: ENV_GLOBAL.discordClientId !== null ? ENV_GLOBAL.discordClientId : null,
-      discordClientSecret: ENV_GLOBAL.discordClientSecret !== null ? ENV_GLOBAL.discordClientSecret : null,
-      discordRedirectUri: ENV_GLOBAL.discordRedirectUri !== null ? ENV_GLOBAL.discordRedirectUri : null,
-      allowedGuildId: null,
-      discordScopes: DEFAULT_DISCORD_SCOPES
+      //apiBase: ENV_GLOBAL.apiBase !== null ? ENV_GLOBAL.apiBase : null,
+      //pixabayKey: ENV_GLOBAL.pixabayKey !== null ? ENV_GLOBAL.pixabayKey : null,
+      //discordClientId: ENV_GLOBAL.discordClientId !== null ? ENV_GLOBAL.discordClientId : null,
+      //discordClientSecret: ENV_GLOBAL.discordClientSecret !== null ? ENV_GLOBAL.discordClientSecret : null,
+      //discordRedirectUri: ENV_GLOBAL.discordRedirectUri !== null ? ENV_GLOBAL.discordRedirectUri : null,
+      //allowedGuildId: null,
+      //discordScopes: DEFAULT_DISCORD_SCOPES
     };
   }
 }
