@@ -221,7 +221,7 @@
 
             <!-- Bouton -->
             <div class="flex items-center gap-2">
-              <button class="btn-ghost inline-flex h-[34px] items-center gap-2 rounded-lg border border-emerald-400 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              <button class="btn-ghost inline-flex h-[34px] items-center gap-2 rounded-lg border border-emerald-400 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 px-3 py-1.5 text-xs dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                       @click="currentScene && duplicateScene(currentScene)" :disabled="!currentScene">
                 <i class="fa-regular fa-clone"></i> Dupliquer la scène
               </button>
@@ -336,7 +336,7 @@
                   <div class="flex items-center gap-2">
                     <label class="" x-show="tenantId">
                       <input type="file" class="hidden" multiple accept="audio/*" @change="uploadSceneAudio($event)">                                                                                        
-                      <span class="btn-ghost inline-flex h-[34px] items-center gap-2 rounded-lg border border-lime-600 text-lime-600 hover:bg-lime-50 dark:hover:bg-lime-900/20 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 transition">
+                      <span class="btn-ghost inline-flex h-[34px] items-center gap-2 rounded-lg border border-lime-600 text-lime-600 hover:bg-lime-50 dark:hover:bg-lime-900/20 px-3 py-1.5 text-xs dark:text-slate-200 transition">
                         <i class="fa-solid fa-upload"></i> Ajouter (&lt; 1 Mo)
                       </span>
                     </label>
@@ -391,7 +391,7 @@
                   <div class="flex items-center justify-between pb-2">
                     <h3 class="text-s font-semibold text-lime-600">Tous vos audios</h3>
                     <a href="/admin/audio/audio.html"
-                      class="btn-ghost inline-flex h-[34px] items-center gap-2 rounded-lg border border-lime-600 text-lime-600 hover:bg-lime-50 dark:hover:bg-lime-900/20 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 transition">
+                      class="btn-ghost inline-flex h-[34px] items-center gap-2 rounded-lg border border-lime-600 text-lime-600 hover:bg-lime-50 dark:hover:bg-lime-900/20 px-3 py-1.5 text-xs dark:text-slate-200 transition">
                       <i class="fa-solid fa-music text-base"></i>
                       Ouvrir les audios
                     </a>
@@ -441,7 +441,7 @@
                       <span class="h-3.5 w-3.5 rounded-full border-2 border-emerald-700 border-t-transparent animate-spin"></span>
                       <span>Sauvegarde...</span>
                     </div>
-                    <a class="btn-ghost inline-flex h-[34px] items-center gap-2 rounded-lg border border-sky-600 text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-900/20 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 transition"
+                    <a class="btn-ghost inline-flex h-[34px] items-center gap-2 rounded-lg border border-sky-600 text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-900/20 px-3 py-1.5 text-xs dark:text-slate-200 transition"
                       :href="`/admin/notes/notes.html${tenantId ? `?tenant=${encodeURIComponent(tenantId)}` : ''}`"
                       target="_blank">
                       <i class="fa-solid fa-note-sticky"></i> Toutes les notes
