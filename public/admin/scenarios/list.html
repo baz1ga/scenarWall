@@ -69,7 +69,7 @@
                     <div class="flex items-center justify-between gap-2">
                       <a class="inline-flex items-center gap-1.5 min-w-0 text-slate-800 dark:text-slate-100"
                         :href="`/admin/sessions/view.html?id=${encodeURIComponent(sess.id)}`">
-                        <i class="fa-solid fa-clapperboard text-emerald-500"></i>
+                        <i class="text-emerald-500" :class="sess.icon || defaultSessionIcon"></i>
                         <span class="font-semibold truncate" x-text="sess.title || sess.id"></span>
                       </a>
                       <button type="button"
