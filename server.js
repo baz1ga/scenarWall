@@ -249,6 +249,7 @@ const ENV_SESSION_COOKIE = {
 };
 
 const UTF8_EXT = new Set([".html", ".htm", ".js", ".mjs", ".css", ".json", ".svg", ".txt", ".xml", ".webmanifest"]);
+const NO_CACHE_ASSETS = new Set(["assets/css/tailwind.css"]);
 const SCENARIO_FORMATS = new Set(["campaign", "oneshot"]);
 
 assertRequiredEnv();
@@ -401,6 +402,10 @@ app.use(express.static(PUBLIC_DIR, {
       if (current && !/charset=/i.test(String(current))) {
         res.setHeader("Content-Type", `${current}; charset=utf-8`);
       }
+    }
+    const relativePath = path.relative(PUBLIC_DIR, filePath || "").replace(/\\/g, "/");
+    if (NO_CACHE_ASSETS.has(relativePath)) {
+      res.setHeader("Cache-Control", "no-cache, must-revalidate");
     }
   }
 })); // serve login, signup, front, admin UIs
