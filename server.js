@@ -115,6 +115,7 @@ const DEFAULT_GLOBAL = {
   defaultQuotaMB: 100 // seul champ persistant dans global.json
 };
 const DEFAULT_DISCORD_SCOPES = ["identify"];
+const DEFAULT_SCENARIO_ICON = "fa-solid fa-scroll";
 const FALLBACK_TENSION_DEFAULTS = {
   tensionEnabled: true,
   tensionColors: {
@@ -1959,17 +1960,27 @@ app.put("/api/:tenantId/session/notes", requireLogin, (req, res) => {
 //------------------------------------------------------------
 function sanitizeScenarioInput(body = {}, existing = null) {
   const now = Math.floor(Date.now() / 1000);
+  const normalizeIcon = (value) => {
+    if (typeof value !== "string") return DEFAULT_SCENARIO_ICON;
+    const trimmed = value.trim();
+    return trimmed ? trimmed.slice(0, 200) : DEFAULT_SCENARIO_ICON;
+  };
   const base = existing ? { ...existing } : {
     id: `sc_${Date.now()}`,
     tenantId: body.tenantId,
     title: "",
     sessions: [],
+    icon: DEFAULT_SCENARIO_ICON,
     createdAt: now,
     updatedAt: now
   };
   const payload = { ...base };
   if (typeof body.title === "string") payload.title = body.title.trim().slice(0, 200);
   if (Array.isArray(body.sessions)) payload.sessions = body.sessions.map(String);
+  if (typeof body.icon === "string") {
+    payload.icon = normalizeIcon(body.icon);
+  }
+  payload.icon = normalizeIcon(payload.icon);
   delete payload.description;
   delete payload.format;
   payload.updatedAt = now;

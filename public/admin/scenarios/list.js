@@ -1,4 +1,5 @@
 import { coreSection } from '/admin/js/core.js';
+import { DEFAULT_SCENARIO_ICON, ICON_OPTIONS, filterIcons } from '/admin/js/icon-picker-utils.js';
 
 export function scenariosListSection() {
   return {
@@ -6,6 +7,8 @@ export function scenariosListSection() {
     sessions: [],
     loading: true,
     error: '',
+    defaultScenarioIcon: DEFAULT_SCENARIO_ICON,
+    iconOptions: ICON_OPTIONS,
     confirmModal: {
       open: false,
       item: null,
@@ -14,6 +17,8 @@ export function scenariosListSection() {
     createModal: {
       open: false,
       title: '',
+      icon: DEFAULT_SCENARIO_ICON,
+      iconSearch: '',
       saving: false,
       error: ''
     },
@@ -21,6 +26,9 @@ export function scenariosListSection() {
       open: false,
       title: '',
       id: '',
+      icon: DEFAULT_SCENARIO_ICON,
+      iconSearch: '',
+      createdAt: '',
       saving: false,
       error: ''
     },
@@ -46,7 +54,7 @@ export function scenariosListSection() {
       const val = Number(ts);
       const date = new Date((String(val).length === 13 ? val : val * 1000));
       if (Number.isNaN(date.getTime())) return '';
-      return date.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
+      return date.toLocaleString('fr-FR', { dateStyle: 'short' });
     },
 
     async fetchScenarios() {
@@ -61,7 +69,7 @@ export function scenariosListSection() {
         if (!res.ok) throw new Error('Impossible de charger les scénarios');
         const data = await res.json();
         this.scenarios = Array.isArray(data)
-          ? [...data].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+          ? [...data].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
           : [];
       } catch (err) {
         this.error = err?.message || 'Erreur de chargement';
@@ -86,12 +94,30 @@ export function scenariosListSection() {
       return this.sessions.filter(s => s.parentScenario === scenarioId);
     },
 
+    filteredIcons(query = '') {
+      return filterIcons(query, this.iconOptions);
+    },
+
     openCreateModal() {
-      this.createModal = { open: true, title: '', saving: false, error: '' };
+      this.createModal = {
+        open: true,
+        title: '',
+        icon: this.defaultScenarioIcon,
+        iconSearch: '',
+        saving: false,
+        error: ''
+      };
     },
 
     closeCreateModal() {
-      this.createModal = { open: false, title: '', saving: false, error: '' };
+      this.createModal = {
+        open: false,
+        title: '',
+        icon: this.defaultScenarioIcon,
+        iconSearch: '',
+        saving: false,
+        error: ''
+      };
     },
 
     async submitCreate() {
@@ -107,7 +133,10 @@ export function scenariosListSection() {
         const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/scenarios`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...this.headersAuth() },
-          body: JSON.stringify({ title })
+          body: JSON.stringify({
+            title,
+            icon: this.createModal.icon || this.defaultScenarioIcon
+          })
         });
         if (!res.ok) throw new Error('Création impossible');
         await this.fetchScenarios();
@@ -166,11 +195,29 @@ export function scenariosListSection() {
 
     openEditModal(item) {
       if (!item || !item.id) return;
-      this.editModal = { open: true, title: item.title || '', id: item.id, saving: false, error: '' };
+      this.editModal = {
+        open: true,
+        title: item.title || '',
+        id: item.id,
+        icon: item.icon || this.defaultScenarioIcon,
+        iconSearch: '',
+        createdAt: item.createdAt || '',
+        saving: false,
+        error: ''
+      };
     },
 
     closeEditModal() {
-      this.editModal = { open: false, title: '', id: '', saving: false, error: '' };
+      this.editModal = {
+        open: false,
+        title: '',
+        id: '',
+        icon: this.defaultScenarioIcon,
+        iconSearch: '',
+        createdAt: '',
+        saving: false,
+        error: ''
+      };
     },
 
     async submitEdit() {
@@ -189,7 +236,10 @@ export function scenariosListSection() {
         const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/scenarios/${encodeURIComponent(this.editModal.id)}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', ...this.headersAuth() },
-          body: JSON.stringify({ title })
+          body: JSON.stringify({
+            title,
+            icon: this.editModal.icon || this.defaultScenarioIcon
+          })
         });
         if (!res.ok) throw new Error('Mise à jour impossible');
         await this.fetchScenarios();

@@ -1,3 +1,5 @@
+import { DEFAULT_SCENARIO_ICON } from './icon-picker-utils.js';
+
 export function coreSection() {
   return {
     API: getApiBase(),
@@ -22,6 +24,7 @@ export function coreSection() {
       action: null
     },
     recentScenarios: [],
+    defaultScenarioIcon: DEFAULT_SCENARIO_ICON,
     recentSessionsIndex: {},
 
     async init() {

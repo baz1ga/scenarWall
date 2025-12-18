@@ -62,7 +62,7 @@
               <span x-text="sessionTitle || 'Session'"></span>
             </h1>
           <button x-show="session"
-                  class="inline-flex items-center justify-center h-8 w-8 text-slate-600 dark:text-slate-200  dark:hover:text-slate-400 transition"
+                  class="inline-flex items-center justify-center text-sm text-slate-600 dark:text-slate-200  dark:hover:text-slate-400 transition"
                   @click="openEditModal()">
             <i class="fa-solid fa-pen"></i>
           </button>
@@ -78,7 +78,7 @@
           <i class="fa-solid fa-hat-wizard"></i> Game Master
         </button>
         <button x-show="session"
-                class="inline-flex items-center gap-2 h-10 rounded-lg border border-stone-400 text-stone-700 bg-white dark:bg-gray-900 px-4 text-sm font-semibold hover:bg-stone-50 dark:hover:bg-stone-800/30 transition"
+                class="inline-flex items-center gap-2 h-10 rounded-lg border border-stone-400 dark:text-slate-300 text-stone-700 bg-white dark:bg-gray-900 px-4 text-sm font-semibold hover:bg-stone-50 dark:hover:bg-stone-800/30 transition"
                 @click="showTension = !showTension">
           <i class="fa-solid fa-bolt"></i> Tension
         </button>
@@ -89,8 +89,6 @@
         </button>
       </div>
     </div>
-
-
 
     <template x-if="loading">
       <div class="rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-6 shadow-sm flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
@@ -130,7 +128,7 @@
                   <div class="relative w-full min-h-[90px] rounded-lg border px-2 py-2 text-sm transition flex flex-col gap-2 overflow-hidden cursor-pointer"
                         :class="scene.id === currentScene?.id
                           ? 'border-emerald-400 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-100 shadow-md ring-1 ring-emerald-300/60'
-                          : 'border-slate-200 dark:border-gray-700 hover-border-emerald-300 hover:bg-emerald-50/40 dark:hover:border-emerald-700 dark:hover:bg-emerald-900/20 text-slate-700 dark:text-slate-200'"
+                          : 'border-slate-200 dark:border-gray-400 hover-border-emerald-300 hover:bg-emerald-50/40 dark:hover:border-emerald-700 dark:hover:bg-emerald-900/20 text-slate-700 dark:text-slate-200'"
                         role="button"
                         tabindex="0"
                         @click="setCurrentScene(scene.id, true)"
@@ -138,7 +136,7 @@
                         @keydown.space.prevent="setCurrentScene(scene.id, true)">
                     <div class="min-h-[48px]">
                       <div class="flex min-w-0 gap-2 items-start">
-                        <div class="px-2 py-0.5 rounded-bl-lg bg-slate-900/80 text-white text-[11px] font-semibold shadow-sm pointer-events-none leading-none absolute top-0 right-0">#<span x-text="scene.order || index + 1"></span></div>
+                        <div class="px-2 py-0.5 rounded-bl-lg scenario-bg text-white text-[11px] font-semibold shadow-sm pointer-events-none leading-none absolute top-0 right-0">#<span x-text="scene.order || index + 1"></span></div>
                         <div class="flex-1 pr-9">
                           <div class="w-full text-left font-semibold leading-tight whitespace-normal">
                             <span class="block" x-text="scene.title || 'Scène'"></span>
@@ -147,11 +145,11 @@
                       </div>
                     </div>
                     <div class="absolute bottom-2 right-2 flex items-center gap-1">
-                      <button class="h-6 w-6 inline-flex items-center justify-center rounded-md border border-slate-200 dark:border-gray-700 text-slate-500 hover:text-emerald-600 hover:border-emerald-400 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                      <button class="h-6 w-6 inline-flex items-center justify-center rounded-md border border-slate-200 dark:border-gray-400 dark:text-slate-300 text-slate-500 hover:text-emerald-600 hover:border-emerald-400 transition disabled:opacity-40 disabled:cursor-not-allowed"
                               @click.stop="moveScene(index, -1)" :disabled="index === 0">
                         <i class="fa-solid fa-chevron-left"></i>
                       </button>
-                      <button class="h-6 w-6 inline-flex items-center justify-center rounded-md border border-slate-200 dark:border-gray-700 text-slate-500 hover:text-emerald-600 hover:border-emerald-400 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                      <button class="h-6 w-6 inline-flex items-center justify-center rounded-md border border-slate-200 dark:border-gray-400 dark:text-slate-300 text-slate-500 hover:text-emerald-600 hover:border-emerald-400 transition disabled:opacity-40 disabled:cursor-not-allowed"
                               @click.stop="moveScene(index, 1)" :disabled="index === scenes.length - 1">
                         <i class="fa-solid fa-chevron-right"></i>
                       </button>
@@ -190,7 +188,7 @@
               <div class="flex items-center flex-wrap gap-2">
                 <h3 class="text-lg font-semibold text-emerald-600"
                     x-text="currentScene?.title || (scenes.length === 1 ? (scenes[0]?.title || 'Scène') : 'Détails de la scène')"></h3>
-                <button class="inline-flex items-center justify-center h-8 w-8 text-slate-600 dark:text-slate-200  dark:hover:text-slate-400 transition"
+                <button class="inline-flex items-center justify-center text-sm text-slate-600 dark:text-slate-200  dark:hover:text-slate-400 transition"
                         @click="openSceneEditModal()" :disabled="!currentScene">
                   <i class="fa-solid fa-pen"></i>
                 </button>
@@ -211,7 +209,7 @@
                             : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-200 dark:hover:text-slate-200'"
                           @click="setActiveTab(tab.id)">
                     <span class="inline-flex items-center gap-2">
-                      <i :class="tab.id === 'images' ? 'fa-regular fa-image' : tab.id === 'audio' ? 'fa-solid fa-music' : 'fa-regular fa-note-sticky'"></i>
+                      <i :class="tab.id === 'images' ? 'fa-regular fa-image' : tab.id === 'audio' ? 'fa-solid fa-music' : 'fa-solid fa-note-sticky'"></i>
                       <span x-text="tab.label"></span>
                     </span>
                   </button>
