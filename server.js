@@ -864,6 +864,22 @@ function flattenRuns(groups) {
   return flat;
 }
 
+function pruneShortRunsHistory(groups) {
+  // Retire de l'historique les runs terminés en moins de 2 minutes (front + GM offline)
+  return (groups || []).map(t => ({
+    tenantId: t.tenantId,
+    sessions: (t.sessions || []).map(s => {
+      const runs = (s.runs || []).filter(r => {
+        const duration = (r.updatedAt || r.createdAt || 0) - (r.createdAt || 0);
+        const bothOffline = (r.front || "offline") === "offline" && (r.gm || "offline") === "offline";
+        if (bothOffline && duration < MIN_RUN_DURATION_MS) return false;
+        return true;
+      });
+      return { sessionId: s.sessionId, runs };
+    })
+  }));
+}
+
 function loadSessionStates() {
   if (!fs.existsSync(SESSION_STATES_FILE)) {
     // migration depuis l'ancien nom
@@ -876,7 +892,7 @@ function loadSessionStates() {
   }
   try {
     const data = JSON.parse(fs.readFileSync(SESSION_STATES_FILE, "utf8")) || [];
-    return normalizeSessionRuns(data);
+    return pruneShortRunsHistory(normalizeSessionRuns(data));
   } catch (err) {
     logger.error("Failed to read session-states, reset", { err: err?.message });
     return [];
@@ -914,8 +930,39 @@ function ensureTenantSession(tenantId, sessionId) {
   return session;
 }
 
+function hasOpenSocket(tenantId, sessionId, role) {
+  let found = false;
+  wss.clients.forEach(client => {
+    if (found) return;
+    if (client.readyState !== WebSocket.OPEN) return;
+    if (!client.meta) return;
+    if (tenantId && client.meta.tenantId !== tenantId) return;
+    if (role && client.meta.role !== role) return;
+    if (sessionId && client.meta.sessionId !== sessionId) return;
+    found = true;
+  });
+  return found;
+}
+
+function getLastRun(tenantId, sessionId) {
+  const session = ensureTenantSession(tenantId, sessionId);
+  if (!session.runs || !session.runs.length) return null;
+  return session.runs[session.runs.length - 1];
+}
+
+function ensureSessionRunsFile() {
+  // Si le fichier a été supprimé manuellement pendant que le serveur tourne, on remet l'état en mémoire à zéro
+  if (!fs.existsSync(SESSION_STATES_FILE)) {
+    sessionRuns = [];
+    fs.writeFileSync(SESSION_STATES_FILE, JSON.stringify([], null, 2));
+  }
+}
+
 function appendSessionRun(tenantId, sessionId, data = {}) {
   if (!tenantId || !sessionId) return null;
+  // recharge depuis le disque au cas où le fichier aurait été vidé manuellement
+  sessionRuns = loadSessionStates();
+  ensureSessionRunsFile();
   const now = Date.now();
   const run = {
     front: data.front || "offline",
@@ -932,13 +979,26 @@ function appendSessionRun(tenantId, sessionId, data = {}) {
 }
 
 function updateLatestRun(tenantId, sessionId, patch = {}) {
+  // recharge depuis le disque au cas où le fichier aurait été vidé manuellement
+  sessionRuns = loadSessionStates();
+  ensureSessionRunsFile();
   const session = ensureTenantSession(tenantId, sessionId);
   if (!session.runs || !session.runs.length) {
-    return appendSessionRun(tenantId, sessionId, patch);
+    // on ne crée pas de run ici : il doit être explicitement démarré via /session-runs
+    return null;
   }
   const run = session.runs[session.runs.length - 1];
   Object.assign(run, patch);
   run.updatedAt = patch.updatedAt || Date.now();
+  if (run.front === "offline" && run.gm === "offline") {
+    const duration = (run.updatedAt || Date.now()) - (run.createdAt || run.updatedAt || Date.now());
+    // On ne conserve pas en historique les runs de moins de 2 minutes
+    if (duration < MIN_RUN_DURATION_MS) {
+      session.runs.pop();
+      saveSessionStates(sessionRuns);
+      return null;
+    }
+  }
   saveSessionStates(sessionRuns);
   return run;
 }
@@ -2906,6 +2966,7 @@ function broadcastTenant(tenantId, payload) {
 // In-memory presence state
 const presenceState = new Map(); // key: tenantId -> Map(sessionId -> { front: 'online'|'offline', gm: 'online'|'offline', lastFrontPing, lastGmPing, createdAt, updatedAt })
 const PRESENCE_TTL = 16000; // ms
+const MIN_RUN_DURATION_MS = 2 * 60 * 1000; // 2 minutes
 let sessionRuns = loadSessionStates(); // historique des runs
 
 // hydrate presence map with latest known status per session (offline by default)
@@ -2950,7 +3011,6 @@ function updatePresence(tenantId, sessionId, role, status) {
   if (!state) return;
   const prevFront = state.front;
   const prevGm = state.gm;
-  const wasOnlinePair = state.front === "online" && state.gm === "online";
   if (role === "front") {
     state.front = status;
     state.lastFrontPing = status === "online" ? Date.now() : state.lastFrontPing || Date.now();
@@ -2961,17 +3021,7 @@ function updatePresence(tenantId, sessionId, role, status) {
   }
   state.updatedAt = Date.now();
 
-  // Si le GM vient de passer offline -> online, on démarre un nouveau run
-  if (role === "gm" && prevGm !== "online" && status === "online") {
-    appendSessionRun(tenantId, sessionId, {
-      gm: "online",
-      front: state.front,
-      lastFrontPing: state.lastFrontPing,
-      lastGmPing: state.lastGmPing,
-      createdAt: state.updatedAt,
-      updatedAt: state.updatedAt
-    });
-  }
+  // On ne créé pas automatiquement un nouveau run ici : l'API /session-runs s'occupe de démarrer une partie.
 
   broadcastTenant(tenantId, {
     type: "presence:update",
@@ -2996,11 +3046,24 @@ function markOfflineIfStale(now = Date.now()) {
   presenceState.forEach((sessions, tenantId) => {
     sessions.forEach((state, sessionId) => {
       let changed = false;
+      const hasFrontSocket = hasOpenSocket(tenantId, sessionId, "front");
+      const hasGmSocket = hasOpenSocket(tenantId, sessionId, "gm");
       if (state.front === "online" && (!state.lastFrontPing || now - state.lastFrontPing > PRESENCE_TTL)) {
         state.front = "offline";
         changed = true;
       }
-      if (state.gm === "online" && (!state.lastGmPing || now - state.lastGmPing > PRESENCE_TTL)) {
+      const gmHeartbeatStale = state.gm === "online" && (!state.lastGmPing || now - state.lastGmPing > PRESENCE_TTL);
+      // Tant que le front est online, on garde le GM en vie même si son heartbeat est en retard
+      if (gmHeartbeatStale && state.front !== "online") {
+        state.gm = "offline";
+        changed = true;
+      }
+      // Si un rôle est déclaré online mais qu'aucune socket n'est ouverte pour ce rôle/session, force offline après le TTL
+      if (state.front === "online" && !hasFrontSocket && now - (state.updatedAt || state.createdAt || 0) > PRESENCE_TTL) {
+        state.front = "offline";
+        changed = true;
+      }
+      if (state.gm === "online" && !hasGmSocket && state.front !== "online" && now - (state.updatedAt || state.createdAt || 0) > PRESENCE_TTL) {
         state.gm = "offline";
         changed = true;
       }
@@ -3053,14 +3116,23 @@ app.post("/api/tenant/:tenantId/session-runs", requireLogin, (req, res) => {
   if (!sessionId) return res.status(400).json({ error: "sessionId is required" });
 
   const now = Date.now();
-  const run = appendSessionRun(tenantId, sessionId, {
-    gm: "online",
-    front: "offline",
-    lastGmPing: now,
-    lastFrontPing: null,
-    createdAt: now,
-    updatedAt: now
-  });
+  const last = getLastRun(tenantId, sessionId);
+  const gmAlreadyOnline = last && last.gm === "online";
+  const run = gmAlreadyOnline
+    ? updateLatestRun(tenantId, sessionId, {
+      gm: "online",
+      front: last.front || "offline",
+      lastGmPing: now,
+      updatedAt: now
+    })
+    : appendSessionRun(tenantId, sessionId, {
+      gm: "online",
+      front: "offline",
+      lastGmPing: now,
+      lastFrontPing: null,
+      createdAt: now,
+      updatedAt: now
+    });
 
   // Synchronise aussi l'état en mémoire et notifie
   updatePresence(tenantId, sessionId, "gm", "online");
@@ -3134,7 +3206,10 @@ wss.on("connection", (ws, req) => {
 
   ws.on("close", () => {
     if (ws.meta && ws.meta.tenantId && ws.meta.sessionId) {
-      updatePresence(ws.meta.tenantId, ws.meta.sessionId, ws.meta.role, "offline");
+      const stillConnected = hasOpenSocket(ws.meta.tenantId, ws.meta.sessionId, ws.meta.role);
+      if (!stillConnected) {
+        updatePresence(ws.meta.tenantId, ws.meta.sessionId, ws.meta.role, "offline");
+      }
     }
   });
 });

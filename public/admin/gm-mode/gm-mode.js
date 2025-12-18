@@ -15,7 +15,6 @@ export function gmDashboard() {
     currentSession: null,
     showLeaveModal: false,
     leaveTarget: '',
-    frontOnline: false,
     presenceBySession: {},
     scenes: [],
     sceneLoading: false,
@@ -165,9 +164,10 @@ export function gmDashboard() {
       if (!id || !this.tenantId) return;
       this.selectedSessionId = id;
       this.frontOnline = false;
-      if (this.presenceBySession[id] !== undefined) {
-        this.frontOnline = !!this.presenceBySession[id];
+      if (this.presenceBySession[id] === undefined) {
+        this.presenceBySession[id] = false; // par défaut : front supposé offline tant qu'il n'est pas lancé
       }
+      this.frontOnline = !!this.presenceBySession[id];
       this.selectedTension = '';
       this.currentSession = this.sessions.find(s => s.id === id) || null;
       this.scenarioId = this.currentSession?.parentScenario || '';
@@ -179,7 +179,10 @@ export function gmDashboard() {
       await this.loadSessionData();
       await this.loadScenesForSession(id, preferredScene);
       this.fulfillPendingRequests();
-      this.sendPresenceHello();
+      if (this.presenceBySession[id] !== false) {
+        this.connectSocket();
+        this.sendPresenceHello();
+      }
     },
     async loadSessionData() {
       if (!this.tenantId || !this.selectedSessionId) return;
@@ -842,13 +845,15 @@ export function gmDashboard() {
       }
       this.section = 'gm';
       this.breadcrumb = 'Game Master';
-      this.connectSocket();
       await Promise.all([this.loadTenantImages(), this.loadTenantAudio()]);
       await this.fetchSessionsAndSelect();
     },
 
     connectSocket() {
       if (!this.tenantId) return;
+      if (this.selectedSessionId && this.presenceBySession[this.selectedSessionId] === false) {
+        return;
+      }
       if (this.socket) {
         this.socket.close();
         this.socket = null;
@@ -883,6 +888,9 @@ export function gmDashboard() {
         if (this._presenceTimer) {
           clearInterval(this._presenceTimer);
           this._presenceTimer = null;
+        }
+        if (this.selectedSessionId && this.presenceBySession[this.selectedSessionId] === false) {
+          return;
         }
         this.socketTimer = setTimeout(() => this.connectSocket(), 2000);
       };
@@ -976,11 +984,17 @@ export function gmDashboard() {
         await fetch(`/api/tenant/${this.tenantId}/session-runs`, {
           method: 'POST',
           credentials: 'same-origin',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...this.headersAuth() },
           body: JSON.stringify({ sessionId: this.selectedSessionId })
         });
       } catch (e) {
         console.error('[GM] failed to start session run', e);
+      }
+
+      if (this.selectedSessionId) {
+        this.presenceBySession[this.selectedSessionId] = undefined;
+        this.frontOnline = false;
+        this.connectSocket();
       }
 
       window.open(`/t/${this.tenantId}/front${sessionParam}`, '_blank');
@@ -1010,7 +1024,4 @@ export function gmDashboard() {
   };
 }
 
-window.gmDashboard = gmDashboard;
-
-// Alpine a besoin de l'exposer en global
 window.gmDashboard = gmDashboard;
