@@ -125,9 +125,9 @@
               <div class="">
                 <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100 leading-none mt-1">Scènes <i class="fa-solid fa-angles-right"></i></h3>
               </div>              
-              <div class="flex-1 min-w-[260px] grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8">
+              <div class="flex-1 min-w-[260px] grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
                 <template x-for="(scene, index) in scenes" :key="scene.id">
-                  <div class="relative w-full min-h-[90px] rounded-lg border px-2 py-2 text-sm transition flex flex-col gap-2 overflow-hidden cursor-pointer"
+                  <div class="relative w-full min-h-[80px] rounded-lg border px-2 py-2 text-sm transition flex flex-col gap-2 overflow-hidden cursor-pointer"
                         :class="scene.id === currentScene?.id
                           ? 'border-emerald-400 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-100 shadow-md ring-1 ring-emerald-300/60'
                           : 'border-slate-200 dark:border-gray-400 hover-border-emerald-300 hover:bg-emerald-50/40 dark:hover:border-emerald-700 dark:hover:bg-emerald-900/20 text-slate-700 dark:text-slate-200'"
@@ -159,7 +159,7 @@
                   </div>
                 </template>
 
-                  <button class="h-[90px] min-h-[90px] min-h-[90px] w-full inline-flex flex-col items-center justify-center rounded-lg border border-dashed border-emerald-400 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition text-sm font-semibold"
+                  <button class="h-[80px] min-h-[80px] w-full inline-flex flex-col items-center justify-center rounded-lg border border-dashed border-emerald-400 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition text-sm font-semibold"
                           @click="openSceneModal()">
                     <i class="fa-solid fa-plus text-lg"></i>
                     <span class="truncate">Ajouter une scène</span>

@@ -950,6 +950,10 @@ video {
   height: 100vh;
 }
 
+.h-\[80px\]{
+  height: 80px;
+}
+
 .max-h-48{
   max-height: 12rem;
 }
@@ -970,6 +974,10 @@ video {
   max-height: 90vh;
 }
 
+.max-h-\[80px\]{
+  max-height: 80px;
+}
+
 .min-h-0{
   min-height: 0px;
 }
@@ -988,6 +996,10 @@ video {
 
 .min-h-screen{
   min-height: 100vh;
+}
+
+.min-h-\[80px\]{
+  min-height: 80px;
 }
 
 .w-10{
@@ -1080,6 +1092,14 @@ video {
 
 .w-full{
   width: 100%;
+}
+
+.w-\[220px\]{
+  width: 220px;
+}
+
+.w-\[185px\]{
+  width: 185px;
 }
 
 .min-w-0{
@@ -3418,10 +3438,18 @@ video {
   .xl\:grid-cols-7{
     grid-template-columns: repeat(7, minmax(0, 1fr));
   }
+
+  .xl\:grid-cols-5{
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
 }
 
 @media (min-width: 1536px){
   .\32xl\:grid-cols-8{
     grid-template-columns: repeat(8, minmax(0, 1fr));
+  }
+
+  .\32xl\:grid-cols-6{
+    grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 }
