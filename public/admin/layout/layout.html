@@ -4,6 +4,22 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>.ScenarWall.</title>
+  <link rel="preload" href="/assets/css/tailwind.css" as="style">
+  <link rel="preload" href="/assets/fontawesome/css/all.min.css" as="style">
+  <style>
+    /* Couleur de fond minimale pour éviter le flash blanc avant chargement CSS */
+    body { background: #f8fafc; color: #0f172a; }
+    .dark body { background: #0f172a; color: #e2e8f0; }
+  </style>
+  <script>
+    // Appliquer le thème dark le plus tôt possible pour éviter le flash clair
+    (function() {
+      try {
+        const theme = localStorage.getItem('sw_theme');
+        if (theme === 'dark') document.documentElement.classList.add('dark');
+      } catch (e) {}
+    })();
+  </script>
   <link rel="icon" href="/assets/favicons/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicons/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicons/favicon-16x16.png">
