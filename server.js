@@ -116,6 +116,7 @@ const DEFAULT_GLOBAL = {
 };
 const DEFAULT_DISCORD_SCOPES = ["identify"];
 const DEFAULT_SCENARIO_ICON = "fa-solid fa-scroll";
+const DEFAULT_SESSION_ICON = "fa-solid fa-clapperboard";
 const FALLBACK_TENSION_DEFAULTS = {
   tensionEnabled: true,
   tensionColors: {
@@ -1958,13 +1959,16 @@ app.put("/api/:tenantId/session/notes", requireLogin, (req, res) => {
 //------------------------------------------------------------
 //  SCENARIOS
 //------------------------------------------------------------
+function normalizeIconClass(value, fallback) {
+  const fallbackIcon = typeof fallback === "string" && fallback.trim() ? fallback.trim() : fallback;
+  const dest = fallbackIcon || DEFAULT_SCENARIO_ICON;
+  if (typeof value !== "string") return dest;
+  const trimmed = value.trim();
+  return trimmed ? trimmed.slice(0, 200) : dest;
+}
+
 function sanitizeScenarioInput(body = {}, existing = null) {
   const now = Math.floor(Date.now() / 1000);
-  const normalizeIcon = (value) => {
-    if (typeof value !== "string") return DEFAULT_SCENARIO_ICON;
-    const trimmed = value.trim();
-    return trimmed ? trimmed.slice(0, 200) : DEFAULT_SCENARIO_ICON;
-  };
   const base = existing ? { ...existing } : {
     id: `sc_${Date.now()}`,
     tenantId: body.tenantId,
@@ -1977,10 +1981,7 @@ function sanitizeScenarioInput(body = {}, existing = null) {
   const payload = { ...base };
   if (typeof body.title === "string") payload.title = body.title.trim().slice(0, 200);
   if (Array.isArray(body.sessions)) payload.sessions = body.sessions.map(String);
-  if (typeof body.icon === "string") {
-    payload.icon = normalizeIcon(body.icon);
-  }
-  payload.icon = normalizeIcon(payload.icon);
+  payload.icon = normalizeIconClass(body.icon, payload.icon);
   delete payload.description;
   delete payload.format;
   payload.updatedAt = now;
@@ -2152,12 +2153,14 @@ function sanitizeSessionInput(body = {}, existing = null) {
     timer: { ...DEFAULT_TENANT_SESSION.timer },
     hourglass: { ...DEFAULT_TENANT_SESSION.hourglass }
   };
+  base.icon = base.icon || DEFAULT_SESSION_ICON;
   const payload = { ...base };
   if (typeof body.title === "string") payload.title = body.title.trim().slice(0, 200);
   if (typeof body.parentScenario === "string") {
     const v = body.parentScenario.trim();
     payload.parentScenario = v || null;
   }
+  payload.icon = normalizeIconClass(body.icon, payload.icon || DEFAULT_SESSION_ICON);
   if (typeof body.tensionEnabled === "boolean") {
     payload.tensionEnabled = body.tensionEnabled;
   }

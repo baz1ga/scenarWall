@@ -1,5 +1,5 @@
 import { coreSection } from '/admin/js/core.js';
-import { DEFAULT_SCENARIO_ICON, ICON_OPTIONS, filterIcons } from '/admin/js/icon-picker-utils.js';
+import { DEFAULT_SCENARIO_ICON, DEFAULT_SESSION_ICON, ICON_OPTIONS, filterIcons } from '/admin/js/icon-picker-utils.js';
 
 export function scenariosListSection() {
   return {
@@ -8,6 +8,7 @@ export function scenariosListSection() {
     loading: true,
     error: '',
     defaultScenarioIcon: DEFAULT_SCENARIO_ICON,
+    defaultSessionIcon: DEFAULT_SESSION_ICON,
     iconOptions: ICON_OPTIONS,
     confirmModal: {
       open: false,
@@ -36,6 +37,8 @@ export function scenariosListSection() {
       open: false,
       title: '',
       scenarioId: '',
+      icon: DEFAULT_SESSION_ICON,
+      iconSearch: '',
       saving: false,
       error: ''
     },
@@ -150,11 +153,27 @@ export function scenariosListSection() {
     },
 
     openSessionModal(scenarioId) {
-      this.sessionModal = { open: true, title: '', scenarioId, saving: false, error: '' };
+      this.sessionModal = {
+        open: true,
+        title: '',
+        scenarioId,
+        icon: DEFAULT_SESSION_ICON,
+        iconSearch: '',
+        saving: false,
+        error: ''
+      };
     },
 
     closeSessionModal() {
-      this.sessionModal = { open: false, title: '', scenarioId: '', saving: false, error: '' };
+      this.sessionModal = {
+        open: false,
+        title: '',
+        scenarioId: '',
+        icon: DEFAULT_SESSION_ICON,
+        iconSearch: '',
+        saving: false,
+        error: ''
+      };
     },
 
     async submitSession() {
@@ -175,7 +194,8 @@ export function scenariosListSection() {
           headers: { 'Content-Type': 'application/json', ...this.headersAuth() },
           body: JSON.stringify({
             title,
-            parentScenario: this.sessionModal.scenarioId
+            parentScenario: this.sessionModal.scenarioId,
+            icon: this.sessionModal.icon || DEFAULT_SESSION_ICON
           })
         });
         if (!res.ok) throw new Error('Création impossible');

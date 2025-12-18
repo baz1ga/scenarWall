@@ -614,6 +614,10 @@ video {
   visibility: visible;
 }
 
+.collapse{
+  visibility: collapse;
+}
+
 .fixed{
   position: fixed;
 }
@@ -1037,6 +1041,10 @@ video {
   width: 200px;
 }
 
+.w-\[54px\]{
+  width: 54px;
+}
+
 .w-\[72px\]{
   width: 72px;
 }
@@ -1212,18 +1220,6 @@ video {
 
 .grid-cols-3{
   grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.grid-cols-4{
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.grid-cols-6{
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-}
-
-.grid-cols-7{
-  grid-template-columns: repeat(7, minmax(0, 1fr));
 }
 
 .grid-cols-8{
@@ -2098,6 +2094,10 @@ video {
   font-size: 18px;
 }
 
+.text-\[9px\]{
+  font-size: 9px;
+}
+
 .text-base{
   font-size: 1rem;
   line-height: 1.5rem;
@@ -2121,10 +2121,6 @@ video {
 .text-xs{
   font-size: 0.75rem;
   line-height: 1rem;
-}
-
-.text-\[9px\]{
-  font-size: 9px;
 }
 
 .font-bold{
@@ -2586,11 +2582,6 @@ video {
 .hover\:border-sky-400:hover{
   --tw-border-opacity: 1;
   border-color: rgb(56 189 248 / var(--tw-border-opacity, 1));
-}
-
-.hover\:border-slate-400:hover{
-  --tw-border-opacity: 1;
-  border-color: rgb(148 163 184 / var(--tw-border-opacity, 1));
 }
 
 .hover\:bg-amber-50:hover{
@@ -3174,19 +3165,9 @@ video {
   border-color: rgb(4 120 87 / var(--tw-border-opacity, 1));
 }
 
-.dark\:hover\:border-gray-600:hover:is(.dark *){
-  --tw-border-opacity: 1;
-  border-color: rgb(75 85 99 / var(--tw-border-opacity, 1));
-}
-
 .dark\:hover\:border-indigo-700:hover:is(.dark *){
   --tw-border-opacity: 1;
   border-color: rgb(67 56 202 / var(--tw-border-opacity, 1));
-}
-
-.dark\:hover\:border-gray-300:hover:is(.dark *){
-  --tw-border-opacity: 1;
-  border-color: rgb(209 213 219 / var(--tw-border-opacity, 1));
 }
 
 .dark\:hover\:bg-amber-900\/20:hover:is(.dark *){
@@ -3262,6 +3243,11 @@ video {
   color: rgb(167 243 208 / var(--tw-text-opacity, 1));
 }
 
+.dark\:hover\:text-emerald-500:hover:is(.dark *){
+  --tw-text-opacity: 1;
+  color: rgb(16 185 129 / var(--tw-text-opacity, 1));
+}
+
 .dark\:hover\:text-lime-200:hover:is(.dark *){
   --tw-text-opacity: 1;
   color: rgb(217 249 157 / var(--tw-text-opacity, 1));
@@ -3292,11 +3278,6 @@ video {
   color: rgb(254 240 138 / var(--tw-text-opacity, 1));
 }
 
-.dark\:hover\:text-emerald-500:hover:is(.dark *){
-  --tw-text-opacity: 1;
-  color: rgb(16 185 129 / var(--tw-text-opacity, 1));
-}
-
 @media (min-width: 640px){
   .sm\:w-40{
     width: 10rem;
@@ -3316,18 +3297,6 @@ video {
 
   .sm\:grid-cols-4{
     grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
-  .sm\:grid-cols-5{
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
-
-  .sm\:grid-cols-6{
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-  }
-
-  .sm\:grid-cols-7{
-    grid-template-columns: repeat(7, minmax(0, 1fr));
   }
 
   .sm\:grid-cols-8{

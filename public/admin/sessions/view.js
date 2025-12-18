@@ -1,5 +1,6 @@
 import { coreSection } from '/admin/js/core.js';
 import { pixabayMixin } from '/admin/js/pixabay.js';
+import { DEFAULT_SESSION_ICON, ICON_OPTIONS, filterIcons } from '/admin/js/icon-picker-utils.js';
 // SimpleMDE supprimé : éditeur basculé en textarea simple
 
 export function sessionViewSection(baseInit) {
@@ -169,9 +170,13 @@ export function sessionViewSection(baseInit) {
     ...pixabayMixin(),
     imageDragIndex: null,
     imageDragOver: null,
+    defaultSessionIcon: DEFAULT_SESSION_ICON,
+    iconOptions: ICON_OPTIONS,
     editModal: {
       open: false,
       title: '',
+      icon: DEFAULT_SESSION_ICON,
+      iconSearch: '',
       saving: false,
       error: ''
     },
@@ -226,6 +231,10 @@ export function sessionViewSection(baseInit) {
       } finally {
         this.loading = false;
       }
+    },
+
+    filteredIcons(query = '') {
+      return filterIcons(query, this.iconOptions);
     },
 
     async deleteSessionConfirm() {
@@ -395,6 +404,8 @@ export function sessionViewSection(baseInit) {
       this.editModal = {
         open: true,
         title: this.sessionTitle || '',
+        icon: (this.session?.icon) || this.defaultSessionIcon,
+        iconSearch: '',
         saving: false,
         error: ''
       };
@@ -416,7 +427,14 @@ export function sessionViewSection(baseInit) {
     },
 
     closeEditModal() {
-      this.editModal = { open: false, title: '', saving: false, error: '' };
+      this.editModal = {
+        open: false,
+        title: '',
+        icon: this.defaultSessionIcon,
+        iconSearch: '',
+        saving: false,
+        error: ''
+      };
     },
 
     async submitEdit() {
@@ -435,7 +453,10 @@ export function sessionViewSection(baseInit) {
         const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/sessions/${encodeURIComponent(this.session.id)}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', ...this.headersAuth() },
-          body: JSON.stringify({ title })
+          body: JSON.stringify({
+            title,
+            icon: this.editModal.icon || this.defaultSessionIcon
+          })
         });
         if (!res.ok) throw new Error('Mise à jour impossible');
         await this.fetchSession(this.session.id);

@@ -1,4 +1,5 @@
 export const DEFAULT_SCENARIO_ICON = 'fa-solid fa-scroll';
+export const DEFAULT_SESSION_ICON = 'fa-solid fa-clapperboard';
 const ICON_DEFINITIONS = [
   { label: 'Parchemin', name: 'scroll' },
   { label: 'Parchemin ancien', name: 'scroll-torah' },
