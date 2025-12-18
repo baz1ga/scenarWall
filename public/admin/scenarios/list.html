@@ -46,7 +46,7 @@
           <div class="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-4 shadow-sm flex flex-col gap-3 hover:shadow-md transition">
             <div class="space-y-2 flex-1 block">
               <div class="flex items-center justify-between gap-2">
-                <div class="flex items-center gap-2 min-w-0">
+                <div class="flex items-center gap-1.5 min-w-0">
                   <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 shrink-0">
                     <i class="text-lg" :class="scenario.icon || defaultScenarioIcon"></i>
                   </span>
@@ -67,7 +67,7 @@
                 <template x-for="sess in sessionsFor(scenario.id)" :key="sess.id">
                   <div class="rounded-lg border border-slate-200 dark:border-gray-700 px-3 py-2 text-sm hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition">
                     <div class="flex items-center justify-between gap-2">
-                      <a class="inline-flex items-center gap-2 min-w-0 text-slate-800 dark:text-slate-100"
+                      <a class="inline-flex items-center gap-1.5 min-w-0 text-slate-800 dark:text-slate-100"
                         :href="`/admin/sessions/view.html?id=${encodeURIComponent(sess.id)}`">
                         <i class="fa-solid fa-clapperboard text-emerald-500"></i>
                         <span class="font-semibold truncate" x-text="sess.title || sess.id"></span>
