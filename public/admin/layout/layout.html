@@ -73,7 +73,7 @@
               <template x-if="Array.isArray(sc.sessions) && sc.sessions.length">
                 <div class="">
                   <template x-for="sessId in sc.sessions.slice(0,3)" :key="sessId">
-                    <a :href="`/admin/sessions/view.html?id=${encodeURIComponent(sessId)}`"
+                    <a :href="`/admin/sessions/edit-scenes.html?id=${encodeURIComponent(sessId)}`"
                        class="flex w-full items-center gap-2 text-[11px] text-slate-600 dark:text-slate-200 rounded-md pl-3 pr-2 py-1 transition hover:bg-emerald-50 dark:hover:bg-emerald-900/25 hover:text-emerald-600">
                       <i class="fa-regular fa-circle-dot text-xs"></i>
                       <span class="truncate" x-text="lookupSessionTitle(sessId)"></span>
@@ -208,6 +208,13 @@
           :title="sidebarCollapsed ? 'Déplier' : 'Réduire'">
           <i class="text-base" :class="sidebarCollapsed ? 'fa-solid fa-angles-right' : 'fa-solid fa-angles-left'"></i>
         </button>
+      </div>
+    </aside>
+
+    <!-- SECONDARY NAV -->
+    <aside class="w-56 flex-shrink-0 bg-white dark:bg-gray-950 border-r border-slate-200 dark:border-gray-800 h-screen sticky top-0 overflow-y-auto" data-secondary-nav-container>
+      <div class="space-y-3">
+          {{SECONDARY_NAV}}
       </div>
     </aside>
 

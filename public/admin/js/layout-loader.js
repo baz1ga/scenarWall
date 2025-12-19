@@ -17,6 +17,9 @@
     try {
     const contentEl = document.querySelector('#page-content');
     if (!contentEl) return;
+    const secondaryNavEl = contentEl.querySelector('#page-secondary-nav');
+    const secondaryNavHtml = secondaryNavEl ? secondaryNavEl.outerHTML : '';
+    if (secondaryNavEl) secondaryNavEl.remove();
     const contentContainer = document.querySelector('main');
     let loaderEl = null;
     if (contentContainer) {
@@ -42,9 +45,15 @@
       return;
     }
 
-    const mergedHtml = layoutHtml.replace('{{CONTENT}}', pageContent);
+    const mergedHtml = layoutHtml
+      .replace('{{SECONDARY_NAV}}', secondaryNavHtml || '')
+      .replace('{{CONTENT}}', pageContent);
     const parser = new DOMParser();
     const parsed = parser.parseFromString(mergedHtml, 'text/html');
+    const secondaryNavContainer = parsed.querySelector('[data-secondary-nav-container]');
+    if (secondaryNavContainer && !secondaryNavHtml) {
+      secondaryNavContainer.remove();
+    }
 
     // Bloque l'auto-init Alpine pour démarrer après les scripts de page
     window.__swStartAlpine = null;

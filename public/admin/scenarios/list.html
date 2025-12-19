@@ -68,7 +68,7 @@
                   <div class="rounded-lg border border-slate-200 dark:border-gray-700 px-3 py-2 text-sm hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition">
                     <div class="flex items-center justify-between gap-2">
                       <a class="inline-flex items-center gap-1.5 min-w-0 text-slate-800 dark:text-slate-100"
-                        :href="`/admin/sessions/view.html?id=${encodeURIComponent(sess.id)}`">
+                        :href="`/admin/sessions/edit-scenes.html?id=${encodeURIComponent(sess.id)}`">
                         <i class="text-emerald-500" :class="sess.icon || defaultSessionIcon"></i>
                         <span class="font-semibold truncate" x-text="sess.title || sess.id"></span>
                       </a>

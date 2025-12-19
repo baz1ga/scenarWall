@@ -23,7 +23,6 @@ export function sessionViewSection(baseInit) {
     showDeleteSessionModal: false,
     showDeleteSceneModal: false,
     pendingScene: null,
-    showGmConfirm: false,
     sceneModal: {
       open: false,
       title: '',
@@ -165,8 +164,6 @@ export function sessionViewSection(baseInit) {
     uploadUrlMessage: '',
     uploadUrlStatus: 'ok',
     uploadUrlLoading: false,
-    showGmConfirm: false,
-    gmTarget: null,
     ...pixabayMixin(),
     imageDragIndex: null,
     imageDragOver: null,
@@ -270,6 +267,9 @@ export function sessionViewSection(baseInit) {
       const data = await res.json();
       this.session = data;
       this.sessionTitle = data.title || '';
+      // préremplir le formulaire d'édition quand la session arrive
+      if (!this.editModal.title) this.editModal.title = this.sessionTitle;
+      this.editModal.icon = data.icon || this.defaultSessionIcon;
       this.sessionLink = data.id ? `/admin/sessions/view.html?id=${encodeURIComponent(data.id)}` : '';
       this.scenarioId = data.parentScenario || '';
       this.scenarioLink = this.scenarioId ? `/admin/sessions/list.html?scenario=${encodeURIComponent(this.scenarioId)}` : '/admin/scenarios/list.html';
@@ -410,21 +410,6 @@ export function sessionViewSection(baseInit) {
         error: ''
       };
     },
-    openGameMasterConfirm() {
-      if (!this.session?.id) return;
-      this.gmTarget = this.session.id;
-      this.showGmConfirm = true;
-    },
-    cancelGameMaster() {
-      this.showGmConfirm = false;
-      this.gmTarget = null;
-    },
-    proceedGameMaster() {
-      if (!this.gmTarget) return;
-      this.openGameMaster(this.gmTarget);
-      this.showGmConfirm = false;
-      this.gmTarget = null;
-    },
 
     closeEditModal() {
       this.editModal = {
@@ -461,6 +446,9 @@ export function sessionViewSection(baseInit) {
         if (!res.ok) throw new Error('Mise à jour impossible');
         await this.fetchSession(this.session.id);
         this.closeEditModal();
+        try {
+          window.location.reload();
+        } catch (e) {}
       } catch (err) {
         this.editModal.error = err?.message || 'Erreur lors de la sauvegarde';
       } finally {
