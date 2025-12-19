@@ -9,14 +9,11 @@
     .users-bg { background-color: var(--users-accent); color: #fff; border-color: var(--users-accent); }
   </style>
   <template x-if="usersLoading">
-    <div class="max-w-4xl mx-auto rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-6 shadow-sm flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+    <div class="justify-center max-w-4xl mx-auto rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-6 shadow-sm flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
       <div class="h-5 w-5 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
-      Chargement des utilisateurs...
+      Chargement de la page
     </div>
   </template>
-  <template x-if="error">
-    <div class="max-w-4xl mx-auto rounded-2xl border border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-900/20 dark:text-rose-100 px-4 py-3 text-sm" x-text="error"></div>
-  </template> 
   <template x-if="!usersLoading">    
     <section class="space-y-6">
       <div class="flex items-center justify-between gap-3">
