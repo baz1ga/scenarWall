@@ -31,11 +31,9 @@
       </div>
       <div class="space-y-4">
         <template x-if="groupedNotes().scenarios.length === 0 && groupedNotes().unlinked.length === 0">
-          <div class="max-w-4xl mx-auto rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-4 text-sm text-slate-600 dark:text-slate-300">
-            Aucune note liée pour le moment.
-          </div>
+          <div class="text-sm max-w-4xl mx-auto text-center text-slate-600 dark:text-slate-200 border border-dashed border-slate-300 dark:border-gray-800 rounded-lg p-4">Aucune note</div>
         </template>
-        
+
         <div class="space-y-4 max-w-4xl mx-auto">
           <template x-for="grp in groupedNotes().scenarios" :key="grp.scenario.id">
             <div class="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-4 shadow-sm space-y-3">

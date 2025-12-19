@@ -39,7 +39,7 @@
         </div>
       </div>
       <template x-if="!audioLoading && audioFiles.length === 0">
-        <div class="max-w-4xl mx-auto text-sm text-slate-600 dark:text-slate-200 border border-dashed border-slate-300 dark:border-gray-800 rounded-lg p-4">Aucun fichier audio.</div>
+        <div class="text-sm max-w-4xl mx-auto text-center text-slate-600 dark:text-slate-200 border border-dashed border-slate-300 dark:border-gray-800 rounded-lg p-4">Aucun audio</div>
       </template>
       <div class="space-y-2 max-w-4xl mx-auto" x-show="!audioLoading && audioFiles.length > 0">
         <template x-for="(audio, index) in audioFiles" :key="audio.name">

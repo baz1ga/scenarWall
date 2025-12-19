@@ -50,7 +50,7 @@
       <div id="visiblePictures" class="space-y-2">
         <div class="rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-4">
           <template x-if="!galleryLoading && visible.length === 0">
-            <div class="text-sm text-slate-600 dark:text-slate-200 border border-dashed border-slate-300 dark:border-gray-800 rounded-lg p-4">Aucune image.</div>
+            <div class="text-sm max-w-4xl mx-auto text-center text-slate-600 dark:text-slate-200 border border-dashed border-slate-300 dark:border-gray-800 rounded-lg p-4">Aucune image</div>
           </template>
 
           <div class="grid gap-2 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7">
@@ -147,7 +147,7 @@
             <div class="text-sm text-slate-400">Chargement...</div>
           </template>
           <template x-if="!galleryLoading && hidden.length === 0">
-            <div class="text-sm text-slate-600 dark:text-slate-200 border border-dashed border-slate-300 dark:border-gray-800 rounded-lg p-4">Aucune image.</div>
+            <div class="text-sm max-w-4xl mx-auto text-center text-slate-600 dark:text-slate-200 border border-dashed border-slate-300 dark:border-gray-800 rounded-lg p-4">Aucune image</div>
           </template>
 
             <div class="grid gap-2 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7">
