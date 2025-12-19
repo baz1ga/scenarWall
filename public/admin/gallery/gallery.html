@@ -48,69 +48,66 @@
         </div>
       </div>
       <div id="visiblePictures" class="space-y-2">
-          <div class="rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-4">
-            <template x-if="galleryLoading">
-              <div class="text-sm text-slate-400">Chargement...</div>
-            </template>
-            <template x-if="!galleryLoading && visible.length === 0">
-              <div class="text-sm text-slate-600 dark:text-slate-200 border border-dashed border-slate-300 dark:border-gray-800 rounded-lg p-4">Aucune image.</div>
-            </template>
+        <div class="rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-4">
+          <template x-if="!galleryLoading && visible.length === 0">
+            <div class="text-sm text-slate-600 dark:text-slate-200 border border-dashed border-slate-300 dark:border-gray-800 rounded-lg p-4">Aucune image.</div>
+          </template>
 
-              <div class="grid gap-2 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7">
-                <template x-for="(img, index) in visible" :key="img.name">
-                  <div
-                    class="relative rounded-lg border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 overflow-hidden aspect-square transition-all group hover:-translate-y-0.5"
-                    draggable="true"
-                    @dragstart="startDrag(index, $event)"
-                    @dragend="endDrag()"
-                    @dragover.prevent="onDragOver(index, $event)"
-                    @dragenter.prevent="onDragOver(index, $event)"
-                    @drop.prevent="onDrop(index, $event)"
-                    :class="[
-                      'shadow-sm hover:shadow-md',
-                      dragOverIndex === index ? 'gallery-ring ring-offset-2 ring-offset-slate-50 dark:ring-offset-slate-900 shadow-lg' : '',
-                      dragIndex === index ? 'opacity-80 scale-[0.98]' : ''
-                    ]"
-                  >
-                    <div class="absolute top-2 right-2 z-20 flex items-center gap-2">
-                      <label class="h-8 w-8 flex items-center justify-center rounded-full bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 shadow cursor-pointer">
-                        <input
-                          type="checkbox"
-                          class="h-4 w-4 rounded border border-slate-400 bg-white text-yellow-500 accent-yellow-500 cursor-pointer"
-                          :checked="selectedVisible.includes(img.name)"
-                          @change.stop="toggleSelectVisible(img.name)"
-                          :aria-label="`Sélectionner ${img.name}`"
-                        >
-                      </label>
-                    </div>
-                    <button
-                      class="absolute top-2 left-2 h-7 w-7 flex items-center justify-center rounded-full bg-white/90 dark:bg-gray-800/90 text-slate-500 hover:text-yellow-600 cursor-grab select-none border border-slate-200 dark:border-gray-700 text-xs"
-                      :class="dragIndex === index ? 'cursor-grabbing text-yellow-600' : ''"
-                      title="Glisser pour réordonner"
-                      @mousedown.prevent
+          <div class="grid gap-2 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7">
+            <template x-for="(img, index) in visible" :key="img.name">
+              <div
+                class="relative rounded-lg border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 overflow-hidden aspect-square transition-all group hover:-translate-y-0.5"
+                draggable="true"
+                @dragstart="startDrag(index, $event)"
+                @dragend="endDrag()"
+                @dragover.prevent="onDragOver(index, $event)"
+                @dragenter.prevent="onDragOver(index, $event)"
+                @drop.prevent="onDrop(index, $event)"
+                :class="[
+                  'shadow-sm hover:shadow-md',
+                  dragOverIndex === index ? 'gallery-ring ring-offset-2 ring-offset-slate-50 dark:ring-offset-slate-900 shadow-lg' : '',
+                  dragIndex === index ? 'opacity-80 scale-[0.98]' : ''
+                ]"
+              >
+                <div class="absolute top-2 right-2 z-20 flex items-center gap-2">
+                  <label class="h-8 w-8 flex items-center justify-center rounded-full bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 shadow cursor-pointer">
+                    <input
+                      type="checkbox"
+                      class="h-4 w-4 rounded border border-slate-400 bg-white text-yellow-500 accent-yellow-500 cursor-pointer"
+                      :checked="selectedVisible.includes(img.name)"
+                      @change.stop="toggleSelectVisible(img.name)"
+                      :aria-label="`Sélectionner ${img.name}`"
                     >
-                      <i class="fa-solid fa-grip-vertical"></i>
-                    </button>
-                    <div class="absolute bottom-2 left-2 px-2 py-1 rounded-full bg-slate-900/80 text-white text-[11px] font-semibold shadow-sm">#<span x-text="index + 1"></span></div>
-                    <div class="absolute inset-0">
-                      <img :src="img.thumbUrl || img.url" draggable="false" class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105 group-active:scale-[1.02]" @click="zoom(img.url)">
-                    </div>
-                    <div class="absolute inset-0 bg-slate-900/15 dark:bg-slate-100/10 opacity-0 group-hover:opacity-100 transition flex items-center justify-center pointer-events-none text-[10px] font-semibold tracking-wide text-white">Glisser pour déplacer</div>
-                    <div
-                      class="absolute inset-0 flex items-center justify-center text-xs font-semibold tracking-wide uppercase"
-                      :style="dragIndex !== null && dragOverIndex === index ? 'background: var(--gallery-accent-strong); color: #fff;' : 'display:none;'"
-                      x-show="dragIndex !== null && dragOverIndex === index"
-                      x-transition
-                    >
-                      Déposer ici
-                    </div>
-                    <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/40 to-transparent p-2 text-white space-y-1.5">
-                      <div class="text-[12px] font-semibold truncate text-slate-400" x-text="img.name"></div>
-                    </div>
-                  </div>
-                </template>
+                  </label>
+                </div>
+                <button
+                  class="absolute top-2 left-2 h-7 w-7 flex items-center justify-center rounded-full bg-white/90 dark:bg-gray-800/90 text-slate-500 hover:text-yellow-600 cursor-grab select-none border border-slate-200 dark:border-gray-700 text-xs"
+                  :class="dragIndex === index ? 'cursor-grabbing text-yellow-600' : ''"
+                  title="Glisser pour réordonner"
+                  @mousedown.prevent
+                >
+                  <i class="fa-solid fa-grip-vertical"></i>
+                </button>
+                <div class="absolute bottom-2 left-2 px-2 py-1 rounded-full bg-slate-900/80 text-white text-[11px] font-semibold shadow-sm">#<span x-text="index + 1"></span></div>
+                <div class="absolute inset-0">
+                  <img :src="img.thumbUrl || img.url" draggable="false" class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105 group-active:scale-[1.02]" @click="zoom(img.url)">
+                </div>
+                <div class="absolute inset-0 bg-slate-900/15 dark:bg-slate-100/10 opacity-0 group-hover:opacity-100 transition flex items-center justify-center pointer-events-none text-[10px] font-semibold tracking-wide text-white">Glisser pour déplacer</div>
+                <div
+                  class="absolute inset-0 flex items-center justify-center text-xs font-semibold tracking-wide uppercase"
+                  :style="dragIndex !== null && dragOverIndex === index ? 'background: var(--gallery-accent-strong); color: #fff;' : 'display:none;'"
+                  x-show="dragIndex !== null && dragOverIndex === index"
+                  x-transition
+                >
+                  Déposer ici
+                </div>
+                <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/40 to-transparent p-2 text-white space-y-1.5">
+                  <div class="text-[12px] font-semibold truncate text-slate-400" x-text="img.name"></div>
+                </div>
               </div>
+            </template>
           </div>
+        </div>
       </div>
       <div id="hiddenPictures" class="space-y-4 mt-6">
         <div class="flex items-center justify-between gap-3">
