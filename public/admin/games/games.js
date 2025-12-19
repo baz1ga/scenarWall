@@ -6,12 +6,12 @@ export function gamesPage() {
 
   return {
     ...base,
-
+    loading: false,
+    error: '',
     section: "games",
     states: [],
     searchTerm: "",
     hideShortRuns: true,
-    loading: false,
     allOpen: false,
 
     // Tri "games"

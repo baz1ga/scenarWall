@@ -8,110 +8,119 @@
     .users-border { border-color: var(--users-accent); }
     .users-bg { background-color: var(--users-accent); color: #fff; border-color: var(--users-accent); }
   </style>
-  
-  <section class="space-y-6">
-    <div class="flex items-center justify-between gap-3">
-      <div class="flex items-center gap-3">
-        <span class="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-cyan-50 text-cyan-600 dark:bg-cyan-900/30">
-          <i class="fa-solid fa-user-gear text-lg"></i>
-        </span>
-        <div>
-          <h1 class="text-2xl font-semibold inline-flex items-center gap-2 users-text">
-            Utilisateurs
-          </h1>
-          <p class="text-sm text-slate-500 dark:text-slate-200">Gérez les quotas et usages par tenant.</p>
+  <template x-if="usersLoading">
+    <div class="max-w-4xl mx-auto rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-6 shadow-sm flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+      <div class="h-5 w-5 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
+      Chargement des utilisateurs...
+    </div>
+  </template>
+  <template x-if="error">
+    <div class="max-w-4xl mx-auto rounded-2xl border border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-900/20 dark:text-rose-100 px-4 py-3 text-sm" x-text="error"></div>
+  </template> 
+  <template x-if="!usersLoading">    
+    <section class="space-y-6">
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <span class="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-cyan-50 text-cyan-600 dark:bg-cyan-900/30">
+            <i class="fa-solid fa-user-gear text-lg"></i>
+          </span>
+          <div>
+            <h1 class="text-2xl font-semibold inline-flex items-center gap-2 users-text">
+              Utilisateurs
+            </h1>
+            <p class="text-sm text-slate-500 dark:text-slate-200">Gérez les quotas et usages par tenant.</p>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="flex flex-col lg:flex-row gap-4 max-w-4xl mx-auto">
-      <div class="flex-1 rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-3 space-y-2 shadow-sm">
-        <div class="flex flex-wrap items-center gap-3">
-          <div class="flex items-center gap-2">
-            <div class="font-semibold whitespace-nowrap">Quota global par défaut (Mo)</div>
-            <div class="text-sm" :class="globalQuotaStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-300'" x-text="globalQuotaMessage"></div>
-          </div>
-          <div class="flex flex-wrap items-center gap-3 ml-auto">
-            <div class="flex items-center gap-3">
-              <input type="number" min="1" step="1" class="w-32 sm:w-40 rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100" x-model.number="globalQuotaValue">
-              <button class="rounded-lg px-3 py-2 text-sm font-semibold text-white users-bg hover:brightness-110 transition"
-                      @click="saveGlobalQuota">Mettre à jour</button>
+      <div class="flex flex-col lg:flex-row gap-4 max-w-4xl mx-auto">
+        <div class="flex-1 rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-3 space-y-2 shadow-sm">
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="flex items-center gap-2">
+              <div class="font-semibold whitespace-nowrap">Quota global par défaut (Mo)</div>
+              <div class="text-sm" :class="globalQuotaStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-300'" x-text="globalQuotaMessage"></div>
+            </div>
+            <div class="flex flex-wrap items-center gap-3 ml-auto">
+              <div class="flex items-center gap-3">
+                <input type="number" min="1" step="1" class="w-32 sm:w-40 rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100" x-model.number="globalQuotaValue">
+                <button class="rounded-lg px-3 py-2 text-sm font-semibold text-white users-bg hover:brightness-110 transition"
+                        @click="saveGlobalQuota">Mettre à jour</button>
+              </div>
             </div>
           </div>
         </div>
+        <div class="lg:w-64 rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-3 shadow-sm flex items-center justify-between">
+          <div class="font-semibold text-slate-900 dark:text-slate-100">Total usages</div>
+          <div class="text-sm text-slate-700 dark:text-slate-200" x-text="totalUsageText()"></div>
+        </div>
       </div>
-      <div class="lg:w-64 rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-3 shadow-sm flex items-center justify-between">
-        <div class="font-semibold text-slate-900 dark:text-slate-100">Total usages</div>
-        <div class="text-sm text-slate-700 dark:text-slate-200" x-text="totalUsageText()"></div>
-      </div>
-    </div>
-    <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 shadow-sm  max-w-4xl mx-auto">
-      <table class="min-w-full text-sm">
-        <thead class="bg-slate-100 text-slate-800 dark:bg-gray-700 dark:text-slate-50">
-          <tr>
-            <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('name')">
-              <div class="inline-flex items-center gap-2">Nom <i :class="sortIcon('name','users')" class="text-xs users-text"></i></div>
-            </th>
-            <th class="px-4 py-2 text-left">Tenant</th>
-            <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('images')">
-              <div class="inline-flex items-center gap-2">Images <i :class="sortIcon('images','users')" class="text-xs users-text"></i></div>
-            </th>
-            <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('audios')">
-              <div class="inline-flex items-center gap-2">Audio <i :class="sortIcon('audios','users')" class="text-xs users-text"></i></div>
-            </th>
-            <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('usage')">
-              <div class="inline-flex items-center gap-2">Usage <i :class="sortIcon('usage','users')" class="text-xs users-text"></i></div>
-            </th>
-            <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('lastLogin')">
-              <div class="inline-flex items-center gap-2">Dernière connexion <i :class="sortIcon('lastLogin','users')" class="text-xs users-text"></i></div>
-            </th>
-            <th class="px-4 py-2 text-left">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <template x-if="usersLoading">
-            <tr><td colspan="7" class="px-4 py-3 text-center text-slate-400">Chargement...</td></tr>
-          </template>
-          <template x-if="!usersLoading && filteredUsers('users').length === 0">
-            <tr><td colspan="7" class="px-4 py-3 text-center text-slate-500">Aucun utilisateur</td></tr>
-          </template>
-          <template x-for="u in filteredUsers('users')" :key="u.email">
-            <tr class="border-t border-slate-200 dark:border-gray-800">
-              <td class="px-4 py-2"><div class="flex items-center gap-2"><template x-if="u.admin"><i class="fa-solid fa-crown text-amber-400"></i></template><span x-text="u.displayName || u.email"></span></div></td>
-              <td class="px-4 py-2">
-                <div class="flex items-center gap-2">
-                  <span x-text="u.tenantId || '—'"></span>
-                </div>
-              </td>
-              <td class="px-4 py-2" x-text="u.imageCount || 0"></td>
-              <td class="px-4 py-2" x-text="u.audioCount || 0"></td>
-              <td class="px-4 py-2">
-                <div class="w-36 sm:w-44 h-2 rounded-full bg-slate-800 overflow-hidden" :title="usageTitle(u)">
-                  <div class="h-full" :style="`width:${usageData(u).percent}%; background: var(--users-accent);`"></div>
-                </div>
-                <div class="text-xs text-slate-400" x-text="usageData(u).text"></div>
-              </td>
-              <td class="px-4 py-2" x-text="u.lastLogin ? new Date(u.lastLogin).toLocaleString('fr-FR') : '—'"></td>
-              <td class="px-4 py-2">
-                <div class="flex items-center gap-2">
-                  <button class="h-8 w-8 inline-flex items-center justify-center rounded-lg border users-border users-text hover:bg-lime-50 dark:hover:bg-lime-900/30 transition" 
-                          @click="editTenantQuota(u)">
-                    <i class="fa-solid fa-chart-pie"></i>
-                  </button>
-                  <template x-if="!u.admin">
-                    <button class="h-8 w-8 inline-flex items-center justify-center rounded-lg border notes-border notes-text hover:bg-lime-50 dark:hover:bg-lime-900/30 transition" 
-                          @click="deleteUser(u.email)">
-                      <i class="fa-solid fa-trash"></i>
-                    </button>
-                  </template>
-                </div>
-              </td>
+      <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 shadow-sm  max-w-4xl mx-auto">
+        <table class="min-w-full text-sm">
+          <thead class="bg-slate-100 text-slate-800 dark:bg-gray-700 dark:text-slate-50">
+            <tr>
+              <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('name')">
+                <div class="inline-flex items-center gap-2">Nom <i :class="sortIcon('name','users')" class="text-xs users-text"></i></div>
+              </th>
+              <th class="px-4 py-2 text-left">Tenant</th>
+              <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('images')">
+                <div class="inline-flex items-center gap-2">Images <i :class="sortIcon('images','users')" class="text-xs users-text"></i></div>
+              </th>
+              <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('audios')">
+                <div class="inline-flex items-center gap-2">Audio <i :class="sortIcon('audios','users')" class="text-xs users-text"></i></div>
+              </th>
+              <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('usage')">
+                <div class="inline-flex items-center gap-2">Usage <i :class="sortIcon('usage','users')" class="text-xs users-text"></i></div>
+              </th>
+              <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('lastLogin')">
+                <div class="inline-flex items-center gap-2">Dernière connexion <i :class="sortIcon('lastLogin','users')" class="text-xs users-text"></i></div>
+              </th>
+              <th class="px-4 py-2 text-left">Actions</th>
             </tr>
-          </template>
-        </tbody>
-      </table>
-    </div>
-  </section>
-
+          </thead>
+          <tbody>
+            <template x-if="usersLoading">
+              <tr><td colspan="7" class="px-4 py-3 text-center text-slate-400">Chargement...</td></tr>
+            </template>
+            <template x-if="!usersLoading && filteredUsers('users').length === 0">
+              <tr><td colspan="7" class="px-4 py-3 text-center text-slate-500">Aucun utilisateur</td></tr>
+            </template>
+            <template x-for="u in filteredUsers('users')" :key="u.email">
+              <tr class="border-t border-slate-200 dark:border-gray-800">
+                <td class="px-4 py-2"><div class="flex items-center gap-2"><template x-if="u.admin"><i class="fa-solid fa-crown text-amber-400"></i></template><span x-text="u.displayName || u.email"></span></div></td>
+                <td class="px-4 py-2">
+                  <div class="flex items-center gap-2">
+                    <span x-text="u.tenantId || '—'"></span>
+                  </div>
+                </td>
+                <td class="px-4 py-2" x-text="u.imageCount || 0"></td>
+                <td class="px-4 py-2" x-text="u.audioCount || 0"></td>
+                <td class="px-4 py-2">
+                  <div class="w-36 sm:w-44 h-2 rounded-full bg-slate-800 overflow-hidden" :title="usageTitle(u)">
+                    <div class="h-full" :style="`width:${usageData(u).percent}%; background: var(--users-accent);`"></div>
+                  </div>
+                  <div class="text-xs text-slate-400" x-text="usageData(u).text"></div>
+                </td>
+                <td class="px-4 py-2" x-text="u.lastLogin ? new Date(u.lastLogin).toLocaleString('fr-FR') : '—'"></td>
+                <td class="px-4 py-2">
+                  <div class="flex items-center gap-2">
+                    <button class="h-8 w-8 inline-flex items-center justify-center rounded-lg border users-border users-text hover:bg-lime-50 dark:hover:bg-lime-900/30 transition" 
+                            @click="editTenantQuota(u)">
+                      <i class="fa-solid fa-chart-pie"></i>
+                    </button>
+                    <template x-if="!u.admin">
+                      <button class="h-8 w-8 inline-flex items-center justify-center rounded-lg border notes-border notes-text hover:bg-lime-50 dark:hover:bg-lime-900/30 transition" 
+                            @click="deleteUser(u.email)">
+                        <i class="fa-solid fa-trash"></i>
+                      </button>
+                    </template>
+                  </div>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </template>
   <div
     class="fixed inset-0 z-50 flex items-center justify-center px-4"
     x-show="tenantQuotaModal.open"

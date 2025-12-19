@@ -2,6 +2,7 @@ import { coreSection } from '/admin/js/core.js';
 
 export function usersSection() {
   return {
+    error: '',
     users: [],
     usersLoading: false,
     hideInactiveUsers: false,

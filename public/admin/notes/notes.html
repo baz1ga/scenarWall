@@ -8,134 +8,140 @@
     .notes-border { border-color: var(--notes-accent); }
     .notes-bg { background-color: var(--notes-accent); color: #fff; border-color: var(--notes-accent); }
   </style>
-  
-  <section class="space-y-6">
-    <div class="flex items-center justify-between gap-3">
-      <div class="flex items-center gap-3">
-        <span class="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-sky-50 text-sky-600 dark:bg-sky-900/30">
-          <i class="fa-solid fa-note-sticky text-lg"></i>
-        </span>
-        <div>
-          <h1 class="text-2xl font-semibold inline-flex items-center gap-2 notes-text">
-            Notes
-          </h1>
-          <p class="text-sm text-slate-500 dark:text-slate-200">Consultez et gérez l’ensemble des notes par scénario et session.</p>
-        </div>
-      </div>
-    </div>
-
   <template x-if="loading">
-    <div class="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-4 shadow-sm text-sm text-slate-600 dark:text-slate-300">
-      Chargement des notes...
+    <div class="max-w-4xl mx-auto rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-6 shadow-sm flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+      <div class="h-5 w-5 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
+      Chargement des audios...
     </div>
   </template>
-
-  <template x-if="!loading">
-    <div class="space-y-4">
-      <template x-if="groupedNotes().scenarios.length === 0 && groupedNotes().unlinked.length === 0">
-        <div class="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-4 text-sm text-slate-600 dark:text-slate-300">
-          Aucune note liée pour le moment.
+  <template x-if="!loading">      
+    <section class="space-y-6">
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <span class="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-sky-50 text-sky-600 dark:bg-sky-900/30">
+            <i class="fa-solid fa-note-sticky text-lg"></i>
+          </span>
+          <div>
+            <h1 class="text-2xl font-semibold inline-flex items-center gap-2 notes-text">
+              Notes
+            </h1>
+            <p class="text-sm text-slate-500 dark:text-slate-200">Consultez et gérez l’ensemble des notes par scénario et session.</p>
+          </div>
         </div>
-      </template>
+      </div>
 
-      <div class="space-y-4 max-w-4xl mx-auto">
-        <template x-for="grp in groupedNotes().scenarios" :key="grp.scenario.id">
-          <div class="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-4 shadow-sm space-y-3">
-            <div class="text-lg font-semibold notes-text">
-              <a class="hover:underline" :href="`/admin/scenarios/list.html?scenario=${encodeURIComponent(grp.scenario.id)}`" x-text="grp.scenario.title || grp.scenario.id"></a>
-            </div>
-            <template x-if="grp.singleSceneNotes.length">
-              <div class="space-y-2">
-                <template x-for="note in grp.singleSceneNotes" :key="note.name">
-                  <div class="rounded-lg border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 px-3 py-2 shadow-sm flex items-center justify-between gap-3">
-                    <template x-if="note.sessionId">
-                      <a class="font-semibold text-slate-900 dark:text-slate-100 truncate hover:underline"
-                         :href="`/admin/sessions/view.html?id=${encodeURIComponent(note.sessionId)}${note.sceneId ? `&scene=${encodeURIComponent(note.sceneId)}` : ''}`"
-                         x-text="note.sceneTitle || note.name"></a>
-                    </template>
-                    <template x-if="!note.sessionId">
-                      <span class="font-semibold text-slate-900 dark:text-slate-100 truncate" x-text="note.sceneTitle || note.name"></span>
-                    </template>
-                        <div class="flex items-center gap-2 text-xs shrink-0">
-                      <button class="h-8 w-8 inline-flex items-center justify-center rounded-lg border notes-border notes-text hover:bg-lime-50 dark:hover:bg-lime-900/30 transition" 
-                              @click="openEdit(note)">
-                        <i class="fa-solid fa-pen"></i> 
-                      </button>
-                      <button class="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-rose-200 dark:border-rose-900 bg-white dark:bg-gray-950 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition"
-                                  @click="openDelete(note)">
-                            <i class="fa-solid fa-trash"></i> 
-                          </button>
+    <template x-if="loading">
+      <div class="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-4 shadow-sm text-sm text-slate-600 dark:text-slate-300">
+        Chargement des notes...
+      </div>
+    </template>
+
+    <template x-if="!loading">
+      <div class="space-y-4">
+        <template x-if="groupedNotes().scenarios.length === 0 && groupedNotes().unlinked.length === 0">
+          <div class="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-4 text-sm text-slate-600 dark:text-slate-300">
+            Aucune note liée pour le moment.
+          </div>
+        </template>
+
+        <div class="space-y-4 max-w-4xl mx-auto">
+          <template x-for="grp in groupedNotes().scenarios" :key="grp.scenario.id">
+            <div class="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-4 shadow-sm space-y-3">
+              <div class="text-lg font-semibold notes-text">
+                <a class="hover:underline" :href="`/admin/scenarios/list.html?scenario=${encodeURIComponent(grp.scenario.id)}`" x-text="grp.scenario.title || grp.scenario.id"></a>
+              </div>
+              <template x-if="grp.singleSceneNotes.length">
+                <div class="space-y-2">
+                  <template x-for="note in grp.singleSceneNotes" :key="note.name">
+                    <div class="rounded-lg border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 px-3 py-2 shadow-sm flex items-center justify-between gap-3">
+                      <template x-if="note.sessionId">
+                        <a class="font-semibold text-slate-900 dark:text-slate-100 truncate hover:underline"
+                          :href="`/admin/sessions/view.html?id=${encodeURIComponent(note.sessionId)}${note.sceneId ? `&scene=${encodeURIComponent(note.sceneId)}` : ''}`"
+                          x-text="note.sceneTitle || note.name"></a>
+                      </template>
+                      <template x-if="!note.sessionId">
+                        <span class="font-semibold text-slate-900 dark:text-slate-100 truncate" x-text="note.sceneTitle || note.name"></span>
+                      </template>
+                          <div class="flex items-center gap-2 text-xs shrink-0">
+                        <button class="h-8 w-8 inline-flex items-center justify-center rounded-lg border notes-border notes-text hover:bg-lime-50 dark:hover:bg-lime-900/30 transition" 
+                                @click="openEdit(note)">
+                          <i class="fa-solid fa-pen"></i> 
+                        </button>
+                        <button class="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-rose-200 dark:border-rose-900 bg-white dark:bg-gray-950 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition"
+                                    @click="openDelete(note)">
+                              <i class="fa-solid fa-trash"></i> 
+                            </button>
+                          </div>
+                    </div>
+                  </template>
+                </div>
+              </template>
+
+              <div class="space-y-2" x-show="grp.sessions.length">
+                <template x-for="sess in grp.sessions" :key="sess.session.id">
+                  <div class="rounded-lg border border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-800/40 p-3 space-y-2">
+                    <div class="flex items-center justify-between">
+                      <a class="font-semibold text-slate-900 dark:text-slate-100 hover:underline"
+                        :href="`/admin/sessions/view.html?id=${encodeURIComponent(sess.session.id)}`"
+                        x-text="sess.session.title || sess.session.id"></a>
+                    </div>
+                    <div class="space-y-2">
+                      <template x-for="note in sess.notes" :key="note.name">
+                        <div class="rounded-lg border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 shadow-sm transition flex items-center justify-between gap-3">
+                          <template x-if="note.sceneId">
+                            <a class="font-semibold text-slate-900 dark:text-slate-100 truncate hover:underline"
+                              :href="`/admin/sessions/view.html?id=${encodeURIComponent(sess.session.id)}&scene=${encodeURIComponent(note.sceneId)}`"
+                              x-text="note.sceneTitle || note.name"></a>
+                          </template>
+                          <template x-if="!note.sceneId">
+                            <span class="font-semibold text-slate-900 dark:text-slate-100 truncate" x-text="note.sceneTitle || note.name"></span>
+                          </template>
+                          <div class="flex items-center gap-2 text-xs shrink-0">
+                        <button class="h-8 w-8 inline-flex items-center justify-center rounded-lg border notes-border notes-text hover:bg-lime-50 dark:hover:bg-lime-900/30 transition" 
+                                @click="openEdit(note)">
+                          <i class="fa-solid fa-pen"></i> 
+                        </button>
+                        <button class="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-rose-200 dark:border-rose-900 bg-white dark:bg-gray-950 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition"
+                                    @click="openDelete(note)">
+                              <i class="fa-solid fa-trash"></i> 
+                            </button>
+                          </div>
                         </div>
+                      </template>
+                    </div>
                   </div>
                 </template>
               </div>
-            </template>
-
-            <div class="space-y-2" x-show="grp.sessions.length">
-              <template x-for="sess in grp.sessions" :key="sess.session.id">
-                <div class="rounded-lg border border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-800/40 p-3 space-y-2">
-                  <div class="flex items-center justify-between">
-                    <a class="font-semibold text-slate-900 dark:text-slate-100 hover:underline"
-                       :href="`/admin/sessions/view.html?id=${encodeURIComponent(sess.session.id)}`"
-                       x-text="sess.session.title || sess.session.id"></a>
-                  </div>
-                  <div class="space-y-2">
-                    <template x-for="note in sess.notes" :key="note.name">
-                      <div class="rounded-lg border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 shadow-sm transition flex items-center justify-between gap-3">
-                        <template x-if="note.sceneId">
-                          <a class="font-semibold text-slate-900 dark:text-slate-100 truncate hover:underline"
-                             :href="`/admin/sessions/view.html?id=${encodeURIComponent(sess.session.id)}&scene=${encodeURIComponent(note.sceneId)}`"
-                             x-text="note.sceneTitle || note.name"></a>
-                        </template>
-                        <template x-if="!note.sceneId">
-                          <span class="font-semibold text-slate-900 dark:text-slate-100 truncate" x-text="note.sceneTitle || note.name"></span>
-                        </template>
-                        <div class="flex items-center gap-2 text-xs shrink-0">
-                      <button class="h-8 w-8 inline-flex items-center justify-center rounded-lg border notes-border notes-text hover:bg-lime-50 dark:hover:bg-lime-900/30 transition" 
-                              @click="openEdit(note)">
-                        <i class="fa-solid fa-pen"></i> 
-                      </button>
-                      <button class="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-rose-200 dark:border-rose-900 bg-white dark:bg-gray-950 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition"
-                                  @click="openDelete(note)">
-                            <i class="fa-solid fa-trash"></i> 
-                          </button>
-                        </div>
-                      </div>
-                    </template>
-                  </div>
-                </div>
-              </template>
             </div>
-          </div>
-        </template>
+          </template>
 
-        <template x-if="groupedNotes().unlinked.length">
-          <div class="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-4 shadow-sm space-y-2">
-            <div class="text-lg font-semibold text-slate-900 dark:text-slate-100">Non liées</div>
-            <div class="space-y-2">
-              <template x-for="note in groupedNotes().unlinked" :key="note.name">
-                <div class="rounded-lg border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 shadow-sm flex items-center justify-between gap-3">
-                  <span class="font-semibold text-slate-900 dark:text-slate-100 truncate" x-text="note.name"></span>
-                        <div class="flex items-center gap-2 text-xs shrink-0">
-                      <button class="inline-flex items-center gap-1 px-2 py-1 rounded border border-sky-200 text-sky-700 dark:border-gray-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-slate-800 transition"
-                              @click="openEdit(note)">
-                        <i class="fa-solid fa-pen"></i> 
-                      </button>
-                      <button class="inline-flex items-center gap-1 px-2 py-1 rounded border border-rose-200 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition"
-                                  @click="openDelete(note)">
-                            <i class="fa-solid fa-trash"></i> 
-                          </button>
-                        </div>
-                </div>
-              </template>
+          <template x-if="groupedNotes().unlinked.length">
+            <div class="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-4 shadow-sm space-y-2">
+              <div class="text-lg font-semibold text-slate-900 dark:text-slate-100">Non liées</div>
+              <div class="space-y-2">
+                <template x-for="note in groupedNotes().unlinked" :key="note.name">
+                  <div class="rounded-lg border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 shadow-sm flex items-center justify-between gap-3">
+                    <span class="font-semibold text-slate-900 dark:text-slate-100 truncate" x-text="note.name"></span>
+                          <div class="flex items-center gap-2 text-xs shrink-0">
+                        <button class="inline-flex items-center gap-1 px-2 py-1 rounded border border-sky-200 text-sky-700 dark:border-gray-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-slate-800 transition"
+                                @click="openEdit(note)">
+                          <i class="fa-solid fa-pen"></i> 
+                        </button>
+                        <button class="inline-flex items-center gap-1 px-2 py-1 rounded border border-rose-200 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition"
+                                    @click="openDelete(note)">
+                              <i class="fa-solid fa-trash"></i> 
+                            </button>
+                          </div>
+                  </div>
+                </template>
+              </div>
             </div>
-          </div>
-        </template>
+          </template>
+        </div>
       </div>
-    </div>
+    </template>
+    </section>
   </template>
-  </section>
-
   <div x-show="showEditModal" x-transition class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full mx-4 p-4 space-y-3">
       <div class="flex items-center justify-between">

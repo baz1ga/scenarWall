@@ -7,93 +7,103 @@
     .games-text { color: var(--games-accent); }
     .games-bg { background-color: var(--games-accent); color: #fff; border-color: var(--games-accent); }
   </style>
-
-  <section class="space-y-6">
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div class="flex items-center gap-3">
-        <span class="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-900/30">
-          <i class="fa-solid fa-dice text-lg"></i>
-        </span>
-        <div>
-          <h1 class="text-2xl font-semibold flex items-center gap-2 games-text">
-            Parties jouées
-          </h1>
-          <p class="text-sm text-slate-500 dark:text-slate-200">Suivez et filtrez vos runs par tenant et session.</p>
+  <template x-if="loading">
+    <div class="max-w-4xl mx-auto rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-6 shadow-sm flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+      <div class="h-5 w-5 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
+      Chargement des parties...
+    </div>
+  </template>
+  <template x-if="error">
+    <div class="max-w-4xl mx-auto rounded-2xl border border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-900/20 dark:text-rose-100 px-4 py-3 text-sm" x-text="error"></div>
+  </template> 
+  <template x-if="!loading">
+    <section class="space-y-6">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex items-center gap-3">
+          <span class="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-900/30">
+            <i class="fa-solid fa-dice text-lg"></i>
+          </span>
+          <div>
+            <h1 class="text-2xl font-semibold flex items-center gap-2 games-text">
+              Parties jouées
+            </h1>
+            <p class="text-sm text-slate-500 dark:text-slate-200">Suivez et filtrez vos runs par tenant et session.</p>
+          </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button class="inline-flex items-center gap-2 h-10 rounded-lg border border-amber-400 text-slate-700 dark:text-slate-200 bg-white dark:bg-gray-900 px-3 text-sm hover:bg-amber-50 dark:hover:bg-amber-900/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  :disabled="loading"
+                  @click="fetchStates()">
+            <i class="fa-solid fa-rotate" :class="loading ? 'animate-spin' : ''"></i>
+            <span x-text="loading ? 'Rafraîchissement...' : 'Rafraîchir'"></span>
+          </button>
+          <label class="inline-flex items-center gap-2 h-10 text-sm text-slate-700 dark:text-slate-200 border border-amber-400 dark:border-amber-500 rounded-lg px-3 bg-white dark:bg-gray-900 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition">
+            <input type="checkbox" class="rounded text-amber-500 border-slate-300 dark:border-gray-600"
+                  x-model="hideShortRuns">
+            <span>Masquer &lt; 5m</span>
+          </label>
         </div>
       </div>
-      <div class="flex flex-wrap items-center gap-2">
-        <button class="inline-flex items-center gap-2 h-10 rounded-lg border border-amber-400 text-slate-700 dark:text-slate-200 bg-white dark:bg-gray-900 px-3 text-sm hover:bg-amber-50 dark:hover:bg-amber-900/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                :disabled="loading"
-                @click="fetchStates()">
-          <i class="fa-solid fa-rotate" :class="loading ? 'animate-spin' : ''"></i>
-          <span x-text="loading ? 'Rafraîchissement...' : 'Rafraîchir'"></span>
-        </button>
-        <label class="inline-flex items-center gap-2 h-10 text-sm text-slate-700 dark:text-slate-200 border border-amber-400 dark:border-amber-500 rounded-lg px-3 bg-white dark:bg-gray-900 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition">
-          <input type="checkbox" class="rounded text-amber-500 border-slate-300 dark:border-gray-600"
-                 x-model="hideShortRuns">
-          <span>Masquer &lt; 5m</span>
-        </label>
+
+      <div class="flex flex-wrap items-center justify-center gap-3">
+        <input type="text" x-model="searchTerm" placeholder="Rechercher un tenant..." class="rounded-lg border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--games-accent)] focus:border-[var(--games-accent)] w-full sm:w-80 text-center">
       </div>
-    </div>
 
-    <div class="flex flex-wrap items-center justify-center gap-3">
-      <input type="text" x-model="searchTerm" placeholder="Rechercher un tenant..." class="rounded-lg border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--games-accent)] focus:border-[var(--games-accent)] w-full sm:w-80 text-center">
-    </div>
-
-    <!-- Tableau runs -->
-    <div class="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 shadow-sm overflow-hidden max-w-4xl mx-auto">
-      <div class="relative">
-        <template x-if="loading">
-          <div class="absolute inset-0 bg-white/70 dark:bg-black/40 backdrop-blur-sm flex items-center justify-center z-10">
-            <div class="inline-flex items-center gap-2 text-amber-600">
-              <span class="h-6 w-6 rounded-full border-2 border-amber-500 border-t-transparent animate-spin"></span>
-              <span>Rafraîchissement...</span>
+      <!-- Tableau runs -->
+      <div class="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 shadow-sm overflow-hidden max-w-4xl mx-auto">
+        <div class="relative">
+          <template x-if="loading">
+            <div class="absolute inset-0 bg-white/70 dark:bg-black/40 backdrop-blur-sm flex items-center justify-center z-10">
+              <div class="inline-flex items-center gap-2 text-amber-600">
+                <span class="h-6 w-6 rounded-full border-2 border-amber-500 border-t-transparent animate-spin"></span>
+                <span>Rafraîchissement...</span>
+              </div>
             </div>
-          </div>
-        </template>
-        <table class="min-w-full text-sm">
-          <thead class="bg-slate-100 dark:bg-gray-700 text-slate-800 dark:text-slate-50">
-            <tr>
-              <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('tenant')">
-                <div class="inline-flex items-center gap-2">Tenant <i :class="sortIcon('tenant','games')" class="text-xs games-text"></i></div>
-              </th>
-              <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('session')">
-                <div class="inline-flex items-center gap-2">Session <i :class="sortIcon('sessions','games')" class="text-xs games-text"></i></div>
-              </th>
-              <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('date')">
-                <div class="inline-flex items-center gap-2">Date <i :class="sortIcon('date','games')" class="text-xs games-text"></i></div>
-              </th>
-              <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('duration')">
-                <div class="inline-flex items-center gap-2">
-                  Durée <i :class="sortIcon('duration','games')" class="text-xs games-text"></i>
-                </div>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <template x-if="flatRuns().length === 0">
-              <tr><td colspan="4" class="px-4 py-3 text-center text-slate-500 dark:text-slate-200">Aucune partie jouée</td></tr>
-            </template>
-            <template x-for="run in flatRuns()" :key="`${run.tenantId}-${run.sessionId}-${run.updatedAt || run.createdAt}`">
-              <tr class="border-t border-slate-200 dark:border-gray-800">
-                <td class="px-4 py-2">
+          </template>
+          <table class="min-w-full text-sm">
+            <thead class="bg-slate-100 dark:bg-gray-700 text-slate-800 dark:text-slate-50">
+              <tr>
+                <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('tenant')">
+                  <div class="inline-flex items-center gap-2">Tenant <i :class="sortIcon('tenant','games')" class="text-xs games-text"></i></div>
+                </th>
+                <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('session')">
+                  <div class="inline-flex items-center gap-2">Session <i :class="sortIcon('sessions','games')" class="text-xs games-text"></i></div>
+                </th>
+                <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('date')">
+                  <div class="inline-flex items-center gap-2">Date <i :class="sortIcon('date','games')" class="text-xs games-text"></i></div>
+                </th>
+                <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('duration')">
                   <div class="inline-flex items-center gap-2">
-                    <template x-if="run.tenantId === tenantId">
-                      <i class="fa-solid fa-crown text-amber-400"></i>
-                    </template>
-                    <span class="font-mono text-xs" x-text="run.tenantId"></span>
+                    Durée <i :class="sortIcon('duration','games')" class="text-xs games-text"></i>
                   </div>
-                </td>
-                <td class="px-4 py-2 font-mono text-xs" x-text="run.sessionId"></td>
-                <td class="px-4 py-2" x-text="new Date(run.updatedAt || run.createdAt || Date.now()).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })"></td>
-                <td class="px-4 py-2 font-semibold" x-text="formatDuration(run)"></td>
+                </th>
               </tr>
-            </template>
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              <template x-if="flatRuns().length === 0">
+                <tr><td colspan="4" class="px-4 py-3 text-center text-slate-500 dark:text-slate-200">Aucune partie jouée</td></tr>
+              </template>
+              <template x-for="run in flatRuns()" :key="`${run.tenantId}-${run.sessionId}-${run.updatedAt || run.createdAt}`">
+                <tr class="border-t border-slate-200 dark:border-gray-800">
+                  <td class="px-4 py-2">
+                    <div class="inline-flex items-center gap-2">
+                      <template x-if="run.tenantId === tenantId">
+                        <i class="fa-solid fa-crown text-amber-400"></i>
+                      </template>
+                      <span class="font-mono text-xs" x-text="run.tenantId"></span>
+                    </div>
+                  </td>
+                  <td class="px-4 py-2 font-mono text-xs" x-text="run.sessionId"></td>
+                  <td class="px-4 py-2" x-text="new Date(run.updatedAt || run.createdAt || Date.now()).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })"></td>
+                  <td class="px-4 py-2 font-semibold" x-text="formatDuration(run)"></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
+  </template>
 </div>
 
 <script src="/admin/js/layout-loader.js"></script>
