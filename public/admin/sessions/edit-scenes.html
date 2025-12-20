@@ -208,7 +208,7 @@
                   @dragover.prevent
                   @drop.prevent="tenantDragIndex !== null && handleTenantDrop(tenantDragIndex)">
                 <template x-if="!currentScene?.images || currentScene.images.length === 0">
-                  <div class="col-span-full border border-dashed border-slate-300 dark:border-gray-800 rounded-xl p-4 text-sm text-slate-600 dark:text-slate-200">Aucune image.</div>
+                  <div class="col-span-full border text-center border-slate-300  dark:border-gray-800 rounded-xl p-4 border-dashed text-sm text-slate-600 dark:text-slate-200">Aucune image</div>
                 </template>
                 <template x-for="(imgObj, idx) in currentScene?.images || []" :key="`${idx}-${imgObj?.name}`">
                   <div class="relative rounded-lg border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 overflow-hidden aspect-square group shadow-sm"
@@ -255,7 +255,7 @@
                   <div class="text-sm text-slate-500">Chargement...</div>
                 </template>
                 <template x-if="!galleryLoading && visibleTenantImages().length === 0">
-                  <div class="border border-dashed border-slate-300 dark:border-gray-800 rounded-xl p-4 text-sm text-slate-600 dark:text-slate-200">Aucune image.</div>
+                  <div class="text-sm max-w-4xl mx-auto text-center text-slate-600 dark:text-slate-200 border border-dashed border-slate-300 dark:border-gray-800 rounded-lg p-4">Aucune image</div>
                 </template>
 
                 <div class="grid gap-2 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7" x-show="!galleryLoading && visibleTenantImages().length">
@@ -305,7 +305,7 @@
                   @dragover.prevent
                   @drop.prevent="tenantAudioDragIndex !== null && handleTenantAudioDrop()">
                 <template x-if="!currentScene?.audio || currentScene.audio.length === 0">
-                  <div class="max-w-5xl mx-auto border border-dashed border-slate-300 dark:border-gray-700 rounded-xl p-4 text-sm text-slate-600 dark:text-slate-200">Aucun audio.</div>
+                  <div class="text-sm max-w-4xl mx-auto text-center text-slate-600 dark:text-slate-200 border border-dashed border-slate-300 dark:border-gray-800 rounded-lg p-4">Aucun audio</div>
                 </template>
                 <div class="space-y-2 max-w-5xl mx-auto" x-show="currentScene?.audio && currentScene.audio.length">
                   <template x-for="(sound, idx) in currentScene?.audio || []" :key="`${idx}-${sound?.name || sound}`">
@@ -359,7 +359,7 @@
                   <div class="text-sm text-slate-500">Chargement...</div>
                 </template>
                 <template x-if="!tenantAudioLoading && tenantAudio.length === 0">
-                  <div class="max-w-5xl mx-auto border border-dashed border-slate-300 dark:border-gray-800 rounded-xl p-4 text-sm text-slate-600 dark:text-slate-200">Aucun fichier audio.</div>
+                  <div class="text-sm max-w-4xl mx-auto text-center text-slate-600 dark:text-slate-200 border border-dashed border-slate-300 dark:border-gray-800 rounded-lg p-4">Aucun audio</div>
                 </template>
                 <div class="flex flex-col gap-2 max-w-5xl mx-auto " x-show="!tenantAudioLoading && tenantAudio.length">
                   <template x-for="(audio, idx) in tenantAudio" :key="audio.name">
@@ -387,7 +387,7 @@
             <div class="space-y-6 max-w-4xl mx-auto notes-editor">
               <template x-if="!currentScene?.notes">
                 <div class="border border-dashed border-slate-300 dark:border-gray-700 rounded-2xl py-12 px-6 text-center space-y-4 flex flex-col items-center justify-center">              
-                  <button class="inline-flex items-center gap-2 h-10 rounded-lg bg-sky-600 text-slate-900 font-semibold px-4 text-sm shadow-sm hover:bg-sky-400 transition"
+                  <button class="inline-flex items-center gap-2 h-10 rounded-lg bg-sky-600 text-slate-100 font-semibold px-4 text-sm shadow-sm hover:bg-sky-400 transition"
                           @click="startNoteCreation()">
                     <i class="fa-solid fa-plus"></i> Créer une note
                   </button>

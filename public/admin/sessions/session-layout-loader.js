@@ -23,6 +23,15 @@
     if (!fragmentHtml) return;
 
     let viewHtml = '';
+    const desiredScriptSrc = (() => {
+      const path = (window.location.pathname || '').toLowerCase();
+      if (path.includes('edit-scenes')) return '/admin/sessions/edit-scenes.js';
+      if (path.includes('edit-tension')) return '/admin/sessions/edit-tension.js';
+      if (path.includes('edit-table')) return '/admin/sessions/edit-table.js';
+      if (path.includes('edit-pnj')) return '/admin/sessions/edit-pnj.js';
+      if (path.includes('edit-sessions')) return '/admin/sessions/edit-sessions.js';
+      return '/admin/sessions/view.js';
+    })();
     try {
       const res = await fetch(`/admin/sessions/view.html${search}`, { cache: 'no-cache' });
       viewHtml = await res.text();
@@ -40,6 +49,13 @@
     }
     slot.innerHTML = fragmentHtml;
 
+    // Adapter le script principal si besoin (ex: page edit-scenes)
+    const pageScript = parsed.querySelector('script[data-page-script]');
+    if (pageScript) {
+      pageScript.setAttribute('src', desiredScriptSrc);
+    }
+
+    // Rendu final via document.write (plus fiable pour l'empilement layout/page), avec script cible adapté
     const serializer = new XMLSerializer();
     const htmlString = '<!DOCTYPE html>\n' + serializer.serializeToString(parsed);
     document.open();

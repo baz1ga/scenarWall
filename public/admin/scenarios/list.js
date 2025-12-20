@@ -145,6 +145,7 @@ export function scenariosListSection() {
         await this.fetchScenarios();
         await this.fetchSessions();
         this.closeCreateModal();
+        window.location.reload();
       } catch (err) {
         this.createModal.error = err?.message || 'Erreur lors de la création';
       } finally {
@@ -264,6 +265,7 @@ export function scenariosListSection() {
         if (!res.ok) throw new Error('Mise à jour impossible');
         await this.fetchScenarios();
         this.closeEditModal();
+        window.location.reload();
       } catch (err) {
         this.editModal.error = err?.message || 'Erreur lors de la sauvegarde';
       } finally {
@@ -295,6 +297,7 @@ export function scenariosListSection() {
         });
         if (!res.ok) throw new Error('Suppression impossible');
         await this.fetchScenarios();
+        window.location.reload();
       } catch (err) {
         this.error = err?.message || 'Erreur lors de la suppression';
       }

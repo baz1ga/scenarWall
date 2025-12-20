@@ -766,12 +766,13 @@ export function sessionViewSection(baseInit) {
             headers: this.headersAuth(),
             body: form
           });
+          const data = await res.json().catch(() => ({}));
           if (!res.ok) {
-            const data = await res.json().catch(() => ({}));
             errors.push(data.error || `Échec pour ${file.name}`);
           } else {
             success++;
-            uploadedNames.push(file.name);
+            const storedName = data.name || file.name;
+            uploadedNames.push(storedName);
           }
         } catch (err) {
           errors.push(`Réseau: ${file.name}`);
