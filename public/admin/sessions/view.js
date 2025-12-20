@@ -318,7 +318,9 @@ export function sessionViewSection(baseInit) {
       const fromParam = this.initialSceneParam && this.scenes.find(s => s.id === this.initialSceneParam) ? this.initialSceneParam : '';
       const stored = this.readStoredScene();
       const target = fromParam || (stored && this.scenes.find(s => s.id === stored)?.id) || (this.scenes.length ? this.scenes[this.scenes.length - 1]?.id : '');
-      if (target) this.setCurrentScene(target, false);
+      if (target) {
+        this.setCurrentScene(target, false);
+      }
       this.initialSceneParam = '';
       this.updateBreadcrumb();
     },

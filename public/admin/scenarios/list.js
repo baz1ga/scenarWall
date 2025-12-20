@@ -205,7 +205,7 @@ export function scenariosListSection() {
         await this.fetchScenarios();
         this.closeSessionModal();
         if (created?.id) {
-          window.location.href = `/admin/sessions/view.html?id=${encodeURIComponent(created.id)}`;
+          window.location.reload();
         }
       } catch (err) {
         this.sessionModal.error = err?.message || 'Erreur lors de la création';

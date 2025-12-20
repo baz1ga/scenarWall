@@ -3,6 +3,8 @@
   window.__SW_SESSION_LAYOUT_APPLIED = true;
 
   async function applyLayout() {
+    if (window.__SW_SESSION_LAYOUT_DONE) return;
+    window.__SW_SESSION_LAYOUT_DONE = true;
     const fragmentEl = document.querySelector('#session-fragment');
     const search = window.location.search || '';
     let fragmentHtml = fragmentEl ? fragmentEl.outerHTML : '';
@@ -55,12 +57,36 @@
       pageScript.setAttribute('src', desiredScriptSrc);
     }
 
-    // Rendu final via document.write (plus fiable pour l'empilement layout/page), avec script cible adapté
-    const serializer = new XMLSerializer();
-    const htmlString = '<!DOCTYPE html>\n' + serializer.serializeToString(parsed);
-    document.open();
-    document.write(htmlString);
-    document.close();
+    // Rendu sans document.write : extraire les scripts, poser head/body, rejouer les scripts (sans recharger ce loader)
+    const scripts = Array.from(parsed.querySelectorAll('script')).map(script => ({
+      parent: script.closest('head') ? 'head' : 'body',
+      attrs: Array.from(script.attributes).map(attr => ({ name: attr.name, value: attr.value })),
+      content: script.textContent || '',
+      src: script.getAttribute('src') || ''
+    }));
+    parsed.querySelectorAll('script').forEach(s => s.remove());
+
+    document.head.innerHTML = parsed.head.innerHTML;
+    document.body.innerHTML = parsed.body.innerHTML;
+
+    for (const info of scripts) {
+      if (info.src.includes('session-layout-loader.js')) continue; // ne pas relancer le loader
+      await new Promise(resolve => {
+        const el = document.createElement('script');
+        info.attrs.forEach(attr => el.setAttribute(attr.name, attr.value));
+        if (!info.src) {
+          el.textContent = info.content;
+          (info.parent === 'head' ? document.head : document.body).appendChild(el);
+          resolve();
+          return;
+        }
+        el.onload = () => resolve();
+        el.onerror = () => resolve();
+        (info.parent === 'head' ? document.head : document.body).appendChild(el);
+      });
+    }
+
+    try { document.dispatchEvent(new Event('DOMContentLoaded')); } catch (_) {}
   }
 
   if (document.readyState === 'loading') {
