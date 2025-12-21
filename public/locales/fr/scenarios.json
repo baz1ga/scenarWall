@@ -1,0 +1,40 @@
+{
+  "loading": "Chargement de la page",
+  "title": "Scénarios",
+  "subtitle": "Gérez vos intrigues et leurs sessions associées.",
+  "new": "Nouveau",
+  "loadingList": "Chargement des scénarios...",
+  "empty": "Aucun scénario pour le moment. Cliquez sur “Nouveau” pour commencer.",
+  "untitled": "Sans titre",
+  "newSession": "Nouvelle session",
+  "confirm": {
+    "title": "Confirmation",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "message": "Supprimer ce scénario ?",
+    "deleteMessageBase": "Supprimer ce scénario, ses sessions et ses scènes ?",
+    "deleteError": "Suppression impossible"
+  },
+  "create": {
+    "title": "Nouveau scénario",
+    "iconLabel": "Icône du scénario",
+    "iconPreview": "Aperçu",
+    "iconSearch": "Rechercher une icône",
+    "iconChoose": "Choisir ",
+    "iconNone": "Aucun icône correspondant.",
+    "cancel": "Annuler",
+    "create": "Créer",
+    "creating": "Création..."
+  },
+  "edit": {
+    "title": "Éditer le scénario",
+    "createdAt": "Créé le",
+    "iconLabel": "Icône du scénario",
+    "iconPreview": "Aperçu",
+    "iconNone": "Aucun icône correspondant.",
+    "namePlaceholder": "Titre du scénario",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "saving": "Enregistrement..."
+  }
+}

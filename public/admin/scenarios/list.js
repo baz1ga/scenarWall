@@ -1,4 +1,5 @@
 import { coreSection } from '/admin/js/core.js';
+import { loadLocale, t as translate } from '/admin/js/i18n.js';
 import { DEFAULT_SCENARIO_ICON, DEFAULT_SESSION_ICON, ICON_OPTIONS, filterIcons } from '/admin/js/icon-picker-utils.js';
 
 export function scenariosListSection() {
@@ -42,6 +43,9 @@ export function scenariosListSection() {
       saving: false,
       error: ''
     },
+    lang: localStorage.getItem("lang") || (navigator.language || "fr").slice(0, 2) || "fr",
+    texts: {},
+    iconTexts: {},
 
     async init() {
       const baseInit = coreSection().init;
@@ -49,6 +53,8 @@ export function scenariosListSection() {
         await baseInit.call(this);
       }
       this.section = 'scenarios';
+      this.texts = await loadLocale(this.lang, "scenarios");
+      this.iconTexts = await loadLocale(this.lang, "icons");
       await Promise.all([this.fetchScenarios(), this.fetchSessions()]);
     },
 
@@ -98,7 +104,11 @@ export function scenariosListSection() {
     },
 
     filteredIcons(query = '') {
-      return filterIcons(query, this.iconOptions);
+      return filterIcons(query, this.iconOptions, this.iconTexts);
+    },
+
+    t(key, fallback) {
+      return translate(this.texts, key, fallback);
     },
 
     openCreateModal() {
@@ -127,7 +137,7 @@ export function scenariosListSection() {
       if (!this.tenantId) return;
       const title = (this.createModal.title || '').trim();
       if (!title) {
-        this.createModal.error = 'Le titre est requis';
+        this.createModal.error = this.t("create.titleRequired", "Le titre est requis");
         return;
       }
       this.createModal.saving = true;
@@ -141,13 +151,13 @@ export function scenariosListSection() {
             icon: this.createModal.icon || this.defaultScenarioIcon
           })
         });
-        if (!res.ok) throw new Error('Création impossible');
+        if (!res.ok) throw new Error(this.t("create.error", "Création impossible"));
         await this.fetchScenarios();
         await this.fetchSessions();
         this.closeCreateModal();
         window.location.reload();
       } catch (err) {
-        this.createModal.error = err?.message || 'Erreur lors de la création';
+        this.createModal.error = err?.message || this.t("create.errorGeneric", "Erreur lors de la création");
       } finally {
         this.createModal.saving = false;
       }
@@ -180,11 +190,11 @@ export function scenariosListSection() {
     async submitSession() {
       const title = (this.sessionModal.title || '').trim();
       if (!title) {
-        this.sessionModal.error = 'Le titre est requis';
+        this.sessionModal.error = this.t("create.titleRequired", "Le titre est requis");
         return;
       }
       if (!this.tenantId || !this.sessionModal.scenarioId) {
-        this.sessionModal.error = 'Scénario introuvable';
+        this.sessionModal.error = this.t("create.scenarioMissing", "Scénario introuvable");
         return;
       }
       this.sessionModal.saving = true;
@@ -199,7 +209,7 @@ export function scenariosListSection() {
             icon: this.sessionModal.icon || DEFAULT_SESSION_ICON
           })
         });
-        if (!res.ok) throw new Error('Création impossible');
+        if (!res.ok) throw new Error(this.t("create.error", "Création impossible"));
         const created = await res.json();
         await this.fetchSessions();
         await this.fetchScenarios();
@@ -208,7 +218,7 @@ export function scenariosListSection() {
           window.location.reload();
         }
       } catch (err) {
-        this.sessionModal.error = err?.message || 'Erreur lors de la création';
+        this.sessionModal.error = err?.message || this.t("create.errorGeneric", "Erreur lors de la création");
       } finally {
         this.sessionModal.saving = false;
       }
@@ -244,11 +254,11 @@ export function scenariosListSection() {
     async submitEdit() {
       const title = (this.editModal.title || '').trim();
       if (!title) {
-        this.editModal.error = 'Le titre est requis';
+        this.editModal.error = this.t("edit.titleRequired", "Le titre est requis");
         return;
       }
       if (!this.tenantId || !this.editModal.id) {
-        this.editModal.error = 'Scénario introuvable';
+        this.editModal.error = this.t("edit.scenarioMissing", "Scénario introuvable");
         return;
       }
       this.editModal.saving = true;
@@ -262,12 +272,12 @@ export function scenariosListSection() {
             icon: this.editModal.icon || this.defaultScenarioIcon
           })
         });
-        if (!res.ok) throw new Error('Mise à jour impossible');
+        if (!res.ok) throw new Error(this.t("edit.error", "Mise à jour impossible"));
         await this.fetchScenarios();
         this.closeEditModal();
         window.location.reload();
       } catch (err) {
-        this.editModal.error = err?.message || 'Erreur lors de la sauvegarde';
+        this.editModal.error = err?.message || this.t("edit.errorGeneric", "Erreur lors de la sauvegarde");
       } finally {
         this.editModal.saving = false;
       }
@@ -275,10 +285,11 @@ export function scenariosListSection() {
 
     async deleteScenario(item) {
       if (!item || !item.id || !this.tenantId) return;
+      const baseMsg = this.t("confirm.deleteMessageBase", "Supprimer ce scénario, ses sessions et ses scènes ?");
       this.confirmModal = {
         open: true,
         item,
-        message: `Supprimer ${item.title || item.id}, les sessions et les scènes" ?`
+        message: item?.title ? `${baseMsg} (${item.title})` : baseMsg
       };
     },
 
@@ -295,11 +306,11 @@ export function scenariosListSection() {
           method: 'DELETE',
           headers: this.headersAuth()
         });
-        if (!res.ok) throw new Error('Suppression impossible');
+        if (!res.ok) throw new Error(this.t("confirm.deleteError", "Suppression impossible"));
         await this.fetchScenarios();
         window.location.reload();
       } catch (err) {
-        this.error = err?.message || 'Erreur lors de la suppression';
+        this.error = err?.message || this.t("confirm.deleteError", "Erreur lors de la suppression");
       }
     }
   };

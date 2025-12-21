@@ -1,6 +1,7 @@
 import { coreSection } from '/admin/js/core.js';
 import { pixabayMixin } from '/admin/js/pixabay.js';
 import { DEFAULT_SESSION_ICON, ICON_OPTIONS, filterIcons } from '/admin/js/icon-picker-utils.js';
+import { loadLocale, t as translate } from '/admin/js/i18n.js';
 // SimpleMDE supprimé : éditeur basculé en textarea simple
 
 export function sessionViewSection(baseInit) {
@@ -179,11 +180,14 @@ export function sessionViewSection(baseInit) {
     },
     initialSceneParam: '',
     tabs: [
-      { id: 'images', label: 'Images' },
-      { id: 'audio', label: 'Audio' },
-      { id: 'notes', label: 'Notes' }
+      { id: 'images', labelKey: 'tabs.images', fallback: 'Images' },
+      { id: 'audio', labelKey: 'tabs.audio', fallback: 'Audio' },
+      { id: 'notes', labelKey: 'tabs.notes', fallback: 'Notes' }
     ],
     showTension: false,
+    lang: localStorage.getItem('lang') || (navigator.language || 'fr').slice(0, 2) || 'fr',
+    texts: {},
+    iconTexts: {},
     async loadDefaultTension() {
       try {
         const res = await fetch(`${this.API}/api/tension-default`, { headers: this.headersAuth() });
@@ -207,12 +211,20 @@ export function sessionViewSection(baseInit) {
       if (typeof baseInit === 'function') {
         await baseInit.call(this);
       }
+      // harmonise la langue avec la config/LS avant de charger les textes
+      this.lang = (localStorage.getItem('lang') || (navigator.language || 'fr').slice(0, 2) || 'fr').toLowerCase();
+      this.texts = await loadLocale(this.lang, 'sessions-scenes');
+      this.iconTexts = await loadLocale(this.lang, 'icons');
+      this.tabs = this.tabs.map(tab => ({
+        ...tab,
+        label: this.t(tab.labelKey, tab.fallback)
+      }));
       this.section = 'scenarios';
       const params = new URLSearchParams(window.location.search || '');
       const sessionId = params.get('id');
       this.initialSceneParam = params.get('scene') || '';
       if (!sessionId) {
-        this.error = 'Session introuvable';
+        this.error = this.t('errors.sessionNotFound', 'Session introuvable');
         this.loading = false;
         return;
       }
@@ -224,14 +236,18 @@ export function sessionViewSection(baseInit) {
         await this.refreshTenantAudio();
         this.showTension = false;
       } catch (err) {
-        this.error = err?.message || 'Impossible de charger la session';
+        this.error = err?.message || this.t('errors.sessionLoad', 'Impossible de charger la session');
       } finally {
         this.loading = false;
       }
     },
 
+    t(key, fallback = '') {
+      return translate(this.texts, key, fallback);
+    },
+
     filteredIcons(query = '') {
-      return filterIcons(query, this.iconOptions);
+      return filterIcons(query, this.iconOptions, this.iconTexts);
     },
 
     async deleteSessionConfirm() {
@@ -246,11 +262,11 @@ export function sessionViewSection(baseInit) {
           method: 'DELETE',
           headers: this.headersAuth()
         });
-        if (!res.ok) throw new Error('Suppression impossible');
+        if (!res.ok) throw new Error(this.t('errors.deleteSession', 'Suppression impossible'));
         this.showDeleteSessionModal = false;
         window.location.href = '/admin/scenarios/list.html';
       } catch (err) {
-        this.error = err?.message || 'Erreur lors de la suppression de la session';
+        this.error = err?.message || this.t('errors.deleteSessionGeneric', 'Erreur lors de la suppression de la session');
       }
     },
 
@@ -263,7 +279,7 @@ export function sessionViewSection(baseInit) {
       const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/sessions/${encodeURIComponent(id)}`, {
         headers: this.headersAuth()
       });
-      if (!res.ok) throw new Error('Session introuvable');
+      if (!res.ok) throw new Error(this.t('errors.sessionNotFound', 'Session introuvable'));
       const data = await res.json();
       this.session = data;
       this.sessionTitle = data.title || '';
@@ -274,8 +290,8 @@ export function sessionViewSection(baseInit) {
       this.scenarioId = data.parentScenario || '';
       this.scenarioLink = this.scenarioId ? `/admin/sessions/list.html?scenario=${encodeURIComponent(this.scenarioId)}` : '/admin/scenarios/list.html';
       this.breadcrumbLabel = data.parentScenario
-        ? `Scénario ${data.parentScenario} • Session ${data.id}`
-        : `Session ${data.id}`;
+        ? `${this.t('breadcrumb.scenario', 'Scénario')} ${data.parentScenario} • ${this.t('breadcrumb.session', 'Session')} ${data.id}`
+        : `${this.t('breadcrumb.session', 'Session')} ${data.id}`;
       this.updateBreadcrumb();
       this.loadTensionFromSession(data);
       if (data.parentScenario) {
@@ -291,7 +307,7 @@ export function sessionViewSection(baseInit) {
         if (!res.ok) return;
         const scenario = await res.json();
         this.scenarioTitle = scenario.title || '';
-        this.breadcrumbLabel = `${scenario.title || scenario.id} • Session ${this.session?.title || this.session?.id || ''}`;
+      this.breadcrumbLabel = `${scenario.title || scenario.id} • ${this.t('breadcrumb.session', 'Session')} ${this.session?.title || this.session?.id || ''}`;
         this.updateBreadcrumb();
       } catch (err) {
         // silent
@@ -303,7 +319,7 @@ export function sessionViewSection(baseInit) {
       const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/scenes`, {
         headers: this.headersAuth()
       });
-      if (!res.ok) throw new Error('Impossible de charger les scènes');
+      if (!res.ok) throw new Error(this.t('errors.sceneLoad', 'Impossible de charger les scènes'));
       const list = (await res.json()).filter(scene => scene.parentSession === sessionId);
       list.sort((a, b) => {
         const orderDiff = (a.order || 0) - (b.order || 0);
@@ -341,7 +357,7 @@ export function sessionViewSection(baseInit) {
       try {
         await this.saveSceneOrderFallback();
       } catch (err) {
-        this.error = err?.message || 'Erreur lors du réordonnancement';
+        this.error = err?.message || this.t('errors.reorder', 'Erreur lors du réordonnancement');
       } finally {
         this.savingOrder = false;
       }
@@ -469,11 +485,11 @@ export function sessionViewSection(baseInit) {
     async submitScene() {
       const title = (this.sceneModal.title || '').trim();
       if (!title) {
-        this.sceneModal.error = 'Le titre est requis';
+        this.sceneModal.error = this.t('errors.titleRequired', 'Le titre est requis');
         return;
       }
       if (!this.tenantId || !this.session?.id) {
-        this.sceneModal.error = 'Session introuvable';
+        this.sceneModal.error = this.t('errors.sessionNotFound', 'Session introuvable');
         return;
       }
       this.sceneModal.saving = true;
@@ -487,13 +503,13 @@ export function sessionViewSection(baseInit) {
             parentSession: this.session.id
           })
         });
-        if (!res.ok) throw new Error('Création impossible');
+        if (!res.ok) throw new Error(this.t('errors.createScene', 'Création impossible'));
         const created = await res.json();
         await this.fetchScenes(this.session.id);
         this.closeSceneModal();
         if (created?.id) this.setCurrentScene(created.id, true);
       } catch (err) {
-        this.sceneModal.error = err?.message || 'Erreur lors de la création';
+        this.sceneModal.error = err?.message || this.t('errors.createSceneGeneric', 'Erreur lors de la création');
       } finally {
         this.sceneModal.saving = false;
       }
@@ -545,11 +561,11 @@ export function sessionViewSection(baseInit) {
     async submitSceneEdit() {
       const title = (this.sceneEditModal.title || '').trim();
       if (!title) {
-        this.sceneEditModal.error = 'Le titre est requis';
+        this.sceneEditModal.error = this.t('errors.titleRequired', 'Le titre est requis');
         return;
       }
       if (!this.tenantId || !this.currentScene?.id) {
-        this.sceneEditModal.error = 'Scène introuvable';
+        this.sceneEditModal.error = this.t('errors.sceneNotFound', 'Scène introuvable');
         return;
       }
       this.sceneEditModal.saving = true;
@@ -560,13 +576,13 @@ export function sessionViewSection(baseInit) {
           headers: { 'Content-Type': 'application/json', ...this.headersAuth() },
           body: JSON.stringify({ title })
         });
-        if (!res.ok) throw new Error('Mise à jour impossible');
+        if (!res.ok) throw new Error(this.t('errors.update', 'Mise à jour impossible'));
         await this.fetchScenes(this.session.id);
         const refreshed = this.scenes.find(s => s.id === this.currentScene.id);
         if (refreshed) this.setCurrentScene(refreshed.id, false);
         this.closeSceneEditModal();
       } catch (err) {
-        this.sceneEditModal.error = err?.message || 'Erreur lors de la sauvegarde';
+        this.sceneEditModal.error = err?.message || this.t('errors.save', 'Erreur lors de la sauvegarde');
       } finally {
         this.sceneEditModal.saving = false;
       }
@@ -708,7 +724,7 @@ export function sessionViewSection(baseInit) {
       this.galleryLoading = true;
       try {
         const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/images`, { headers: this.headersAuth() });
-        if (!res.ok) throw new Error('Images');
+        if (!res.ok) throw new Error(this.t('errors.images', 'Images'));
         const data = await res.json();
         this.tenantImages = Array.isArray(data) ? data : [];
       } catch (e) {
@@ -736,7 +752,7 @@ export function sessionViewSection(baseInit) {
       this.pixabayStatus = 'ok';
       if (tab === 'pixabay' && !this.pixabayInitialized && !this.pixabayLoading) {
         if (!this.pixabayKey) {
-          this.pixabayMessage = 'Clé API Pixabay manquante.';
+          this.pixabayMessage = this.t('pixabay.missingKey', 'Clé API Pixabay manquante.');
           this.pixabayStatus = 'error';
           return;
         }
@@ -813,11 +829,11 @@ export function sessionViewSection(baseInit) {
         const blob = await res.blob();
         const file = new File([blob], `import_${Date.now()}.jpg`, { type: blob.type || 'image/jpeg' });
         await this.uploadFile([file]);
-        this.uploadUrlMessage = 'Image importée avec succès.';
+        this.uploadUrlMessage = this.t('upload.fromUrlSuccess', 'Image importée avec succès.');
         this.uploadUrlStatus = 'ok';
         this.uploadUrl = '';
       } catch (err) {
-        this.uploadUrlMessage = err.message || 'Import depuis URL impossible.';
+        this.uploadUrlMessage = err.message || this.t('upload.fromUrlError', 'Import depuis URL impossible.');
         this.uploadUrlStatus = 'error';
       }
       this.uploadUrlLoading = false;
@@ -970,7 +986,7 @@ export function sessionViewSection(baseInit) {
       this.tenantAudioLoading = true;
       try {
         const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/audio`, { headers: this.headersAuth() });
-        if (!res.ok) throw new Error('Audio');
+        if (!res.ok) throw new Error(this.t('errors.audio', 'Audio'));
         this.tenantAudio = await res.json();
       } catch (e) {
         this.tenantAudio = [];

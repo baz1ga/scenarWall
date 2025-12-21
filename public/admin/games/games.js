@@ -1,4 +1,5 @@
 import { coreSection } from "../js/core.js";
+import { loadLocale, t as translate } from "../js/i18n.js";
 
 export function gamesPage() {
   const base = coreSection();
@@ -10,6 +11,8 @@ export function gamesPage() {
     error: '',
     section: "games",
     states: [],
+    lang: localStorage.getItem("lang") || (navigator.language || "fr").slice(0, 2) || "fr",
+    texts: {},
     searchTerm: "",
     hideShortRuns: true,
     allOpen: false,
@@ -21,13 +24,22 @@ export function gamesPage() {
       if (typeof baseInit === "function") {
         await baseInit.call(this);
       }
+       await this.loadTexts();
       await this.fetchStates();
+    },
+
+    async loadTexts() {
+      this.texts = await loadLocale(this.lang, "games");
+    },
+
+    t(key, fallback) {
+      return translate(this.texts, key, fallback);
     },
 
     async fetchStates() {
       this.loading = true;
       try {
-        const res = await fetch("/api/admin/session-states", {
+        const res = await fetch("/api/admin/run-states", {
           headers: this.headersAuth(),
         });
         if (!res.ok) throw new Error("states");

@@ -2,7 +2,7 @@
   <template x-if="loading">
     <div class="justify-center max-w-4xl mx-auto rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-6 shadow-sm flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
       <div class="h-5 w-5 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
-      Chargement de la page
+      <span x-text="t('loadingOverlay', 'Chargement de la page')"></span>
     </div>
   </template>
   <template x-if="error">
@@ -16,8 +16,8 @@
               <i class="fa-solid fa-pen-to-square text-lg"></i>
             </span>
             <div>
-              <h1 class="text-2xl font-semibold audio-text">Paramètres de la session</h1>
-              <p class="text-sm text-slate-500 dark:text-slate-200">Mettre à jour le titre et l'icône de la session</p>
+              <h1 class="text-2xl font-semibold audio-text" x-text="t('editSession.title', 'Paramètres de la session')"></h1>
+              <p class="text-sm text-slate-500 dark:text-slate-200" x-text="t('editSession.subtitle', &quot;Mettre à jour le titre et l'icône de la session&quot;)"></p>
             </div>
           </div>
         </div>      
@@ -27,16 +27,16 @@
                 x-init="openEditModal()">
               <div class="space-y-3">
                 <label class="space-y-1 block">
-                  <span class="text-sm font-semibold text-slate-900 dark:text-slate-100">Titre</span>
+                  <span class="text-sm font-semibold text-slate-900 dark:text-slate-100" x-text="t('editSession.fields.titleLabel', 'Titre')"></span>
                   <input type="text" class="w-full rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm"
-                        x-model="editModal.title" placeholder="Titre de la session" required>
+                        x-model="editModal.title" :placeholder="t('editSession.fields.titlePlaceholder', 'Titre de la session')" required>
                 </label>
                 <div class="space-y-3">
                   <div class="flex items-center justify-between gap-3">
-                    <span class="text-sm font-semibold text-slate-900 dark:text-slate-100">Icône</span>
+                    <span class="text-sm font-semibold text-slate-900 dark:text-slate-100" x-text="t('editSession.fields.iconLabel', 'Icône')"></span>
                     <div class="inline-flex items-center gap-2 text-xs text-slate-500 dark:text-slate-300">
                       <i class="text-lg" :class="editModal.icon || defaultSessionIcon"></i>
-                      <span>Aperçu</span>
+                      <span x-text="t('editSession.fields.preview', 'Aperçu')"></span>
                     </div>
                   </div>
                   <div class="grid grid-cols-12 gap-1 max-h-80 overflow-y-auto pr-1">
@@ -45,7 +45,7 @@
                               class="rounded-2xl bg-white dark:bg-gray-950 px-2 py-3 flex flex-col items-center gap-1 text-[9px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-100 transition dark:hover:text-emerald-500 hover:text-emerald-500"
                               :class="editModal.icon === option.value ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600' : ''"
                               :aria-pressed="editModal.icon === option.value"
-                              :aria-label="'Choisir ' + option.label"
+                              :aria-label="t('editSession.fields.iconChoose', 'Choisir ') + option.label"
                               :title="option.label"
                               @click="editModal.icon = option.value">
                         <i class="text-xl" :class="[option.value, editModal.icon === option.value ? 'text-emerald-500' : 'text-slate-500 dark:text-slate-100']"></i>
@@ -53,7 +53,7 @@
                     </template>
                     <template x-if="filteredIcons(editModal.iconSearch).length === 0">
                       <div class="col-span-full rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-center text-xs text-slate-500 dark:border-gray-700 dark:bg-gray-900/60 dark:text-slate-400">
-                        Aucun icône correspondant.
+                        <span x-text="t('editSession.fields.noIcon', 'Aucun icône correspondant.')"></span>
                       </div>
                     </template>
                   </div>
@@ -62,14 +62,14 @@
               <div class="flex flex-wrap justify-end gap-2">
                 <button class="px-4 py-2 rounded-lg border border-rose-300 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-sm font-semibold hover:bg-rose-50 dark:hover:bg-rose-900/20 transition"
                         @click="deleteSessionConfirm()" :disabled="editModal.saving">
-                  <i class="fa-solid fa-trash"></i> Supprimer la session
+                  <i class="fa-solid fa-trash"></i> <span x-text="t('editSession.actions.delete', 'Supprimer la session')"></span>
                 </button>
                 <button class="px-4 py-2 rounded-lg bg-emerald-500 text-slate-900 text-sm font-semibold hover:bg-emerald-400 transition inline-flex items-center gap-2"
                         @click="submitEdit()" :disabled="editModal.saving">
-                  <span x-show="!editModal.saving">Enregistrer</span>
+                  <span x-show="!editModal.saving" x-text="t('common.save', 'Enregistrer')"></span>
                   <span class="flex items-center gap-2" x-show="editModal.saving">
                     <span class="h-4 w-4 rounded-full border-2 border-emerald-800 border-t-transparent animate-spin"></span>
-                    Sauvegarde...
+                    <span x-text="t('common.saving', 'Sauvegarde...')"></span>
                   </span>
                 </button>
               </div>
@@ -87,17 +87,17 @@
             <i class="fa-solid fa-triangle-exclamation"></i>
           </div>
           <div class="space-y-1">
-            <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Supprimer cette session ?</h3>
+            <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100" x-text="t('confirm.deleteSession', 'Supprimer cette session ?')"></h3>
             <p class="text-sm text-slate-600 dark:text-slate-300">
-              <span x-text="sessionTitle || session?.id"></span> et ses scènes seront supprimées.
+              <span x-text="sessionTitle || session?.id"></span> <span x-text="t('editSession.confirm.sessionDeleted', 'et ses scènes seront supprimées.')"></span>
             </p>
           </div>
         </div>
         <div class="flex justify-end gap-2">
           <button class="px-4 py-2 rounded-lg border border-slate-200 dark:border-gray-700 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                  @click="cancelDeleteSession()">Annuler</button>
+                  @click="cancelDeleteSession()" x-text="t('common.cancel', 'Annuler')"></button>
           <button class="px-4 py-2 rounded-lg bg-rose-600 text-white text-sm font-semibold hover:bg-rose-500 transition"
-                  @click="confirmDeleteSession()">Supprimer</button>
+                  @click="confirmDeleteSession()" x-text="t('confirm.deleteSessionAction', 'Supprimer')"></button>
         </div>
       </div>
     </div>

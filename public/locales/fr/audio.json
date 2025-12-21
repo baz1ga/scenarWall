@@ -1,0 +1,34 @@
+{
+  "title": "Fichiers audio",
+  "subtitle": "Bibliothèque audio disponible pour vos scènes.",
+  "loading": "Chargement de la page",
+  "upload": "Ajouter (< 1 Mo)",
+  "none": "Aucun audio",
+  "reorderHint": "Glisser pour réordonner",
+  "renameDialog": {
+    "title": "Renommer l'audio",
+    "current": "Nom actuel :",
+    "label": "Nouveau nom",
+    "placeholder": "ex: ambiance.mp3",
+    "cancel": "Annuler",
+    "confirm": "Renommer",
+    "sameName": "Le nom est identique.",
+    "empty": "Entrez un nom."
+  },
+  "confirm": {
+    "title": "Confirmation",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "deleteOne": "Supprimer définitivement cet audio{impact} ?",
+    "deleteMany": "Supprimer définitivement {count} audio{plural}{impact} ?",
+    "impact": " ({count} scène{plural} impactée{plural})"
+  },
+  "messages": {
+    "added": "{count} fichier(s) ajouté(s).",
+    "errors": "Certains uploads ont échoué.",
+    "deletedScenes": "{count} scène(s) nettoyée(s).",
+    "deleteFailed": "Suppression impossible.",
+    "renameOk": "Nom mis à jour.",
+    "renameFail": "Impossible de renommer."
+  }
+}

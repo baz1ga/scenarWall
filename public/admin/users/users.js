@@ -1,6 +1,7 @@
 import { coreSection } from '/admin/js/core.js';
+import { loadLocale, t as translate } from '/admin/js/i18n.js';
 
-export function usersSection() {
+export function usersSection(baseInit) {
   return {
     error: '',
     users: [],
@@ -18,21 +19,45 @@ export function usersSection() {
       value: '',
       error: ''
     },
+    texts: {},
+
+    async init() {
+      if (typeof baseInit === 'function') {
+        await baseInit.call(this);
+      }
+      this.texts = await loadLocale(this.lang, 'users-label');
+      this.section = 'users';
+      await Promise.all([this.loadGlobalQuota(), this.loadUsers()]);
+    },
+
+    t(key, fallback = '') {
+      return translate(this.texts, key, fallback);
+    },
 
     usageData(u) {
       const usageMB = u.quotaUsedBytes ? (u.quotaUsedBytes / 1024 / 1024) : 0;
       const quotaMB = u.quotaMB || 0;
       const percent = quotaMB > 0 ? Math.min(100, (usageMB / quotaMB) * 100) : 0;
-      const text = quotaMB ? `${usageMB.toFixed(2)} / ${quotaMB} Mo${u.quotaOverride ? ' (perso)' : ''}` : `${usageMB.toFixed(2)} Mo (quota non défini)`;
+      const unit = this.t('units.mo', 'Mo');
+      const custom = u.quotaOverride ? ` (${this.t('usage.custom', 'perso')})` : '';
+      const undefinedText = this.t('usage.undefinedQuota', 'quota non défini');
+      const text = quotaMB
+        ? `${usageMB.toFixed(2)} / ${quotaMB} ${unit}${custom}`
+        : `${usageMB.toFixed(2)} ${unit} (${undefinedText})`;
       return { usageMB, quotaMB, percent, text };
     },
     usageTitle(u) {
       const { usageMB, quotaMB, percent } = this.usageData(u);
-      return quotaMB ? `${usageMB.toFixed(2)} / ${quotaMB} Mo (${percent.toFixed(1)}%)` : `${usageMB.toFixed(2)} Mo (quota non défini)`;
+      const unit = this.t('units.mo', 'Mo');
+      const undefinedText = this.t('usage.undefinedQuota', 'quota non défini');
+      return quotaMB
+        ? `${usageMB.toFixed(2)} / ${quotaMB} ${unit} (${percent.toFixed(1)}%)`
+        : `${usageMB.toFixed(2)} ${unit} (${undefinedText})`;
     },
     totalUsageText() {
       const total = (this.users || []).reduce((sum, u) => sum + this.usageData(u).usageMB, 0);
-      return `${total.toFixed(2)} Mo`;
+      const unit = this.t('units.mo', 'Mo');
+      return `${total.toFixed(2)} ${unit}`;
     },
     sortValue(u, key) {
       const { usageMB } = this.usageData(u);
@@ -91,7 +116,7 @@ export function usersSection() {
       this.usersLoading = false;
     },
     async deleteUser(email) {
-      this.askConfirm('Supprimer définitivement ce compte ?', async () => {
+      this.askConfirm(this.t('confirm.deleteUser', 'Supprimer définitivement ce compte ?'), async () => {
         await fetch(`${this.API}/api/godmode/user/${email}`, {
           method: 'DELETE',
           headers: { ...this.headersGod(), 'Content-Type': 'application/json' }
@@ -107,14 +132,14 @@ export function usersSection() {
         this.globalQuotaValue = data.defaultQuotaMB || '';
         this.globalQuotaMessage = '';
       } catch (e) {
-        this.globalQuotaMessage = 'Impossible de charger le quota global.';
+        this.globalQuotaMessage = this.t('globalQuota.loadError', 'Impossible de charger le quota global.');
         this.globalQuotaStatus = 'error';
       }
     },
     async saveGlobalQuota() {
       const value = parseFloat(this.globalQuotaValue);
       if (Number.isNaN(value) || value <= 0) {
-        this.globalQuotaMessage = 'Entrez une valeur valide (>0).';
+        this.globalQuotaMessage = this.t('globalQuota.invalid', 'Entrez une valeur valide (>0).');
         this.globalQuotaStatus = 'error';
         return;
       }
@@ -126,11 +151,11 @@ export function usersSection() {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Erreur');
-        this.globalQuotaMessage = 'Quota global mis à jour.';
+        this.globalQuotaMessage = this.t('globalQuota.success', 'Quota global mis à jour.');
         this.globalQuotaStatus = 'ok';
         this.loadUsers();
       } catch (err) {
-        this.globalQuotaMessage = err.message || 'Échec de la mise à jour.';
+        this.globalQuotaMessage = err.message || this.t('globalQuota.updateError', 'Échec de la mise à jour.');
         this.globalQuotaStatus = 'error';
       }
     },
@@ -154,7 +179,7 @@ export function usersSection() {
       if (trimmed !== '') {
         const num = parseFloat(trimmed);
         if (Number.isNaN(num) || num <= 0) {
-          this.tenantQuotaModal.error = 'Entrez un nombre positif ou laissez vide pour quota global.';
+          this.tenantQuotaModal.error = this.t('tenantQuota.invalid', 'Entrez un nombre positif ou laissez vide pour quota global.');
           return;
         }
         payloadValue = num;
@@ -171,16 +196,18 @@ export function usersSection() {
         this.closeTenantQuotaModal();
         this.loadUsers();
       } catch (err) {
-        this.tenantQuotaModal.error = err.message || 'Impossible de mettre à jour le quota.';
+        this.tenantQuotaModal.error = err.message || this.t('tenantQuota.updateError', 'Impossible de mettre à jour le quota.');
       }
     },
   };
 }
 
 export function usersPage() {
+  const base = coreSection();
+  const baseInit = base.init;
   return {
-    ...coreSection(),
-    ...usersSection(),
+    ...base,
+    ...usersSection(baseInit),
     section: 'users'
   };
 }

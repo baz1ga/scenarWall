@@ -11,7 +11,7 @@ export function pixabayMixin() {
     async searchPixabay(options = {}) {
       const { allowEmpty = false } = options;
       if (!this.pixabayKey) {
-        this.pixabayMessage = 'Clé API Pixabay manquante.';
+        this.pixabayMessage = this.t ? this.t("messages.pixabayMissingKey", "Clé API Pixabay manquante.") : 'Clé API Pixabay manquante.';
         this.pixabayStatus = 'error';
         return;
       }
@@ -35,19 +35,19 @@ export function pixabayMixin() {
         }
 
         const res = await fetch(url.toString()).catch(() => null);
-        if (!res || !res.ok) throw new Error('Recherche impossible sur Pixabay.');
+        if (!res || !res.ok) throw new Error(this.t ? this.t("messages.pixabayError", "Erreur Pixabay.") : 'Recherche impossible sur Pixabay.');
         const data = await res.json();
         const hits = Array.isArray(data?.hits) ? data.hits : [];
         this.pixabayResults = hits.filter(h => h.type === 'photo' || h.type === 'illustration');
         if (this.pixabayResults.length === 0) {
-          this.pixabayMessage = 'Aucun résultat.';
+          this.pixabayMessage = this.t ? this.t("messages.pixabayNoResult", "Aucun résultat.") : 'Aucun résultat.';
           this.pixabayStatus = 'error';
         } else {
           this.pixabayInitialized = true;
         }
       } catch (err) {
         this.pixabayResults = [];
-        this.pixabayMessage = err?.message || 'Erreur Pixabay.';
+        this.pixabayMessage = err?.message || (this.t ? this.t("messages.pixabayError", "Erreur Pixabay.") : 'Erreur Pixabay.');
         this.pixabayStatus = 'error';
       }
       this.pixabayLoading = false;
@@ -62,10 +62,10 @@ export function pixabayMixin() {
       this.pixabayStatus = 'ok';
       await this.uploadFromUrl(url);
       if (this.uploadUrlStatus === 'ok') {
-        this.pixabayMessage = 'Image importée depuis Pixabay.';
+        this.pixabayMessage = this.t ? this.t("messages.pixabayImportOk", "Image importée depuis Pixabay.") : 'Image importée depuis Pixabay.';
         this.pixabayStatus = 'ok';
       } else {
-        this.pixabayMessage = this.uploadUrlMessage || 'Import Pixabay impossible.';
+        this.pixabayMessage = this.uploadUrlMessage || (this.t ? this.t("messages.pixabayImportFail", "Import Pixabay impossible.") : 'Import Pixabay impossible.');
         this.pixabayStatus = 'error';
       }
     }

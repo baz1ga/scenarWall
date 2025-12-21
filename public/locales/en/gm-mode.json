@@ -1,0 +1,89 @@
+{
+  "scenarDeck": "[en] ScenarDeck",
+  "timer": {
+    "start": "[en] Timer",
+    "stop": "[en] Stop",
+    "reset": "[en] Reset"
+  },
+  "slide": {
+    "prev": "[en] Slide -",
+    "next": "[en] Slide +"
+  },
+  "hourglass": {
+    "toggle": {
+      "show": "[en] Show",
+      "hide": "[en] Hide"
+    }
+  },
+  "header": {
+    "present": "[en] Present",
+    "sessionFallback": "[en] Session"
+  },
+  "scenes": {
+    "title": "[en] Scenes",
+    "untitled": "[en] Scene"
+  },
+  "notes": {
+    "title": "[en] Scene notes",
+    "placeholder": "[en] Your notes for this scene..."
+  },
+  "tension": {
+    "title": "[en] Tension",
+    "launch": "[en] Launch level"
+  },
+  "slideshow": {
+    "title": "[en] Slideshow",
+    "loading": "[en] Loading images...",
+    "empty": "[en] No image available.",
+    "nextScene": "[en] Go to next scene",
+    "nextImage": "[en] Next image",
+    "prevImage": "[en] Previous image",
+    "prevAlt": "[en] Previous image",
+    "currentAlt": "[en] Current image",
+    "nextAlt": "[en] Next image"
+  },
+  "playlist": {
+    "title": "[en] Playlist",
+    "loading": "[en] Loading...",
+    "empty": "[en] No audio file."
+  },
+  "hourglass": {
+    "modalTitle": "[en] Hourglass duration",
+    "sliderLabel": "[en] Duration (slider, max 30min)",
+    "minLabel": "[en] 30s",
+    "maxLabel": "[en] 30min",
+    "showTimerLabel": "[en] Show duration",
+    "start": "[en] Start",
+    "stop": "[en] Stop",
+    "display": "[en] Duration",
+    "toggle": {
+      "show": "[en] Show",
+      "hide": "[en] Hide"
+    }
+  },
+  "leave": {
+    "title": "[en] Exit Game Master mode?",
+    "body": "[en] You will return to the session page.",
+    "cancel": "[en] Cancel",
+    "proceed": "[en] Continue"
+  },
+  "gm": {
+    "session": {
+      "loadError": "[en] Unable to load sessions"
+    },
+    "scenes": {
+      "loadError": "[en] Unable to load scenes"
+    },
+    "slideshow": {
+      "error": "[en] Slideshow error"
+    },
+    "playlist": {
+      "error": "[en] Playlist error"
+    }
+  },
+  "common": {
+    "loading": "[en] Loading...",
+    "confirm": "[en] Confirm",
+    "cancel": "[en] Cancel"
+  }
+}

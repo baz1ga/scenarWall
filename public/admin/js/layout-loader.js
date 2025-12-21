@@ -10,6 +10,35 @@
   } catch (e) {}
 
   document.addEventListener('DOMContentLoaded', async () => {
+    const lang = (localStorage.getItem('lang') || (navigator.language || 'fr').slice(0, 2) || 'fr').toLowerCase();
+    let texts = {};
+    const t = (key, fallback = '') => {
+      if (!key) return fallback || '';
+      const parts = key.split('.');
+      let cur = texts;
+      for (const p of parts) {
+        if (cur && Object.prototype.hasOwnProperty.call(cur, p)) {
+          cur = cur[p];
+        } else {
+          cur = undefined;
+          break;
+        }
+      }
+      if (cur === undefined || cur === null) return fallback || key;
+      if (typeof cur === 'string' || typeof cur === 'number') return cur;
+      return fallback || key;
+    };
+    try {
+      const res = await fetch(`/locales/${lang}/layout.json`);
+      texts = res.ok ? await res.json() : {};
+    } catch (_) {
+      texts = {};
+    }
+    try {
+      window.__swLayoutTexts = texts;
+      window.tLayout = (key, fallback = '') => t(key, fallback);
+    } catch (_) {}
+
     const htmlEl = document.documentElement;
     const previousVisibility = htmlEl.style.visibility;
     htmlEl.style.visibility = 'hidden';
@@ -36,12 +65,12 @@
       const res = await fetch('/admin/layout/layout.html', { cache: 'no-cache' });
       layoutHtml = await res.text();
     } catch (e) {
-      console.error('Impossible de charger le layout admin', e);
+      console.error(t('layoutLoader.layoutError', 'Impossible de charger le layout admin'), e);
       return;
     }
 
     if (!layoutHtml.includes('{{CONTENT}}')) {
-      console.error('Layout admin: placeholder {{CONTENT}} introuvable');
+      console.error(t('layoutLoader.placeholderError', 'Layout admin: placeholder {{CONTENT}} introuvable'));
       return;
     }
 
@@ -111,7 +140,7 @@
           cache.set(name, html);
           return html;
         } catch (err) {
-          console.error(`Impossible de charger le fragment ${name}`, err);
+          console.error(t('layoutLoader.fragmentError', 'Impossible de charger le fragment') + ` ${name}`, err);
           cache.set(name, '');
           return '';
         }

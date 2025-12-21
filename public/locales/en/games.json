@@ -1,0 +1,16 @@
+{
+  "title": "[en] Played games",
+  "subtitle": "[en] Track and filter your runs by tenant and session.",
+  "refresh": "[en] Refresh",
+  "refreshing": "[en] Refreshing...",
+  "hideShort": "[en] Hide < 5m",
+  "searchPlaceholder": "[en] Search a tenant...",
+  "loadingOverlay": "[en] Refreshing...",
+  "columns": {
+    "tenant": "[en] Tenant",
+    "session": "[en] Session",
+    "date": "[en] Date",
+    "duration": "[en] Duration"
+  },
+  "noRuns": "[en] No games played"
+}

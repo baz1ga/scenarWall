@@ -1,0 +1,89 @@
+{
+  "scenarDeck": "ScenarDeck",
+  "timer": {
+    "start": "Démarrer",
+    "stop": "Arrêter",
+    "reset": "Réinitialiser"
+  },
+  "slide": {
+    "prev": "Slide précédent",
+    "next": "Slide suivant"
+  },
+  "hourglass": {
+    "toggle": {
+      "show": "Afficher",
+      "hide": "Masquer"
+    }
+  },
+  "header": {
+    "present": "Présenter",
+    "sessionFallback": "Session"
+  },
+  "scenes": {
+    "title": "Scènes",
+    "untitled": "Scène"
+  },
+  "common": {
+    "loading": "Chargement...",
+    "confirm": "Confirmer",
+    "cancel": "Annuler"
+  },
+  "notes": {
+    "title": "Notes de la scène",
+    "placeholder": "Vos notes pour cette scène..."
+  },
+  "tension": {
+    "title": "Tension",
+    "launch": "Lancer le niveau"
+  },
+  "slideshow": {
+    "title": "Diaporama",
+    "loading": "Chargement des images...",
+    "empty": "Aucune image disponible.",
+    "nextScene": "Passer à la scène suivante",
+    "nextImage": "Image suivante",
+    "prevImage": "Image précédente",
+    "prevAlt": "Image précédente",
+    "currentAlt": "Image actuelle",
+    "nextAlt": "Image suivante"
+  },
+  "playlist": {
+    "title": "Playlist",
+    "loading": "Chargement...",
+    "empty": "Aucun fichier audio."
+  },
+  "hourglass": {
+    "modalTitle": "Durée du sablier",
+    "sliderLabel": "Durée (curseur, max 30min)",
+    "minLabel": "30s",
+    "maxLabel": "30min",
+    "showTimerLabel": "Afficher la durée",
+    "start": "Lancer",
+    "stop": "Stop",
+    "display": "Durée",
+    "toggle": {
+      "show": "Afficher",
+      "hide": "Masquer"
+    }
+  },
+  "leave": {
+    "title": "Quitter le mode Game Master ?",
+    "body": "Vous allez retourner sur la page de la session.",
+    "cancel": "Annuler",
+    "proceed": "Continuer"
+  },
+  "gm": {
+    "session": {
+      "loadError": "Impossible de charger les sessions"
+    },
+    "scenes": {
+      "loadError": "Impossible de charger les scènes"
+    },
+    "slideshow": {
+      "error": "Erreur diaporama"
+    },
+    "playlist": {
+      "error": "Erreur playlist"
+    }
+  }
+}

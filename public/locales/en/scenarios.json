@@ -1,0 +1,40 @@
+{
+  "loading": "[en] Loading page",
+  "title": "[en] Scenarios",
+  "subtitle": "[en] Manage your stories and their sessions.",
+  "new": "[en] New",
+  "loadingList": "[en] Loading scenarios...",
+  "empty": "[en] No scenarios yet. Click “New” to get started.",
+  "untitled": "[en] Untitled",
+  "newSession": "[en] New session",
+  "confirm": {
+    "title": "[en] Confirmation",
+    "cancel": "[en] Cancel",
+    "delete": "[en] Delete",
+    "message": "[en] Delete this scenario?",
+    "deleteMessageBase": "[en] Delete this scenario, its sessions and scenes?",
+    "deleteError": "[en] Delete failed"
+  },
+  "create": {
+    "title": "[en] New scenario",
+    "iconLabel": "[en] Scenario icon",
+    "iconPreview": "[en] Preview",
+    "iconSearch": "[en] Search an icon",
+    "iconChoose": "[en] Choose ",
+    "iconNone": "[en] No matching icon.",
+    "cancel": "[en] Cancel",
+    "create": "[en] Create",
+    "creating": "[en] Creating..."
+  },
+  "edit": {
+    "title": "[en] Edit scenario",
+    "createdAt": "[en] Created on",
+    "iconLabel": "[en] Scenario icon",
+    "iconPreview": "[en] Preview",
+    "iconNone": "[en] No matching icon.",
+    "namePlaceholder": "[en] Scenario title",
+    "cancel": "[en] Cancel",
+    "save": "[en] Save",
+    "saving": "[en] Saving..."
+  }
+}

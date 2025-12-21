@@ -1,0 +1,57 @@
+{
+  "loading": "Chargement de la page",
+  "title": "Utilisateurs",
+  "subtitle": "Gérez les quotas et usages par tenant.",
+  "totalUsage": "Total usages",
+  "units": {
+    "mo": "Mo"
+  },
+  "usage": {
+    "custom": "perso",
+    "undefinedQuota": "quota non défini"
+  },
+  "globalQuota": {
+    "label": "Quota global par défaut (Mo)",
+    "updateButton": "Mettre à jour",
+    "loadError": "Impossible de charger le quota global.",
+    "invalid": "Entrez une valeur valide (>0).",
+    "success": "Quota global mis à jour.",
+    "updateError": "Échec de la mise à jour."
+  },
+  "confirm": {
+    "title": "Confirmation",
+    "deleteUser": "Supprimer définitivement ce compte ?",
+    "cta": "Confirmer"
+  },
+  "actions": {
+    "editQuota": "Quota personnalisé",
+    "delete": "Supprimer"
+  },
+  "table": {
+    "loading": "Chargement...",
+    "empty": "Aucun utilisateur",
+    "columns": {
+      "name": "Nom",
+      "tenant": "Tenant",
+      "images": "Images",
+      "audio": "Audio",
+      "usage": "Usage",
+      "lastLogin": "Dernière connexion",
+      "actions": "Actions"
+    }
+  },
+  "tenantQuota": {
+    "title": "Quota personnalisé",
+    "desc": "Définissez un quota (Mo) pour",
+    "fallbackUser": "cet utilisateur",
+    "clear": "Laisser vide pour appliquer le quota global.",
+    "label": "Quota (Mo)",
+    "placeholder": "Quota global",
+    "invalid": "Entrez un nombre positif ou laissez vide pour quota global.",
+    "updateError": "Impossible de mettre à jour le quota."
+  },
+  "common": {
+    "cancel": "Annuler",
+    "save": "Enregistrer"
+  }
+}

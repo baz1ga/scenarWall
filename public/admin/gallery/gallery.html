@@ -12,7 +12,7 @@
   <template x-if="galleryLoading">
     <div class="justify-center max-w-4xl mx-auto rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-6 shadow-sm flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
       <div class="h-5 w-5 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
-      Chargement de la page
+      <span x-text="t('loading', 'Chargement de la page')"></span>
     </div>
   </template>
   <template x-if="!galleryLoading">    
@@ -24,8 +24,8 @@
             <i class="fa-solid fa-images text-lg"></i>
           </span>
           <div>
-            <h1 class="text-2xl font-semibold gallery-text">Votre bibliothèque</h1>
-            <p class="text-sm text-slate-500 dark:text-slate-200">Images disponibles pour vos scènes.</p>
+            <h1 class="text-2xl font-semibold gallery-text" x-text="t('title', 'Votre bibliothèque')"></h1>
+            <p class="text-sm text-slate-500 dark:text-slate-200" x-text="t('subtitle', 'Images disponibles pour vos scènes.')"></p>
           </div>
         </div>
         <div class="flex items-center gap-2">
@@ -33,9 +33,9 @@
             class="btn-ghost inline-flex h-[34px] items-center gap-2 rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition disabled:opacity-40 disabled:cursor-not-allowed"
             @click="hideSelectedVisible()"
             :disabled="galleryLoading || selectedVisible.length === 0"
-            :title="selectedVisible.length === 0 ? 'Sélectionnez des images' : 'Mettre de coté'"
+            :title="selectedVisible.length === 0 ? t('selectImages', 'Sélectionnez des images') : t('hideTooltip', 'Mettre de côté')"
           >
-            <i class="fa-solid fa-eye-slash"></i> Mettre de coté
+            <i class="fa-solid fa-eye-slash"></i> <span x-text="t('hideSelected', 'Mettre de côté')"></span>
             <span class="badge-count" x-text="selectedVisible.length" x-show="selectedVisible.length > 0"></span>
           </button>
           <button
@@ -43,14 +43,14 @@
             x-show="tenantId"
             @click="openUploadModal()"
           >
-            <i class="fa-solid fa-upload"></i> Ajouter
+            <i class="fa-solid fa-upload"></i> <span x-text="t('add', 'Ajouter')"></span>
           </button>
         </div>
       </div>
       <div id="visiblePictures" class="space-y-2">
         <div class="rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-4">
           <template x-if="!galleryLoading && visible.length === 0">
-            <div class="text-sm max-w-4xl mx-auto text-center text-slate-600 dark:text-slate-200 border border-dashed border-slate-300 dark:border-gray-800 rounded-lg p-4">Aucune image</div>
+            <div class="text-sm max-w-4xl mx-auto text-center text-slate-600 dark:text-slate-200 border border-dashed border-slate-300 dark:border-gray-800 rounded-lg p-4" x-text="t('none', 'Aucune image')"></div>
           </template>
 
           <div class="grid gap-2 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7">
@@ -76,14 +76,14 @@
                       class="h-4 w-4 rounded border border-slate-400 bg-white text-yellow-500 accent-yellow-500 cursor-pointer"
                       :checked="selectedVisible.includes(img.name)"
                       @change.stop="toggleSelectVisible(img.name)"
-                      :aria-label="`Sélectionner ${img.name}`"
+                      :aria-label="`${t('selectImage','Sélectionner')} ${img.name}`"
                     >
                   </label>
                 </div>
                 <button
                   class="absolute top-2 left-2 h-7 w-7 flex items-center justify-center rounded-full bg-white/90 dark:bg-gray-800/90 text-slate-500 hover:text-yellow-600 cursor-grab select-none border border-slate-200 dark:border-gray-700 text-xs"
                   :class="dragIndex === index ? 'cursor-grabbing text-yellow-600' : ''"
-                  title="Glisser pour réordonner"
+                  :title="t('reorderHint', 'Glisser pour réordonner')"
                   @mousedown.prevent
                 >
                   <i class="fa-solid fa-grip-vertical"></i>
@@ -92,14 +92,14 @@
                 <div class="absolute inset-0">
                   <img :src="img.thumbUrl || img.url" draggable="false" class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105 group-active:scale-[1.02]" @click="zoom(img.url)">
                 </div>
-                <div class="absolute inset-0 bg-slate-900/15 dark:bg-slate-100/10 opacity-0 group-hover:opacity-100 transition flex items-center justify-center pointer-events-none text-[10px] font-semibold tracking-wide text-white">Glisser pour déplacer</div>
+                <div class="absolute inset-0 bg-slate-900/15 dark:bg-slate-100/10 opacity-0 group-hover:opacity-100 transition flex items-center justify-center pointer-events-none text-[10px] font-semibold tracking-wide text-white" x-text="t('dragToMove', 'Glisser pour déplacer')"></div>
                 <div
                   class="absolute inset-0 flex items-center justify-center text-xs font-semibold tracking-wide uppercase"
                   :style="dragIndex !== null && dragOverIndex === index ? 'background: var(--gallery-accent-strong); color: #fff;' : 'display:none;'"
                   x-show="dragIndex !== null && dragOverIndex === index"
                   x-transition
                 >
-                  Déposer ici
+                  <span x-text="t('dropHere', 'Déposer ici')"></span>
                 </div>
                 <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/40 to-transparent p-2 text-white space-y-1.5">
                   <div class="text-[12px] font-semibold truncate text-slate-400" x-text="img.name"></div>
@@ -117,8 +117,8 @@
               <i class="fa-solid fa-eye-slash text-lg"></i>
             </span>
             <div>
-              <h2 class="text-2xl font-semibold gallery-text">Vos images mises de coté</h2>
-              <p class="text-sm text-slate-500 dark:text-slate-200">N'impact pas vos scènes existantes.</p>
+              <h2 class="text-2xl font-semibold gallery-text" x-text="t('hiddenTitle', 'Vos images mises de côté')"></h2>
+              <p class="text-sm text-slate-500 dark:text-slate-200" x-text="t('hiddenSubtitle', `N'impact pas vos scènes existantes.`)"></p>
             </div>
           </div>
           <div class="flex items-center gap-2">
@@ -126,16 +126,16 @@
               class="btn-ghost inline-flex h-[34px] items-center gap-2 rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition disabled:opacity-40 disabled:cursor-not-allowed"
               @click="showSelectedHidden()"
               :disabled="galleryLoading || selectedHidden.length === 0"
-              :title="selectedHidden.length === 0 ? 'Sélectionnez des images' : 'Ajouter à la bibliothèque'"
+              :title="selectedHidden.length === 0 ? t('selectImages', 'Sélectionnez des images') : t('addToLibrary', 'Ajouter à la bibliothèque')"
             >
-              <i class="fa-regular fa-eye"></i> Ajouter à la bibliothèque
+              <i class="fa-regular fa-eye"></i> <span x-text="t('addToLibrary', 'Ajouter à la bibliothèque')"></span>
               <span class="badge-count" x-text="selectedHidden.length" x-show="selectedHidden.length > 0"></span>
             </button>
             <button
               class="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-rose-200 dark:border-rose-900 bg-white dark:bg-gray-950 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition disabled:opacity-40 disabled:cursor-not-allowed"
               @click="deleteSelectedHidden()"
               :disabled="galleryLoading || selectedHidden.length === 0"
-              :title="selectedHidden.length === 0 ? 'Sélectionnez des images' : 'Supprimer la sélection'"
+              :title="selectedHidden.length === 0 ? t('selectImages', 'Sélectionnez des images') : t('deleteSelection', 'Supprimer la sélection')"
             >
               <i class="fa-solid fa-trash"></i>
             </button>
@@ -144,10 +144,10 @@
         <div class="space-y-2">
           <div class="rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-4">
           <template x-if="galleryLoading">
-            <div class="text-sm text-slate-400">Chargement...</div>
+            <div class="text-sm text-slate-400" x-text="t('loadingInline', 'Chargement...')"></div>
           </template>
           <template x-if="!galleryLoading && hidden.length === 0">
-            <div class="text-sm max-w-4xl mx-auto text-center text-slate-600 dark:text-slate-200 border border-dashed border-slate-300 dark:border-gray-800 rounded-lg p-4">Aucune image</div>
+            <div class="text-sm max-w-4xl mx-auto text-center text-slate-600 dark:text-slate-200 border border-dashed border-slate-300 dark:border-gray-800 rounded-lg p-4" x-text="t('none', 'Aucune image')"></div>
           </template>
 
             <div class="grid gap-2 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7">
@@ -160,11 +160,11 @@
                         class="h-4 w-4 rounded border border-slate-400 bg-white text-yellow-500 accent-yellow-500 cursor-pointer"
                         :checked="selectedHidden.includes(img.name)"
                         @change.stop="toggleSelectHidden(img.name)"
-                        :aria-label="`Sélectionner ${img.name}`"
+                        :aria-label="`${t('selectImage','Sélectionner')} ${img.name}`"
                       >
                     </label>
                   </div>
-                  <div class="absolute top-2 left-2 px-2 py-1 rounded-full bg-amber-500 text-slate-900 text-[11px] font-semibold shadow-sm">Cachée</div>
+                  <div class="absolute top-2 left-2 px-2 py-1 rounded-full bg-amber-500 text-slate-900 text-[11px] font-semibold shadow-sm" x-text="t('hiddenBadge', 'Cachée')"></div>
                   <div class="absolute inset-0">
                     <img :src="img.thumbUrl || img.url" class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105 group-active:scale-[1.02]" @click="zoom(img.url)">
                   </div>
@@ -195,14 +195,14 @@
             :class="uploadTab === 'drop' ? 'gallery-text border-b-2 gallery-border' : 'text-slate-500 dark:text-slate-200'"
             @click="setUploadTab('drop')"
           >
-            Depuis votre ordinateur
+            <span x-text="t('upload.fromComputer', 'Depuis votre ordinateur')"></span>
           </button>
           <button
             class="px-4 py-2 text-sm font-semibold"
             :class="uploadTab === 'url' ? 'gallery-text border-b-2 gallery-border' : 'text-slate-500 dark:text-slate-200'"
             @click="setUploadTab('url')"
           >
-            Import via URL
+            <span x-text="t('upload.fromUrl', 'Import via URL')"></span>
           </button>
           <button
             class="px-4 py-2 text-sm font-semibold inline-flex items-center gap-2"
@@ -210,7 +210,7 @@
             @click="setUploadTab('pixabay')"
           >
               <img src="https://pixabay.com/favicon-16x16.png" alt="" class="h-4 w-4">
-              <span>Pixabay</span>
+              <span x-text="t('upload.pixabay', 'Pixabay')"></span>
           </button>
         </div>
 
@@ -224,9 +224,9 @@
             @click="$refs.uploadInput.click()"
           >
             <div class="text-3xl gallery-text mb-2"><i class="fa-solid fa-cloud-arrow-up"></i></div>
-            <div class="text-xs text-slate-500 dark:text-slate-200 mt-1">PNG, JPG, WEBP — Taille max 6 Mo par fichier</div>
+            <div class="text-xs text-slate-500 dark:text-slate-200 mt-1" x-text="t('upload.dropHint', 'PNG, JPG, WEBP — Taille max 6 Mo par fichier')"></div>
             <div class="mt-3">
-              <span class="inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm bg-white dark:bg-transparent hover:bg-yellow-50 dark:hover:bg-yellow-900/20" :class="['gallery-border','gallery-text']">Parcourir</span>
+              <span class="inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm bg-white dark:bg-transparent hover:bg-yellow-50 dark:hover:bg-yellow-900/20" :class="['gallery-border','gallery-text']" x-text="t('upload.browse', 'Parcourir')"></span>
             </div>
             <input type="file" multiple accept="image/*" class="hidden" x-ref="uploadInput" @change="uploadFile($event)">
           </div>
@@ -238,7 +238,7 @@
               x-model="uploadUrl"
               class="flex-1 rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm focus:ring-2 focus:outline-none"
               style="--tw-ring-color: var(--gallery-accent);"
-              placeholder="Coller l'url de votre image ici"
+              :placeholder="t('upload.urlPlaceholder', `Coller l'url de votre image ici`)"
             >
             <button
               class="inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm bg-white dark:bg-transparent transition hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
@@ -247,7 +247,7 @@
               :disabled="uploadUrlLoading || !uploadUrl"
             >
               <i class="fa-solid fa-cloud-arrow-down"></i>
-              <span x-text="uploadUrlLoading ? 'Chargement...' : 'Importer'"></span>
+              <span x-text="uploadUrlLoading ? t('upload.urlLoading', 'Chargement...') : t('upload.urlImport', 'Importer')"></span>
             </button>
           </div>
           <p class="text-xs" :class="uploadUrlStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'gallery-text'" x-text="uploadUrlMessage"></p>
@@ -259,7 +259,7 @@
               x-model="pixabayQuery"
               class="flex-1 rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm focus:ring-2 focus:outline-none disabled:opacity-50"
               style="--tw-ring-color: var(--gallery-accent);"
-              :placeholder="pixabayKey ? 'Rechercher sur Pixabay (ex: dungeon, cthulhu, orc...)' : 'Clé API manquante'"
+              :placeholder="pixabayKey ? t('upload.pixabayPlaceholder', 'Rechercher sur Pixabay (ex: dungeon, cthulhu, orc...)') : t('upload.pixabayNoKey', 'Clé API manquante')"
               :disabled="!pixabayKey"
               @keydown.enter.prevent="searchPixabay()"
             >
@@ -270,10 +270,10 @@
               :disabled="pixabayLoading || !pixabayQuery.trim() || !pixabayKey"
             >
               <i class="fa-solid fa-magnifying-glass"></i>
-              <span x-text="pixabayLoading ? 'Recherche...' : 'Rechercher'"></span>
+              <span x-text="pixabayLoading ? t('upload.pixabayLoading', 'Recherche...') : t('upload.pixabaySearch', 'Rechercher')"></span>
             </button>
           </div>
-          <p class="text-xs" :class="pixabayStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'gallery-text'" x-text="pixabayMessage || (!pixabayKey ? `Clé API Pixabay manquante (variable d'environnement PIXABAY_KEY)` : '')"></p>
+          <p class="text-xs" :class="pixabayStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'gallery-text'" x-text="pixabayMessage || (!pixabayKey ? t('upload.pixabayMissingKey', `Clé API Pixabay manquante (variable d'environnement PIXABAY_KEY)`) : '')"></p>
             <div class="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-3" x-show="pixabayResults.length > 0">
               <template x-for="img in pixabayResults" :key="img.id">
                 <div class="relative rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-800 overflow-hidden shadow-sm">
@@ -283,7 +283,7 @@
                     @click="importFromPixabay(img.largeImageURL || img.webformatURL)"
                     :disabled="uploadUrlLoading"
                   >
-                    <i class="fa-solid fa-cloud-arrow-down"></i> Importer
+                    <i class="fa-solid fa-cloud-arrow-down"></i> <span x-text="t('upload.pixabayImport', 'Importer')"></span>
                   </button>
                 </div>
               </template>
@@ -292,7 +292,7 @@
       </div>
     </div>
 
-    <div class="fixed inset-0 bg-black/80 flex items-center justify-center z-50" x-show="zoomUrl" x-transition x-cloak @click="zoomUrl = ''" title="Cliquer pour fermer">
+    <div class="fixed inset-0 bg-black/80 flex items-center justify-center z-50" x-show="zoomUrl" x-transition x-cloak @click="zoomUrl = ''" :title="t('zoomClose', 'Cliquer pour fermer')">
       <div class="relative max-w-4xl w-full px-6">
         <button class="absolute -top-10 right-0 text-slate-200 text-xl" @click="zoomUrl = ''">✕</button>
         <img :src="zoomUrl" class="w-full rounded-xl border border-slate-700 shadow-2xl">
@@ -312,12 +312,12 @@
           <div class="h-10 w-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-xl">
             <i class="fa-solid fa-triangle-exclamation"></i>
           </div>
-          <div class="text-lg font-semibold text-slate-900 dark:text-slate-100">Confirmation</div>
+          <div class="text-lg font-semibold text-slate-900 dark:text-slate-100" x-text="t('confirm.title', 'Confirmation')"></div>
         </div>
         <p class="text-sm text-slate-600 dark:text-slate-300" x-text="confirmModal.message"></p>
         <div class="flex justify-end gap-2 pt-2">
-          <button class="px-4 py-2 rounded-lg border border-slate-300 dark:border-gray-700 text-slate-700 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800" @click="closeConfirm()">Annuler</button>
-          <button class="px-4 py-2 rounded-lg bg-rose-600 text-white font-semibold hover:bg-rose-500" @click="confirmYes()">Confirmer</button>
+          <button class="px-4 py-2 rounded-lg border border-slate-300 dark:border-gray-700 text-slate-700 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800" @click="closeConfirm()" x-text="t('confirm.cancel', 'Annuler')"></button>
+          <button class="px-4 py-2 rounded-lg bg-rose-600 text-white font-semibold hover:bg-rose-500" @click="confirmYes()" x-text="t('confirm.confirm', 'Confirmer')"></button>
         </div>
       </div>
     </div>

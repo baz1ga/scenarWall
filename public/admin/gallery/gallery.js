@@ -1,5 +1,6 @@
 import { coreSection } from '/admin/js/core.js';
 import { pixabayMixin } from '/admin/js/pixabay.js';
+import { loadLocale, t as translate } from '/admin/js/i18n.js';
 
 export function gallerySection() {
   return {
@@ -21,7 +22,16 @@ export function gallerySection() {
     uploadUrlMessage: '',
     uploadUrlStatus: 'ok',
     uploadUrlLoading: false,
+    lang: localStorage.getItem("lang") || (navigator.language || "fr").slice(0, 2) || "fr",
+    texts: {},
     ...pixabayMixin(),
+
+    async loadTexts() {
+      this.texts = await loadLocale(this.lang, "gallery");
+    },
+    t(key, fallback) {
+      return translate(this.texts, key, fallback);
+    },
 
     async refreshGallery() {
       if (!this.tenantId) return;
@@ -77,7 +87,7 @@ export function gallerySection() {
       this.pixabayStatus = 'ok';
       if (tab === 'pixabay' && !this.pixabayInitialized && !this.pixabayLoading) {
         if (!this.pixabayKey) {
-          this.pixabayMessage = 'Clé API Pixabay manquante. Définissez PIXABAY_KEY dans l’environnement (.env).';
+          this.pixabayMessage = this.t("upload.pixabayMissingKey", "Clé API Pixabay manquante (variable d'environnement PIXABAY_KEY)");
           this.pixabayStatus = 'error';
           return;
         }
@@ -113,15 +123,16 @@ export function gallerySection() {
           if (!res.ok) {
             const data = await res.json().catch(() => ({}));
             if (res.status === 400 && data.error === 'Quota exceeded') {
-              errors.push(`Quota dépassé pour ${file.name}`);
+              errors.push(this.t("messages.quotaExceeded", `Quota dépassé pour ${file.name}`).replace("{name}", file.name));
               break;
             }
-            errors.push(data.error || `Échec pour ${file.name}`);
+            const errMsg = data.error ? data.error : this.t("messages.uploadError", `Échec pour ${file.name}`).replace("{name}", file.name);
+            errors.push(errMsg);
           } else {
             success++;
           }
         } catch (err) {
-          errors.push(`Réseau: ${file.name}`);
+          errors.push(this.t("messages.networkError", `Réseau : ${file.name}`).replace("{name}", file.name));
         }
       }
 
@@ -134,12 +145,12 @@ export function gallerySection() {
       }
 
       if (errors.length === 0) {
-        this.setUpload(`${success} image${success > 1 ? 's' : ''} uploadée${success > 1 ? 's' : ''} avec succès.`, 'ok');
+        this.setUpload(this.t("messages.uploadSuccess", `${success} image${success > 1 ? 's' : ''} uploadée${success > 1 ? 's' : ''} avec succès.`).replace("{count}", success), 'ok');
       } else {
-        const msg = [
-          success > 0 ? `${success} image${success > 1 ? 's' : ''} ok.` : 'Aucune image envoyée.',
-          errors.join(' | ')
-        ].join(' ');
+        const base = success > 0
+          ? this.t("messages.uploadPartial", `${success} image${success > 1 ? 's' : ''} ok.`).replace("{count}", success)
+          : this.t("messages.uploadNone", "Aucune image envoyée.");
+        const msg = [base, errors.join(' | ')].join(' ');
         this.setUpload(msg, 'error');
       }
     },
@@ -151,21 +162,21 @@ export function gallerySection() {
       this.uploadUrlStatus = 'ok';
       try {
         const res = await fetch(targetUrl, { mode: 'cors' }).catch(() => null);
-        if (!res || !res.ok) throw new Error('Impossible de récupérer le fichier.');
+        if (!res || !res.ok) throw new Error(this.t("messages.urlFetchError", "Impossible de récupérer le fichier."));
         const blob = await res.blob();
         const contentType = res.headers.get('content-type') || '';
-        if (!contentType.startsWith('image/')) throw new Error('Le lien ne pointe pas vers une image.');
+        if (!contentType.startsWith('image/')) throw new Error(this.t("messages.urlNotImage", "Le lien ne pointe pas vers une image."));
         const urlPath = targetUrl.split('/').pop() || 'image';
         const extFromType = contentType.split('/')[1]?.split(';')[0] || 'jpg';
         const safeName = urlPath.match(/[^?#]+/)?.[0] || `remote.${extFromType}`;
         const fileName = safeName.includes('.') ? safeName : `${safeName}.${extFromType}`;
         const file = new File([blob], fileName, { type: contentType || 'image/jpeg' });
         await this.uploadFile([file]);
-        this.uploadUrlMessage = 'Image importée avec succès.';
+        this.uploadUrlMessage = this.t("messages.urlImported", "Image importée avec succès.");
         this.uploadUrlStatus = 'ok';
         this.uploadUrl = '';
       } catch (err) {
-        this.uploadUrlMessage = err.message || 'Import depuis URL impossible.';
+        this.uploadUrlMessage = err.message || this.t("messages.urlImportFail", "Import depuis URL impossible.");
         this.uploadUrlStatus = 'error';
       }
       this.uploadUrlLoading = false;
@@ -270,7 +281,7 @@ export function gallerySection() {
       if (!this.selectedVisible.length) return;
       const names = [...this.selectedVisible];
       for (const name of names) {
-        await fetch(`${this.API}/api/${this.tenantId}/images/hide/${name}`, { method: 'PUT', headers: this.headersAuth() });
+        await this.updateImageVisibility(name, true);
       }
       this.selectedVisible = [];
       await this.refreshGallery();
@@ -278,21 +289,22 @@ export function gallerySection() {
     },
     async hideImage(name) {
       this.selectedVisible = this.selectedVisible.filter(n => n !== name);
-      await fetch(`${this.API}/api/${this.tenantId}/images/hide/${name}`, { method: 'PUT', headers: this.headersAuth() });
+      await this.updateImageVisibility(name, true);
       await this.refreshGallery();
       await this.fetchQuota();
     },
     async showImage(name) {
       this.selectedHidden = this.selectedHidden.filter(n => n !== name);
-      await fetch(`${this.API}/api/${this.tenantId}/images/show/${name}`, { method: 'PUT', headers: this.headersAuth() });
+      await this.updateImageVisibility(name, false);
       await this.refreshGallery();
       await this.fetchQuota();
     },
     async deleteImage(name) {
       const impacted = await this.countImageUsage([name]);
       const msg = impacted > 0
-        ? `Supprimer définitivement cette image ? Elle est utilisée dans ${impacted} scène${impacted > 1 ? 's' : ''} et sera retirée.`
-        : 'Supprimer définitivement cette image ? Elle sera retirée de toutes vos scènes.';
+        ? this.t("confirm.deleteOneUsed", "Supprimer définitivement cette image ? Elle est utilisée dans {count} scène{plural} et sera retirée.")
+          .replace("{count}", impacted).replace("{plural}", impacted > 1 ? "s" : "")
+        : this.t("confirm.deleteOne", "Supprimer définitivement cette image ? Elle sera retirée de toutes vos scènes.");
       this.askConfirm(msg, async () => {
         this.selectedHidden = this.selectedHidden.filter(n => n !== name);
         await fetch(`${this.API}/api/${this.tenantId}/images/${name}`, { method: 'DELETE', headers: this.headersAuth() });
@@ -304,19 +316,33 @@ export function gallerySection() {
       if (!this.selectedHidden.length) return;
       const names = [...this.selectedHidden];
       for (const name of names) {
-        await fetch(`${this.API}/api/${this.tenantId}/images/show/${name}`, { method: 'PUT', headers: this.headersAuth() });
+        await this.updateImageVisibility(name, false);
       }
       this.selectedHidden = [];
       await this.refreshGallery();
       await this.fetchQuota();
+    },
+    async updateImageVisibility(name, hidden) {
+      const safeName = encodeURIComponent(name);
+      await fetch(`${this.API}/api/${this.tenantId}/images/${safeName}/hide`, {
+        method: 'PUT',
+        headers: { ...this.headersAuth(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hidden })
+      });
     },
     async deleteSelectedHidden() {
       if (!this.selectedHidden.length) return;
       const names = [...this.selectedHidden];
       const impacted = await this.countImageUsage(names);
       const msg = impacted > 0
-        ? `Supprimer définitivement ${names.length} image${names.length > 1 ? 's' : ''} ? Elles sont utilisées dans ${impacted} scène${impacted > 1 ? 's' : ''} et seront retirées.`
-        : `Supprimer définitivement ${names.length} image${names.length > 1 ? 's' : ''} ? Elles seront retirées de toutes vos scènes.`;
+        ? this.t("confirm.deleteManyUsed", `Supprimer définitivement ${names.length} image${names.length > 1 ? 's' : ''} ? Elles sont utilisées dans ${impacted} scène${impacted > 1 ? 's' : ''} et seront retirées.`)
+          .replace("{count}", names.length)
+          .replace("{plural}", names.length > 1 ? "s" : "")
+          .replace("{impacted}", impacted)
+          .replace("{pluralImp}", impacted > 1 ? "s" : "")
+        : this.t("confirm.deleteMany", `Supprimer définitivement ${names.length} image${names.length > 1 ? 's' : ''} ? Elles seront retirées de toutes vos scènes.`)
+          .replace("{count}", names.length)
+          .replace("{plural}", names.length > 1 ? "s" : "");
       this.askConfirm(msg, async () => {
         for (const name of names) {
           await fetch(`${this.API}/api/${this.tenantId}/images/${name}`, { method: 'DELETE', headers: this.headersAuth() });
@@ -346,10 +372,20 @@ export function gallerySection() {
 }
 
 export function galleryPage() {
+  const base = coreSection();
+  const baseInit = base.init;
+  const gallery = gallerySection();
   return {
-    ...coreSection(),
-    ...gallerySection(),
-    section: 'galerie'
+    ...base,
+    ...gallery,
+    section: 'galerie',
+    async init() {
+      if (typeof baseInit === "function") {
+        await baseInit.call(this);
+      }
+      await this.loadTexts();
+      await this.refreshGallery();
+    }
   };
 }
 
