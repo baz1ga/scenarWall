@@ -146,12 +146,9 @@ const SESSION_STATES_FILE = path.join(DATA_DIR, "run-states.json");
 const LEGACY_SESSION_STATES_FILE = path.join(DATA_DIR, "session-states.json");
 const TENSION_DEFAULT_FILE = path.join(DATA_DIR, "default-tension.json");
 const LEGACY_TENSION_DEFAULT_FILE = path.join(DATA_DIR, "tension-default.json");
-// (history removed)
-const LOG_DIR = path.join(DATA_DIR, "logs");
 const CSRF_COOKIE = "XSRF-TOKEN";
 const IMAGE_EXT = /\.(jpg|jpeg|png|webp)$/i;
 const AUDIO_EXT = /\.(mp3|wav|ogg|m4a|aac)$/i;
-// Multer uploaders injectés dans les modules images/audio
 const imageUpload = multer({
   storage: multer.diskStorage({
     destination: (req, file, cb) => {
@@ -200,29 +197,11 @@ const audioUpload = multer({
     return cb(err);
   }
 });
-if (!fs.existsSync(LOG_DIR)) fs.mkdirSync(LOG_DIR, { recursive: true });
-const accessLogStream = fs.createWriteStream(path.join(LOG_DIR, "access.log"), { flags: "a" });
-const appLogStream = fs.createWriteStream(path.join(LOG_DIR, "app.log"), { flags: "a" });
-
-// Écrit une entrée dans le log applicatif.
-function log(level, message, meta = {}) {
-  const payload = {
-    time: new Date().toISOString(),
-    level,
-    message,
-    ...meta
-  };
-  try {
-    appLogStream.write(JSON.stringify(payload) + "\n");
-  } catch (err) {
-    console.error("Log write failed", err);
-  }
-}
-
+// Logger simple vers stdout/stderr (compatible PM2).
 const logger = {
-  info: (msg, meta) => log("info", msg, meta),
-  warn: (msg, meta) => log("warn", msg, meta),
-  error: (msg, meta) => log("error", msg, meta)
+  info: (msg, meta) => console.log(JSON.stringify({ level: "info", time: new Date().toISOString(), message: msg, ...meta })),
+  warn: (msg, meta) => console.warn(JSON.stringify({ level: "warn", time: new Date().toISOString(), message: msg, ...meta })),
+  error: (msg, meta) => console.error(JSON.stringify({ level: "error", time: new Date().toISOString(), message: msg, ...meta }))
 };
 
 // Ajoute un identifiant de requête pour le suivi des logs.
@@ -251,21 +230,7 @@ const limiterGeneral = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   handler: rateLimitHandler("general"),
-  skip: (req) => {
-    // On ne limite pas les requêtes lecture (GET/HEAD/OPTIONS) pour éviter les 429 sur l'admin
-    if (["GET", "HEAD", "OPTIONS"].includes(req.method)) return true;
-    const p = req.path || "";
-    return (
-      p.startsWith("/admin") ||
-      p.startsWith("/admin/js/") ||
-      p.startsWith("/fragments/") ||
-      p.startsWith("/assets/") ||
-      p.startsWith("/js/") ||
-      p.startsWith("/front/") ||
-      p.startsWith("/t/") ||
-      p.includes(".")
-    );
-  }
+  skip: (req) => ["GET", "HEAD", "OPTIONS"].includes(req.method)
 });
 const limiterAuth = rateLimit({
   windowMs: 1 * 60 * 1000,
@@ -561,9 +526,11 @@ class FileStore extends session.Store {
 app.use(express.json());
 app.set("trust proxy", 1);
 app.use(requestId);
-// Access logs (to file)
+// Access logs vers stdout (ignore GET/HEAD/OPTIONS pour limiter le bruit)
 morgan.token("id", (req) => req.id);
-app.use(morgan('[:date[iso]] :id :remote-addr :method :url :status :res[content-length] - :response-time ms', { stream: accessLogStream }));
+app.use(morgan('[:date[iso]] :id :remote-addr :method :url :status :res[content-length] - :response-time ms', {
+  skip: (req) => req.method === "GET" || req.method === "HEAD" || req.method === "OPTIONS"
+}));
 const globalConfig = getGlobalConfig();
 app.use(limiterGeneral);
 
