@@ -960,7 +960,13 @@ function loadConfig(tenantId) {
 // Récupère la configuration globale (quota par défaut) avec fallback.
 function getGlobalConfig() {
   if (!fs.existsSync(GLOBAL_FILE)) {
-    return { ...DEFAULT_GLOBAL };
+    return {
+      ...DEFAULT_GLOBAL,
+      discordClientId: ENV_GLOBAL.discordClientId || null,
+      discordClientSecret: ENV_GLOBAL.discordClientSecret || null,
+      discordRedirectUri: ENV_GLOBAL.discordRedirectUri || null,
+      discordScopes: ENV_GLOBAL.discordScopes || null
+    };
   }
 
   try {
@@ -968,13 +974,27 @@ function getGlobalConfig() {
     const defaultQuotaMB = (typeof data.defaultQuotaMB === "number" && data.defaultQuotaMB > 0)
       ? data.defaultQuotaMB
       : DEFAULT_GLOBAL.defaultQuotaMB;
+    const discordClientId = data.discordClientId || ENV_GLOBAL.discordClientId || null;
+    const discordClientSecret = data.discordClientSecret || ENV_GLOBAL.discordClientSecret || null;
+    const discordRedirectUri = data.discordRedirectUri || ENV_GLOBAL.discordRedirectUri || null;
+    const discordScopes = Array.isArray(data.discordScopes) && data.discordScopes.length
+      ? data.discordScopes
+      : (ENV_GLOBAL.discordScopes || null);
     return {
       defaultQuotaMB,
+      discordClientId,
+      discordClientSecret,
+      discordRedirectUri,
+      discordScopes
     };
   } catch (err) {
     logger.error("Failed to read global config, using defaults", { err: err?.message });
     return {
       defaultQuotaMB: DEFAULT_GLOBAL.defaultQuotaMB,
+      discordClientId: ENV_GLOBAL.discordClientId || null,
+      discordClientSecret: ENV_GLOBAL.discordClientSecret || null,
+      discordRedirectUri: ENV_GLOBAL.discordRedirectUri || null,
+      discordScopes: ENV_GLOBAL.discordScopes || null
     };
   }
 }

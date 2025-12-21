@@ -281,7 +281,7 @@ export function gallerySection() {
       if (!this.selectedVisible.length) return;
       const names = [...this.selectedVisible];
       for (const name of names) {
-        await fetch(`${this.API}/api/${this.tenantId}/images/hide/${name}`, { method: 'PUT', headers: this.headersAuth() });
+        await this.updateImageVisibility(name, true);
       }
       this.selectedVisible = [];
       await this.refreshGallery();
@@ -289,13 +289,13 @@ export function gallerySection() {
     },
     async hideImage(name) {
       this.selectedVisible = this.selectedVisible.filter(n => n !== name);
-      await fetch(`${this.API}/api/${this.tenantId}/images/hide/${name}`, { method: 'PUT', headers: this.headersAuth() });
+      await this.updateImageVisibility(name, true);
       await this.refreshGallery();
       await this.fetchQuota();
     },
     async showImage(name) {
       this.selectedHidden = this.selectedHidden.filter(n => n !== name);
-      await fetch(`${this.API}/api/${this.tenantId}/images/show/${name}`, { method: 'PUT', headers: this.headersAuth() });
+      await this.updateImageVisibility(name, false);
       await this.refreshGallery();
       await this.fetchQuota();
     },
@@ -316,11 +316,19 @@ export function gallerySection() {
       if (!this.selectedHidden.length) return;
       const names = [...this.selectedHidden];
       for (const name of names) {
-        await fetch(`${this.API}/api/${this.tenantId}/images/show/${name}`, { method: 'PUT', headers: this.headersAuth() });
+        await this.updateImageVisibility(name, false);
       }
       this.selectedHidden = [];
       await this.refreshGallery();
       await this.fetchQuota();
+    },
+    async updateImageVisibility(name, hidden) {
+      const safeName = encodeURIComponent(name);
+      await fetch(`${this.API}/api/${this.tenantId}/images/${safeName}/hide`, {
+        method: 'PUT',
+        headers: { ...this.headersAuth(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hidden })
+      });
     },
     async deleteSelectedHidden() {
       if (!this.selectedHidden.length) return;
