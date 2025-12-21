@@ -1,4 +1,5 @@
 const fs = require("fs");
+const path = require("path");
 
 // Uniformise le format des runs (legacy ou groupé) en structure groupée par tenant/session.
 function normalizeSessionRuns(raw) {
@@ -87,7 +88,7 @@ function pruneShortRunsHistory(groups, minRunDurationMs) {
 
 // Construit l'API de présence (état en mémoire + persistance disque).
 function createPresence({
-  sessionStatesFile,
+  tenantBaseDir,
   legacySessionStatesFile,
   logger,
   broadcastTenant,
@@ -98,39 +99,93 @@ function createPresence({
   const presenceState = new Map(); // tenantId -> Map(sessionId -> state)
   let sessionRuns = loadSessionStates();
 
+  // Chemin du fichier run-states pour un tenant donné.
+  function tenantStateFile(tenantId) {
+    return tenantId ? path.join(tenantBaseDir, tenantId, "run-states.json") : null;
+  }
+
+  // Charge les runs pour un tenant (fichier dédié).
+  function loadTenantRuns(tenantId) {
+    const file = tenantStateFile(tenantId);
+    if (!file) return { tenantId, sessions: [] };
+    const dir = path.dirname(file);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    if (!fs.existsSync(file)) fs.writeFileSync(file, JSON.stringify([], null, 2));
+    try {
+      const data = JSON.parse(fs.readFileSync(file, "utf8")) || [];
+      return { tenantId, sessions: Array.isArray(data) ? data : [] };
+    } catch (err) {
+      log.error("Failed to read tenant run-states, reset", { tenantId, err: err?.message });
+      return { tenantId, sessions: [] };
+    }
+  }
+
+  // Sauvegarde les runs d'un tenant dans son fichier dédié.
+  function saveTenantRuns(tenantId) {
+    const tenant = sessionRuns.find(t => t.tenantId === tenantId);
+    if (!tenant) return;
+    const file = tenantStateFile(tenantId);
+    if (!file) return;
+    const dir = path.dirname(file);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    try {
+      fs.writeFileSync(file, JSON.stringify(tenant.sessions || [], null, 2));
+    } catch (err) {
+      log.error("Failed to write tenant run-states", { tenantId, err: err?.message });
+    }
+  }
+
   // Charge les états depuis le disque (avec migration/initialisation).
   function loadSessionStates() {
-    if (!fs.existsSync(sessionStatesFile)) {
-      // migration depuis l'ancien nom
-      if (legacySessionStatesFile && fs.existsSync(legacySessionStatesFile)) {
-        try { fs.renameSync(legacySessionStatesFile, sessionStatesFile); } catch {}
+    const collected = [];
+    const legacyFiles = Array.isArray(legacySessionStatesFile)
+      ? legacySessionStatesFile
+      : (legacySessionStatesFile ? [legacySessionStatesFile] : []);
+
+    // Migration depuis un fichier global legacy vers des fichiers par tenant.
+    legacyFiles.forEach(file => {
+      if (!file || !fs.existsSync(file)) return;
+      try {
+        const legacyData = JSON.parse(fs.readFileSync(file, "utf8")) || [];
+        const normalized = pruneShortRunsHistory(normalizeSessionRuns(legacyData), minRunDurationMs);
+        normalized.forEach(t => {
+          const dest = { tenantId: t.tenantId, sessions: t.sessions || [] };
+          collected.push(dest);
+          sessionRuns = sessionRuns || [];
+          const existing = sessionRuns.find(x => x.tenantId === t.tenantId);
+          if (existing) {
+            existing.sessions = dest.sessions;
+          } else {
+            sessionRuns.push(dest);
+          }
+          saveTenantRuns(t.tenantId);
+        });
+      } catch (err) {
+        log.error("Failed to migrate legacy session-states", { file, err: err?.message });
       }
-      if (!fs.existsSync(sessionStatesFile)) {
-        fs.writeFileSync(sessionStatesFile, JSON.stringify([], null, 2));
+    });
+
+    // Charge les fichiers par tenant présents dans tenantBaseDir.
+    const tenants = fs.readdirSync(tenantBaseDir, { withFileTypes: true })
+      .filter(d => d.isDirectory())
+      .map(d => d.name);
+    tenants.forEach(tid => {
+      const data = loadTenantRuns(tid);
+      const existing = collected.find(t => t.tenantId === tid);
+      if (existing) {
+        existing.sessions = data.sessions || existing.sessions;
+      } else {
+        collected.push(data);
       }
-    }
-    try {
-      const data = JSON.parse(fs.readFileSync(sessionStatesFile, "utf8")) || [];
-      return pruneShortRunsHistory(normalizeSessionRuns(data), minRunDurationMs);
-    } catch (err) {
-      log.error("Failed to read session-states, reset", { err: err?.message });
-      return [];
-    }
+    });
+
+    return pruneShortRunsHistory(normalizeSessionRuns(collected), minRunDurationMs);
   }
 
   // Recharge en mémoire les runs depuis le disque.
   function reloadSessionRuns() {
     sessionRuns = loadSessionStates();
     return sessionRuns;
-  }
-
-  // Sauvegarde les runs sur disque.
-  function saveSessionStates(states) {
-    try {
-      fs.writeFileSync(sessionStatesFile, JSON.stringify(states, null, 2));
-    } catch (err) {
-      log.error("Failed to write session-states", { err: err?.message });
-    }
   }
 
   // Retourne l'état des runs sous forme aplatie.
@@ -153,21 +208,10 @@ function createPresence({
     return session;
   }
 
-  // Récrée le fichier si supprimé pendant le run du serveur.
-  function ensureSessionRunsFile() {
-    // Si le fichier a été supprimé manuellement pendant que le serveur tourne, on remet l'état en mémoire à zéro
-    if (!fs.existsSync(sessionStatesFile)) {
-      sessionRuns = [];
-      fs.writeFileSync(sessionStatesFile, JSON.stringify([], null, 2));
-    }
-  }
-
   // Ajoute un nouveau run pour une session donnée.
   function appendSessionRun(tenantId, sessionId, data = {}) {
     if (!tenantId || !sessionId) return null;
-    // recharge depuis le disque au cas où le fichier aurait été vidé manuellement
     sessionRuns = loadSessionStates();
-    ensureSessionRunsFile();
     const now = Date.now();
     const run = {
       front: data.front || "offline",
@@ -179,15 +223,13 @@ function createPresence({
     };
     const session = ensureTenantSession(tenantId, sessionId);
     session.runs.push(run);
-    saveSessionStates(sessionRuns);
+    saveTenantRuns(tenantId);
     return run;
   }
 
   // Met à jour le dernier run (sans en créer un nouveau).
   function updateLatestRun(tenantId, sessionId, patch = {}) {
-    // recharge depuis le disque au cas où le fichier aurait été vidé manuellement
     sessionRuns = loadSessionStates();
-    ensureSessionRunsFile();
     const session = ensureTenantSession(tenantId, sessionId);
     if (!session.runs || !session.runs.length) {
       // on ne crée pas de run ici : il doit être explicitement démarré via /session-runs
@@ -201,11 +243,11 @@ function createPresence({
       // On ne conserve pas en historique les runs de moins de 2 minutes
       if (duration < minRunDurationMs) {
         session.runs.pop();
-        saveSessionStates(sessionRuns);
+        saveTenantRuns(tenantId);
         return null;
       }
     }
-    saveSessionStates(sessionRuns);
+    saveTenantRuns(tenantId);
     return run;
   }
 
@@ -223,9 +265,8 @@ function createPresence({
       if (!run || !run.tenantId || !run.sessionId) return;
       const key = `${run.tenantId}::${run.sessionId}`;
       const existing = latestBySession.get(key);
-      if (!existing || (run.updatedAt || 0) > (existing.updatedAt || 0)) {
-        latestBySession.set(key, run);
-      }
+      if (existing && (existing.updatedAt || 0) > (run.updatedAt || 0)) return;
+      latestBySession.set(key, run);
     });
     latestBySession.forEach(run => {
       const state = getSessionState(run.tenantId, run.sessionId);
@@ -273,8 +314,6 @@ function createPresence({
   function updatePresence(tenantId, sessionId, role, status) {
     const state = getSessionState(tenantId, sessionId);
     if (!state) return;
-    const prevFront = state.front;
-    const prevGm = state.gm;
     if (role === "front") {
       state.front = status;
       state.lastFrontPing = status === "online" ? Date.now() : state.lastFrontPing || Date.now();
@@ -331,6 +370,7 @@ function createPresence({
             lastGmPing: state.lastGmPing,
             updatedAt: state.updatedAt
           });
+          saveTenantRuns(tenantId);
         }
       });
     });

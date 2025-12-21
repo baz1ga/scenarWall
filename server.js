@@ -6,6 +6,8 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
+// Force le fuseau horaire (par défaut Europe/Paris si non fourni dans l'env avant le démarrage).
+process.env.TZ = process.env.TZ || "Europe/Paris";
 const crypto = require("crypto");
 const session = require("express-session");
 const rateLimit = require("express-rate-limit"); // basic rate limiting for auth/uploads
@@ -197,11 +199,23 @@ const audioUpload = multer({
     return cb(err);
   }
 });
-// Logger simple vers stdout/stderr (compatible PM2).
+// Logger simple vers stdout/stderr (compatible PM2) avec heure locale TZ.
 const logger = {
-  info: (msg, meta) => console.log(JSON.stringify({ level: "info", time: new Date().toISOString(), message: msg, ...meta })),
-  warn: (msg, meta) => console.warn(JSON.stringify({ level: "warn", time: new Date().toISOString(), message: msg, ...meta })),
-  error: (msg, meta) => console.error(JSON.stringify({ level: "error", time: new Date().toISOString(), message: msg, ...meta }))
+  info: (msg, meta) => {
+    const now = new Date();
+    const tz = process.env.TZ || "Europe/Paris";
+    console.log(JSON.stringify({ level: "info", time: now.toISOString(), localTime: now.toLocaleString("fr-FR", { timeZone: tz }), tz, message: msg, ...meta }));
+  },
+  warn: (msg, meta) => {
+    const now = new Date();
+    const tz = process.env.TZ || "Europe/Paris";
+    console.warn(JSON.stringify({ level: "warn", time: now.toISOString(), localTime: now.toLocaleString("fr-FR", { timeZone: tz }), tz, message: msg, ...meta }));
+  },
+  error: (msg, meta) => {
+    const now = new Date();
+    const tz = process.env.TZ || "Europe/Paris";
+    console.error(JSON.stringify({ level: "error", time: now.toISOString(), localTime: now.toLocaleString("fr-FR", { timeZone: tz }), tz, message: msg, ...meta }));
+  }
 };
 
 // Ajoute un identifiant de requête pour le suivi des logs.
@@ -954,30 +968,13 @@ function getGlobalConfig() {
     const defaultQuotaMB = (typeof data.defaultQuotaMB === "number" && data.defaultQuotaMB > 0)
       ? data.defaultQuotaMB
       : DEFAULT_GLOBAL.defaultQuotaMB;
-    // Seul le quota par défaut peut provenir du fichier. Les autres valeurs viennent des env/fallbacks.
     return {
       defaultQuotaMB,
-      //apiBase: ENV_GLOBAL.apiBase !== null ? ENV_GLOBAL.apiBase : null,
-      //pixabayKey: ENV_GLOBAL.pixabayKey !== null ? ENV_GLOBAL.pixabayKey : null,
-      //discordClientId: ENV_GLOBAL.discordClientId !== null ? ENV_GLOBAL.discordClientId : null,
-      //discordClientSecret: ENV_GLOBAL.discordClientSecret !== null ? ENV_GLOBAL.discordClientSecret : null,
-      //discordRedirectUri: ENV_GLOBAL.discordRedirectUri !== null ? ENV_GLOBAL.discordRedirectUri : null,
-      //allowedGuildId: null,
-      //discordScopes: (ENV_GLOBAL.discordScopes && ENV_GLOBAL.discordScopes.length)
-      //  ? ENV_GLOBAL.discordScopes
-      //  : DEFAULT_DISCORD_SCOPES
     };
   } catch (err) {
     logger.error("Failed to read global config, using defaults", { err: err?.message });
     return {
       defaultQuotaMB: DEFAULT_GLOBAL.defaultQuotaMB,
-      //apiBase: ENV_GLOBAL.apiBase !== null ? ENV_GLOBAL.apiBase : null,
-      //pixabayKey: ENV_GLOBAL.pixabayKey !== null ? ENV_GLOBAL.pixabayKey : null,
-      //discordClientId: ENV_GLOBAL.discordClientId !== null ? ENV_GLOBAL.discordClientId : null,
-      //discordClientSecret: ENV_GLOBAL.discordClientSecret !== null ? ENV_GLOBAL.discordClientSecret : null,
-      //discordRedirectUri: ENV_GLOBAL.discordRedirectUri !== null ? ENV_GLOBAL.discordRedirectUri : null,
-      //allowedGuildId: null,
-      //discordScopes: DEFAULT_DISCORD_SCOPES
     };
   }
 }
@@ -1183,8 +1180,8 @@ function attachSessionToScenario(tenantId, sessionPayload, previousScenarioId = 
 //------------------------------------------------------------
 const { wss, broadcastTenant, attachPresence } = initWebsocket({ server, logger });
 const presence = createPresence({
-  sessionStatesFile: SESSION_STATES_FILE,
-  legacySessionStatesFile: LEGACY_SESSION_STATES_FILE,
+  tenantBaseDir: TENANTS_DIR,
+  legacySessionStatesFile: [SESSION_STATES_FILE, LEGACY_SESSION_STATES_FILE],
   logger,
   broadcastTenant
 });

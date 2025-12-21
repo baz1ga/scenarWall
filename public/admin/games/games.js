@@ -27,7 +27,7 @@ export function gamesPage() {
     async fetchStates() {
       this.loading = true;
       try {
-        const res = await fetch("/api/admin/session-states", {
+        const res = await fetch("/api/admin/run-states", {
           headers: this.headersAuth(),
         });
         if (!res.ok) throw new Error("states");
