@@ -157,7 +157,7 @@ export function gmDashboard() {
           await this.selectSession(picked.id, { preferredScene: sceneParam });
         }
       } catch (e) {
-        this.sessionError = e?.message || 'Impossible de charger les sessions';
+        this.sessionError = e?.message || translate('gm.session.loadError', 'Unable to load sessions');
         this.sessions = [];
       } finally {
         this.sessionLoading = false;
@@ -349,7 +349,7 @@ export function gmDashboard() {
           if (this.notesTextarea) this.notesTextarea.value = '';
         }
       } catch (e) {
-        this.sceneError = e?.message || 'Impossible de charger les scènes';
+        this.sceneError = e?.message || translate('gm.scenes.loadError', 'Unable to load scenes');
         this.scenes = [];
         this.selectedSceneId = '';
         this.currentScene = null;
@@ -374,7 +374,7 @@ export function gmDashboard() {
         }
         this.buildSlideshowFromScene();
       } catch (e) {
-        this.slideshowError = e?.message || 'Erreur diaporama';
+        this.slideshowError = e?.message || translate('gm.slideshow.error', 'Slideshow error');
         this.slideshowImages = [];
       } finally {
         this.slideshowLoading = false;
@@ -386,7 +386,7 @@ export function gmDashboard() {
         }
         this.buildPlaylistFromScene();
       } catch (e) {
-        this.playlistError = e?.message || 'Erreur playlist';
+        this.playlistError = e?.message || translate('gm.playlist.error', 'Playlist error');
         this.playlist = [];
       } finally {
         this.playlistLoading = false;
@@ -690,7 +690,9 @@ export function gmDashboard() {
       }
     },
     hourglassButtonLabel() {
-      return this.hourglassRunning ? 'Stop' : 'Lancer';
+      return this.hourglassRunning
+        ? translate('hourglass.stop', '[en] Stop')
+        : translate('hourglass.start', '[en] Start');
     },
     openHourglassModal() {
       this.hourglassDurationTemp = this.hourglassDuration;
@@ -723,7 +725,7 @@ export function gmDashboard() {
       }
     },
     hourglassDisplay() {
-      if (!this.hourglassRunning) return 'Durée';
+      if (!this.hourglassRunning) return translate('hourglass.display', '[en] Duration');
       const ms = Math.max(0, Math.floor(this.hourglassRemainingMs));
       const sec = Math.ceil(ms / 1000);
       const m = Math.floor(sec / 60);
@@ -742,7 +744,7 @@ export function gmDashboard() {
         this.buildSlideshowFromScene();
       } catch (e) {
         this.slideshowImages = [];
-        this.slideshowError = e?.message || 'Erreur de chargement';
+        this.slideshowError = e?.message || translate('gm.slideshow.error', 'Slideshow error');
       }
       this.slideshowLoading = false;
     },
@@ -816,7 +818,7 @@ export function gmDashboard() {
         this.buildPlaylistFromScene();
       } catch (e) {
         this.playlist = [];
-        this.playlistError = e?.message || 'Erreur de chargement';
+        this.playlistError = e?.message || translate('gm.playlist.error', 'Playlist error');
       }
       this.playlistLoading = false;
     },
@@ -981,9 +983,6 @@ export function gmDashboard() {
       }
 
       window.open(`/t/${this.tenantId}/front${sessionParam}`, '_blank');
-    },
-    t(key, fallback) {
-      return translate(this.texts, key, fallback);
     },
     t(key, fallback) {
       return translate(this.texts, key, fallback);

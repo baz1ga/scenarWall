@@ -16,7 +16,7 @@
     <div class="fixed bottom-6 right-6 z-60" x-show="!scenarDeckOpen">
       <button class="inline-flex items-center gap-2 rounded-full bg-indigo-500 text-white px-4 py-2 shadow-lg hover:bg-indigo-400 transition"
               @click="scenarDeckOpen = true">
-        <i class="fa-solid fa-th-large"></i> ScenarDeck
+        <i class="fa-solid fa-th-large"></i> <span x-text="t('scenarDeck', 'ScenarDeck')"></span>
       </button>
     </div>
 
@@ -36,7 +36,7 @@
            x-transition:leave-start="translate-y-0 opacity-100 scale-100"
            x-transition:leave-end="translate-y-8 opacity-0 scale-92">
         <div class="flex items-center justify-between">
-          <h3 class="text-lg font-semibold inline-flex items-center gap-2 text-indigo-600 dark:text-indigo-300"><i class="fa-solid fa-th-large"></i> ScenarDeck</h3>
+          <h3 class="text-lg font-semibold inline-flex items-center gap-2 text-indigo-600 dark:text-indigo-300"><i class="fa-solid fa-th-large"></i> <span x-text="t('scenarDeck', 'ScenarDeck')"></span></h3>
           <button class="text-slate-500 hover:text-slate-800 dark:hover:text-slate-200" @click="scenarDeckOpen = false"><i class="fa-solid fa-minus"></i></button>
         </div>
         <div class="grid grid-cols-3 grid-rows-3 gap-x-3 gap-y-3 justify-items-center">
@@ -50,7 +50,7 @@
               ]"
             >
               <i :class="timerRunning ? 'fa-solid fa-stopwatch text-red-700 text-xl' : 'fa-solid fa-stopwatch text-xl text-indigo-600'" ></i>
-              <span class="text-[12px]" x-text="timerRunning ? 'Stop' : 'Timer'"></span>
+              <span class="text-[12px]" x-text="timerRunning ? t('timer.stop', 'Stop') : t('timer.start', 'Timer')"></span>
             </button>
             <button
               class="h-[72px] w-[72px] inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-lg font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
@@ -66,7 +66,7 @@
               @click="resetTimer()"
             >
               <i class="fa-solid fa-stopwatch-20 text-xl"></i>
-              <span class="text-[12px]">Reset</span>
+              <span class="text-[12px]" x-text="t('timer.reset', 'Reset')"></span>
             </button>
             <button
               class="h-[72px] w-[72px] inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
@@ -74,7 +74,7 @@
               :disabled="slideshowImages.length === 0"
             >
               <i class="fa-solid fa-chevron-left text-xl"></i>
-              <span class="text-[12px]">Slide -</span>
+              <span class="text-[12px]" x-text="t('slide.prev', 'Slide -')"></span>
             </button>
             <button
               class="h-[72px] w-[72px] inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-lg font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
@@ -91,7 +91,7 @@
               :disabled="slideshowImages.length === 0"
             >
               <i class="fa-solid fa-chevron-right text-xl"></i>
-              <span class="text-[12px]">Slide +</span>
+              <span class="text-[12px]" x-text="t('slide.next', 'Slide +')"></span>
             </button>
             <button
               class="h-[72px] w-[72px] inline-flex flex-col items-center justify-center gap-1 rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
@@ -118,7 +118,7 @@
               :class="!frontOnline ? 'opacity-50 cursor-not-allowed' : ''"
             >
               <i class="fa-solid text-indigo-500" :class="hourglassVisible ? 'fa-hourglass-half' : 'fa-hourglass'"></i>
-              <span class="text-[12px] text-indigo-500" x-text="hourglassVisible ? 'Masquer' : 'Afficher'"></span>
+              <span class="text-[12px] text-indigo-500" x-text="hourglassVisible ? t('hourglass.toggle.hide', 'Masquer') : t('hourglass.toggle.show', 'Afficher')"></span>
             </button>
           </div>
         </div>
@@ -138,7 +138,7 @@
         <template x-if="scenarioTitle">
           <span class="text-slate-400">›</span>
         </template>
-        <span x-text="currentSession?.title || selectedSessionId || 'Session'"></span>
+        <span x-text="currentSession?.title || selectedSessionId || t('header.sessionFallback', 'Session')"></span>
       </h1>
       <div class="flex items-center gap-3">
         <div class="inline-flex items-center gap-3 px-4 py-2 rounded-lg border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-950 text-base font-mono font-semibold shadow-sm"
@@ -152,7 +152,7 @@
               :disabled="frontOnline"
               x-show="selectedSessionId">
         <i class="fa-solid fa-film"></i>
-        <span>Présenter</span>
+        <span x-text="t('header.present', 'Présenter')"></span>
         <span class="inline-flex items-center">
           <span class="h-2.5 w-2.5 rounded-full" :class="frontOnline ? 'bg-rose-500' : 'bg-emerald-500'"></span>
         </span>
@@ -165,7 +165,7 @@
       <div class="rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-4 shadow-sm space-y-3 w-full">
         <div class="flex items-center gap-2">
           <i class="fa-solid fa-clapperboard text-indigo-500"></i>
-          <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100 leading-none mt-1">Scènes</h3>
+          <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100 leading-none mt-1" x-text="t('scenes.title', 'Scènes')"></h3>
         </div>
         <!-- Vue simple si <=5 scènes -->
         <div class="flex flex-wrap gap-3 w-full" x-show="scenes.length <= 5">
@@ -185,7 +185,7 @@
                     <div class="px-2 py-0.5 rounded-bl-lg bg-slate-900/80 text-white text-[11px] font-semibold shadow-sm pointer-events-none leading-none absolute top-0 right-0">#<span x-text="scene.order || index + 1"></span></div>
                     <div class="flex-1 pr-9">
                       <div class="w-full text-left font-semibold leading-tight whitespace-normal">
-                        <span class="block" x-text="scene.title || 'Scène'"></span>
+                        <span class="block" x-text="scene.title || t('scenes.untitled', 'Scène')"></span>
           </div>
         </div>
       </div>
@@ -227,7 +227,7 @@
                           <div class="px-2 py-0.5 rounded-bl-lg bg-slate-900/80 text-white text-[11px] font-semibold shadow-sm pointer-events-none leading-none absolute top-0 right-0">#<span x-text="scene.order || index + 1"></span></div>
                           <div class="flex-1 pr-9">
                             <div class="w-full text-left font-semibold leading-tight whitespace-normal">
-                              <span class="block" x-text="scene.title || 'Scène'"></span>
+                              <span class="block" x-text="scene.title || t('scenes.untitled', 'Scène')"></span>
                             </div>
                           </div>
                         </div>
@@ -260,8 +260,8 @@
         <!-- Notes de la scène -->
         <div class="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-3 shadow-sm space-y-3 notes-editor"
              x-init="initNotesEditor($refs.notesEditor)">
-            <h2 class="text-xl font-semibold inline-flex items-center gap-2 pl-2 inline"><i class="fa-solid fa-note-sticky text-indigo-500"></i> Notes de la scène</h2>
-            <textarea x-ref="notesEditor" placeholder="Vos notes pour cette scène..." class="w-full"></textarea>
+            <h2 class="text-xl font-semibold inline-flex items-center gap-2 pl-2 inline"><i class="fa-solid fa-note-sticky text-indigo-500"></i> <span x-text="t('notes.title', 'Notes de la scène')"></span></h2>
+            <textarea x-ref="notesEditor" :placeholder="t('notes.placeholder', 'Vos notes pour cette scène...')" class="w-full"></textarea>
         </div>
         <div>
           <!-- Tension -->
@@ -269,7 +269,7 @@
             <div class="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 px-4 py-2 shadow-sm transition h-[62px] flex items-center"
                  :style="selectedTension ? `background:${tensionLevels.find(l=>l.key===selectedTension)?.color || ''}22; border-color:${tensionLevels.find(l=>l.key===selectedTension)?.color || ''}` : ''">
               <div class="flex flex-wrap items-center gap-3">
-                <h3 class="text-lg font-semibold inline-flex items-center gap-2"><i class="fa-solid fa-bolt text-indigo-500"></i> Tension</h3>
+                <h3 class="text-lg font-semibold inline-flex items-center gap-2"><i class="fa-solid fa-bolt text-indigo-500"></i> <span x-text="t('tension.title', 'Tension')"></span></h3>
                 <div class="flex flex-wrap items-center gap-2">
                   <template x-for="level in tensionLevels" :key="level.key">
                     <div
@@ -289,16 +289,16 @@
           <!-- Diaporama -->
           <div class="mt-3 rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-4 shadow-sm space-y-2 h-[195px] overflow-hidden">
             <div class="flex items-center justify-between gap-2">
-              <h3 class="text-lg font-semibold inline-flex items-center gap-2"><i class="fa-solid fa-image text-indigo-500"></i> Diaporama</h3>
+              <h3 class="text-lg font-semibold inline-flex items-center gap-2"><i class="fa-solid fa-image text-indigo-500"></i> <span x-text="t('slideshow.title', 'Diaporama')"></span></h3>
             </div>
             <template x-if="slideshowLoading">
-              <p class="text-sm text-slate-500 dark:text-slate-200">Chargement des images...</p>
+              <p class="text-sm text-slate-500 dark:text-slate-200" x-text="t('slideshow.loading', 'Chargement des images...')"></p>
             </template>
             <template x-if="slideshowError">
               <p class="text-sm text-rose-500" x-text="slideshowError"></p>
             </template>
             <template x-if="!slideshowLoading && slideshowImages.length === 0 && !slideshowError && !hasNextScene">
-              <p class="text-sm text-slate-500 dark:text-slate-200">Aucune image disponible.</p>
+              <p class="text-sm text-slate-500 dark:text-slate-200" x-text="t('slideshow.empty', 'Aucune image disponible.')"></p>
             </template>
             <template x-if="!slideshowLoading && slideshowImages.length === 0 && hasNextScene && !slideshowError">
               <div class="grid grid-cols-3 gap-3 items-center h-[120px]">
@@ -306,9 +306,9 @@
                 <div class="flex flex-col justify-center">
                   <div class="relative rounded-lg border border-indigo-400 dark:border-indigo-500 overflow-hidden bg-gradient-to-br from-indigo-600 to-indigo-700 text-white cursor-pointer max-h-[80px] min-h-[80px] w-[185px] px-3"
                        @click="nextSlide()"
-                       title="Passer à la scène suivante">
+                       :title="t('slideshow.nextScene', 'Passer à la scène suivante')">
                     <div class="h-full w-full flex flex-col items-center justify-center text-center leading-tight font-semibold">
-                      <div class="text-[17px] pt-[23px]">Passer à la scène suivante</div>
+                      <div class="text-[17px] pt-[23px]" x-text="t('slideshow.nextScene', 'Passer à la scène suivante')"></div>
                     </div>
                   </div>
                 </div>
@@ -320,8 +320,8 @@
                 <template x-if="prevSlideObj()">
                   <div class="relative rounded-lg border border-slate-200 dark:border-gray-800 overflow-hidden bg-slate-100 dark:bg-slate-800 opacity-80 cursor-pointer max-h-[90px]"
                        @click="prevSlide()"
-                       title="Aller à l'image précédente">
-                    <img class="w-full h-full object-cover" :src="prevSlideObj().displayUrl || prevSlideObj().url" :alt="prevSlideObj().name || 'Image précédente'">
+                       :title="t('slideshow.prevImage', `Aller à l'image précédente`)">
+                    <img class="w-full h-full object-cover" :src="prevSlideObj().displayUrl || prevSlideObj().url" :alt="prevSlideObj().name || t('slideshow.prevAlt', 'Image précédente')">
                     <template x-if="prevSlideObj()?.order">
                       <div class="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-white/80 text-[11px] font-semibold text-slate-700 shadow-sm">#<span x-text="prevSlideObj().order"></span></div>
                     </template>
@@ -331,7 +331,7 @@
               <div class="flex flex-col justify-center transform scale-[1.03]">
                 <template x-if="currentSlide()">
                   <div class="relative rounded-lg border-2 border-indigo-400 dark:border-indigo-500 overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-lg max-h-[120px]">
-                    <img class="w-full h-full object-cover" :src="currentSlide().displayUrl || currentSlide().url" :alt="currentSlide().name || 'Image actuelle'">
+                    <img class="w-full h-full object-cover" :src="currentSlide().displayUrl || currentSlide().url" :alt="currentSlide().name || t('slideshow.currentAlt', 'Image actuelle')">
                     <template x-if="currentSlide()?.order">
                       <div class="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-white/80 text-[11px] font-semibold text-slate-700 shadow-sm">#<span x-text="currentSlide().order"></span></div>
                     </template>
@@ -342,8 +342,8 @@
                 <template x-if="nextSlideObj()">
                   <div class="relative rounded-lg border border-slate-200 dark:border-gray-800 overflow-hidden bg-slate-100 dark:bg-slate-800 opacity-80 cursor-pointer max-h-[90px]"
                        @click="nextSlide()"
-                       title="Aller à l'image suivante">
-                    <img class="w-full h-full object-cover" :src="nextSlideObj().displayUrl || nextSlideObj().url" :alt="nextSlideObj().name || 'Image suivante'">
+                       :title="t('slideshow.nextImage', `Aller à l'image suivante`)">
+                    <img class="w-full h-full object-cover" :src="nextSlideObj().displayUrl || nextSlideObj().url" :alt="nextSlideObj().name || t('slideshow.nextAlt', 'Image suivante')">
                     <template x-if="nextSlideObj()?.order">
                       <div class="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-white/80 text-[11px] font-semibold text-slate-700 shadow-sm">#<span x-text="nextSlideObj().order"></span></div>
                     </template>
@@ -352,10 +352,10 @@
                 <template x-if="!nextSlideObj() && hasNextScene">
                   <div class="relative rounded-lg border border-indigo-400 dark:border-indigo-500 overflow-hidden bg-gradient-to-br from-indigo-600 to-indigo-700 text-white opacity-90 cursor-pointer max-h-[80px] min-h-[80px] w-[185px] px-3"
                        @click="nextSlide()"
-                       title="Passer à la scène suivante">
+                       :title="t('slideshow.nextScene', 'Passer à la scène suivante')">
                     <div class="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-white/90 text-[11px] font-semibold text-indigo-700 shadow-sm">#<span x-text="(slideshowImages?.length || 0) + 1"></span></div>
                     <div class=" h-full w-full flex flex-col items-center justify-center text-center leading-tight font-semibold">
-                      <div class="text-[17px] pt-[23px]">Passer à la scène suivante</div>
+                      <div class="text-[17px] pt-[23px]" x-text="t('slideshow.nextScene', 'Passer à la scène suivante')"></div>
                     </div>
                   </div>
                 </template>
@@ -364,12 +364,12 @@
           </div>
           <!-- Playlist -->
           <div class="mt-3 rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 px-4 pt-4 pb-2 shadow-sm h-[325px]">
-            <h3 class="text-lg font-semibold mb-1 inline-flex items-center gap-2"><i class="fa-solid fa-music text-indigo-500"></i> Playlist</h3>
+            <h3 class="text-lg font-semibold mb-1 inline-flex items-center gap-2"><i class="fa-solid fa-music text-indigo-500"></i> <span x-text="t('playlist.title', 'Playlist')"></span></h3>
             <template x-if="playlistLoading">
-              <p class="text-sm text-slate-500 dark:text-slate-200">Chargement...</p>
+              <p class="text-sm text-slate-500 dark:text-slate-200" x-text="t('playlist.loading', 'Chargement...')"></p>
             </template>
             <template x-if="!playlistLoading && playlist.length === 0 && !playlistError">
-              <p class="text-sm text-slate-500 dark:text-slate-200">Aucun fichier audio.</p>
+              <p class="text-sm text-slate-500 dark:text-slate-200" x-text="t('playlist.empty', 'Aucun fichier audio.')"></p>
             </template>
             <template x-if="playlistError">
               <p class="text-sm text-rose-500" x-text="playlistError"></p>
@@ -394,7 +394,7 @@
   <div x-cloak x-show="hourglassModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
     <div class="bg-white dark:bg-gray-950 rounded-xl shadow-2xl border border-slate-200 dark:border-gray-800 w-full max-w-sm p-5 space-y-4">
       <div class="flex items-center justify-between">
-        <h3 class="text-lg font-semibold inline-flex items-center gap-2"><i class="fa-solid fa-hourglass-half text-indigo-500"></i> Durée du sablier</h3>
+        <h3 class="text-lg font-semibold inline-flex items-center gap-2"><i class="fa-solid fa-hourglass-half text-indigo-500"></i> <span x-text="t('hourglass.modalTitle', 'Durée du sablier')"></span></h3>
         <button class="text-slate-500 hover:text-slate-800 dark:hover:text-slate-200" @click="closeHourglassModal()"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="space-y-2">    
@@ -410,12 +410,12 @@
         </div>
       </div>
       <div class="space-y-2">
-        <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">Durée (slider, max 30min)</label>
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-200" x-text="t('hourglass.sliderLabel', 'Durée (curseur, max 30min)')"></label>
         <input type="range" min="30" max="1800" step="5" x-model.number="hourglassDurationTemp" class="w-full">
         <div class="flex items-center justify-between text-sm text-slate-600 dark:text-slate-300">
-          <span>30s</span>
+          <span x-text="t('hourglass.minLabel', '30s')"></span>
           <span x-text="`${Math.floor(hourglassDurationTemp/60)}m ${Math.round(hourglassDurationTemp%60)}s`"></span>
-          <span>30min</span>
+          <span x-text="t('hourglass.maxLabel', '30min')"></span>
         </div>
       </div>
       <div class="flex items-center gap-2 pt-1">
@@ -426,14 +426,14 @@
             <div class="absolute top-[3px] left-[3px] h-4 w-4 bg-white rounded-full shadow-sm transition"
                  :style="hourglassShowTimer ? 'transform: translateX(20px);' : 'transform: translateX(0);'"></div>
           </div>
-          <span class="ml-3 text-sm font-medium text-slate-700 dark:text-slate-200">Afficher la durée</span>
+          <span class="ml-3 text-sm font-medium text-slate-700 dark:text-slate-200" x-text="t('hourglass.showTimerLabel', 'Afficher la durée')"></span>
         </label>
       </div>
       <div class="flex justify-end gap-2 pt-2">
         <button class="px-4 py-2 rounded-lg border border-slate-300 dark:border-gray-700 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
-                @click="closeHourglassModal()">Annuler</button>
+                @click="closeHourglassModal()" x-text="t('common.cancel', 'Annuler')"></button>
         <button class="px-4 py-2 rounded-lg bg-indigo-500 text-white text-sm font-semibold hover:bg-indigo-400"
-                @click="applyHourglassDuration()">Valider</button>
+                @click="applyHourglassDuration()" x-text="t('common.confirm', 'Valider')"></button>
       </div>
     </div>
   </div>
@@ -448,13 +448,13 @@
             <i class="fa-solid fa-triangle-exclamation"></i>
           </div>
           <div class="space-y-1">
-            <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Quitter le mode Game Master ?</h2>
-            <p class="text-sm text-slate-600 dark:text-slate-200">Vous allez retourner sur la page de la session.</p>
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100" x-text="t('leave.title', 'Quitter le mode Game Master ?')"></h2>
+            <p class="text-sm text-slate-600 dark:text-slate-200" x-text="t('leave.body', 'Vous allez retourner sur la page de la session.')"></p>
           </div>
         </div>
         <div class="flex items-center justify-end gap-2">
-          <button class="px-4 py-2 rounded-lg border border-slate-200 dark:border-gray-700 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition" @click="cancelLeave()">Annuler</button>
-          <button class="px-4 py-2 rounded-lg bg-indigo-500 text-white text-sm font-semibold hover:bg-indigo-400 transition" @click="proceedLeave()">Continuer</button>
+          <button class="px-4 py-2 rounded-lg border border-slate-200 dark:border-gray-700 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition" @click="cancelLeave()" x-text="t('leave.cancel', 'Annuler')"></button>
+          <button class="px-4 py-2 rounded-lg bg-indigo-500 text-white text-sm font-semibold hover:bg-indigo-400 transition" @click="proceedLeave()" x-text="t('leave.proceed', 'Continuer')"></button>
         </div>
       </div>
     </div>
