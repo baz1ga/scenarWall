@@ -56,7 +56,7 @@ function registerScenarioRoutes({
       const scene = {
         id: `scene_${Date.now()}`,
         tenantId,
-        title: "Scène 1",
+        title: "Scene 1",
         parentSession: parentId,
         order: 1,
         images: [],
@@ -111,7 +111,7 @@ function registerScenarioRoutes({
       res.json(list);
     } catch (err) {
       logger.error("List scenarios failed", { tenantId, err: err?.message });
-      res.status(500).json({ error: "Impossible de lister les scénarios" });
+      res.status(500).json({ error: "Unable to list scenarios" });
     }
   });
 
@@ -134,7 +134,7 @@ function registerScenarioRoutes({
       return res.status(403).json({ error: "Forbidden tenant" });
     }
     const payload = sanitizeScenarioInput({ ...req.body, tenantId });
-    if (!payload.title) return res.status(400).json({ error: "Titre requis" });
+    if (!payload.title) return res.status(400).json({ error: "Title is required" });
     const stored = ensureDefaultSessionForScenario(tenantId, payload);
     writeScenario(tenantId, stored);
     res.status(201).json(stored);

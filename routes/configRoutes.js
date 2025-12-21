@@ -69,6 +69,26 @@ function registerConfigRoutes({
       usage: Number((usageBytes / 1024 / 1024).toFixed(2))
     });
   });
+
+  // Met à jour la langue du tenant.
+  app.put("/api/:tenantId/config/lang", requireLogin, (req, res) => {
+    const tenantId = req.params.tenantId;
+    const { lang } = req.body || {};
+
+    if (tenantId !== req.session.user.tenantId) {
+      return res.status(403).json({ error: "Forbidden tenant" });
+    }
+
+    const normalized = typeof lang === "string" ? lang.trim().toLowerCase() : "";
+    if (!["en", "fr"].includes(normalized)) {
+      return res.status(400).json({ error: "Invalid lang" });
+    }
+
+    const config = loadConfig(tenantId);
+    config.lang = normalized;
+    saveConfig(tenantId, config);
+    res.json({ success: true, lang: normalized });
+  });
 }
 
 module.exports = {

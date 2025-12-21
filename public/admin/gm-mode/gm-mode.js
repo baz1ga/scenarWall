@@ -1,4 +1,5 @@
 import { coreSection } from '/admin/js/core.js';
+import { loadLocale, t as translate } from '/admin/js/i18n.js';
 
 export function gmDashboard() {
   const base = coreSection();
@@ -51,6 +52,8 @@ export function gmDashboard() {
     hourglassVisible: false,
     hourglassShowTimer: false,
     scenarDeckOpen: false,
+    lang: (localStorage.getItem("lang") || (navigator.language || "fr").slice(0, 2) || "fr").toLowerCase(),
+    texts: {},
     socket: null,
     socketTimer: null,
     _tensionAudio: null,
@@ -824,6 +827,7 @@ export function gmDashboard() {
       }
       this.section = 'gm';
       this.breadcrumb = 'Game Master';
+      this.texts = await loadLocale(this.lang, "gm-mode");
       await Promise.all([this.loadTenantImages(), this.loadTenantAudio()]);
       await this.fetchSessionsAndSelect();
     },
@@ -977,6 +981,12 @@ export function gmDashboard() {
       }
 
       window.open(`/t/${this.tenantId}/front${sessionParam}`, '_blank');
+    },
+    t(key, fallback) {
+      return translate(this.texts, key, fallback);
+    },
+    t(key, fallback) {
+      return translate(this.texts, key, fallback);
     },
 
     async playTension(levelKey) {

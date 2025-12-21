@@ -65,9 +65,9 @@ function registerAudioRoutes({
     limiterUpload(req, res, () => {
       audioUpload.single("audio")(req, res, err => {
         if (err) {
-          if (err.code === "LIMIT_FILE_SIZE") return res.status(400).json({ error: "Fichier trop volumineux (1 Mo max)" });
-          if (err.code === "INVALID_AUDIO") return res.status(400).json({ error: "Format audio non supporté" });
-          return res.status(400).json({ error: "Échec de l'upload audio" });
+          if (err.code === "LIMIT_FILE_SIZE") return res.status(400).json({ error: "File too large (1 MB max)" });
+          if (err.code === "INVALID_AUDIO") return res.status(400).json({ error: "Unsupported audio format" });
+          return res.status(400).json({ error: "Audio upload failed" });
         }
         if (!req.file) return res.status(400).json({ error: "No file uploaded" });
 
@@ -133,7 +133,7 @@ function registerAudioRoutes({
     const dest = path.join(dir, newName);
 
     if (!fs.existsSync(src)) return res.status(404).json({ error: "Not found" });
-    if (fs.existsSync(dest)) return res.status(400).json({ error: "Le nom existe déjà" });
+    if (fs.existsSync(dest)) return res.status(400).json({ error: "Name already exists" });
 
     try {
       fs.renameSync(src, dest);

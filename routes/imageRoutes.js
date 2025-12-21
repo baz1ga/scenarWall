@@ -100,9 +100,9 @@ function registerImageRoutes({
     limiterUpload(req, res, () => {
       uploadHandler.single("image")(req, res, async err => {
         if (err) {
-          if (err.code === "LIMIT_FILE_SIZE") return res.status(400).json({ error: "Image trop volumineuse (6 Mo max)" });
-          if (err.code === "INVALID_IMAGE") return res.status(400).json({ error: "Format d'image non supporté" });
-          return res.status(400).json({ error: "Échec de l'upload image" });
+          if (err.code === "LIMIT_FILE_SIZE") return res.status(400).json({ error: "Image too large (6 MB max)" });
+          if (err.code === "INVALID_IMAGE") return res.status(400).json({ error: "Unsupported image format" });
+          return res.status(400).json({ error: "Image upload failed" });
         }
 
         if (!req.file) {

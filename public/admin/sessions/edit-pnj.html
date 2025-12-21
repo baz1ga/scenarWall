@@ -2,7 +2,7 @@
   <template x-if="loading">
     <div class="justify-center max-w-4xl mx-auto rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-6 shadow-sm flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
       <div class="h-5 w-5 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
-      Chargement de la page
+      <span x-text="t('loading', 'Chargement de la page')"></span>
     </div>
   </template>
   <template x-if="error">
@@ -16,14 +16,14 @@
             <i class="fa-solid fa-user-ninja text-lg"></i>
           </span>
           <div>
-            <h1 class="text-2xl font-semibold audio-text">PNJ</h1>
-            <p class="text-sm text-slate-500 dark:text-slate-200">Pour gérer les PNJ de la session</p>
+            <h1 class="text-2xl font-semibold audio-text" x-text="t('pnj.title', 'PNJ')"></h1>
+            <p class="text-sm text-slate-500 dark:text-slate-200" x-text="t('pnj.subtitle', 'Pour gérer les PNJ de la session')"></p>
           </div>
         </div>
       </div>      
       <div class="space-y-4 max-w-4xl mx-auto">
         <div class="rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-6 shadow-sm space-y-4">
-          (bientôt)
+          <span x-text="t('pnj.soon', '(bientôt)')"></span>
         </div>
       </div>
     </section>

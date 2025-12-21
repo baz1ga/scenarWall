@@ -1,0 +1,19 @@
+{
+  "loading": "Chargement de la page",
+  "title": "Notes",
+  "subtitle": "Consultez et gérez l’ensemble des notes par scénario et session.",
+  "none": "Aucune note",
+  "unlinked": "Non liées",
+  "actions": {
+    "edit": "Éditer",
+    "delete": "Supprimer",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer"
+  },
+  "modals": {
+    "editTitle": "Éditer la note",
+    "deleteTitle": "Supprimer la note",
+    "deleteConfirm": "Confirmer la suppression de la note {name} ?"
+  }
+}

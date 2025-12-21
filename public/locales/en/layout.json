@@ -1,0 +1,42 @@
+{
+  "nav": {
+    "library": "[en] Library",
+    "admin": "[en] Administration",
+    "scenarios": "[en] Scenarios",
+    "gallery": "[en] Gallery",
+    "audio": "[en] Audio",
+    "tension": "[en] Tension",
+    "quotas": "[en] Quotas",
+    "notes": "[en] Notes",
+    "games": "[en] Played games",
+    "users": "[en] Users"
+  },
+  "donation": {
+    "cta": "[en] A little help for hosting and 🍺",
+    "button": "[en] Support us"
+  },
+  "feedback": {
+    "cta": "[en] 🎲 Want to improve .ScenarWall. ?"
+  },
+  "sidebar": {
+    "expand": "[en] Expand sidebar",
+    "collapse": "[en] Collapse sidebar",
+    "expandShort": "[en] Expand",
+    "collapseShort": "[en] Collapse"
+  },
+  "userMenu": {
+    "loggedAs": "[en] Logged as",
+    "quota": "[en] Quota",
+    "theme": {
+      "light": "[en] Light mode",
+      "dark": "[en] Dark mode"
+    },
+    "roadmap": "[en] Roadmap .ScenarWall.",
+    "logout": "[en] Logout"
+  },
+  "layoutLoader": {
+    "layoutError": "[en] Unable to load admin layout",
+    "placeholderError": "[en] Admin layout: placeholder {{CONTENT}} not found",
+    "fragmentError": "[en] Unable to load fragment"
+  }
+}

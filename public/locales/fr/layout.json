@@ -1,0 +1,42 @@
+{
+  "nav": {
+    "library": "Bibliothèque",
+    "admin": "Administration",
+    "scenarios": "Scénarios",
+    "gallery": "Galerie",
+    "audio": "Audio",
+    "tension": "Tension",
+    "quotas": "Quotas",
+    "notes": "Notes",
+    "games": "Parties jouées",
+    "users": "Utilisateurs"
+  },
+  "donation": {
+    "cta": "Un coup de pouce pour l'hébergement et la 🍺",
+    "button": "Soutenez-nous"
+  },
+  "feedback": {
+    "cta": "🎲 Envie d'améliorer .ScenarWall. ?"
+  },
+  "sidebar": {
+    "expand": "Déplier la barre latérale",
+    "collapse": "Réduire la barre latérale",
+    "expandShort": "Déplier",
+    "collapseShort": "Réduire"
+  },
+  "userMenu": {
+    "loggedAs": "Connecté en tant que",
+    "quota": "Quota",
+    "theme": {
+      "light": "Mode clair",
+      "dark": "Mode sombre"
+    },
+    "roadmap": "Roadmap .ScenarWall.",
+    "logout": "Logout"
+  },
+  "layoutLoader": {
+    "layoutError": "Impossible de charger le layout admin",
+    "placeholderError": "Layout admin: placeholder {{CONTENT}} introuvable",
+    "fragmentError": "Impossible de charger le fragment"
+  }
+}

@@ -16,11 +16,11 @@ function registerAuthRoutes({
 }) {
   // SIGNUP / LOGIN fallback
   app.post("/api/signup", async (req, res) => {
-    return res.status(403).json({ error: "La création de compte se fait uniquement via Discord." });
+    return res.status(403).json({ error: "Account creation is only available via Discord." });
   });
 
   app.post("/api/login", async (req, res) => {
-    return res.status(403).json({ error: "Authentification par email/mot de passe désactivée. Utilisez Discord." });
+    return res.status(403).json({ error: "Email/password authentication is disabled. Please use Discord." });
   });
 
   // DISCORD OAUTH2 (login + callback)
@@ -30,7 +30,7 @@ function registerAuthRoutes({
     const { discordClientId, discordScopes } = config;
     const discordRedirectUri = resolveDiscordRedirectUri(req);
     if (!discordClientId || !discordRedirectUri) {
-      return res.status(503).json({ error: "Discord OAuth non configuré" });
+      return res.status(503).json({ error: "Discord OAuth is not configured" });
     }
     const scopes = Array.isArray(discordScopes) && discordScopes.length ? [...discordScopes] : [...DEFAULT_DISCORD_SCOPES];
     const scope = scopes.join(" ");
@@ -53,10 +53,10 @@ function registerAuthRoutes({
     const { code, state } = req.query;
 
     if (!discordClientId || !discordClientSecret || !discordRedirectUri) {
-      return res.status(503).send("Discord OAuth non configuré");
+      return res.status(503).send("Discord OAuth is not configured");
     }
     if (!code || !state || !req.session || state !== req.session.oauthState) {
-      return res.status(400).send("State ou code invalide");
+      return res.status(400).send("Invalid state or code");
     }
     delete req.session.oauthState;
 
@@ -76,7 +76,7 @@ function registerAuthRoutes({
       const tokenData = await tokenRes.json();
       if (!tokenRes.ok || !tokenData.access_token) {
         logger.error("Discord token error", { reqId: req.id, data: tokenData });
-        return res.status(400).send("Echec OAuth Discord");
+        return res.status(400).send("Discord OAuth failed");
       }
 
       const userRes = await fetch("https://discord.com/api/users/@me", {
@@ -85,7 +85,7 @@ function registerAuthRoutes({
       const userData = await userRes.json();
       if (!userRes.ok || !userData.id) {
         logger.error("Discord user error", { reqId: req.id, data: userData });
-        return res.status(400).send("Impossible de récupérer le compte Discord");
+        return res.status(400).send("Unable to fetch Discord account");
       }
 
       const discordId = userData.id;
@@ -152,7 +152,7 @@ function registerAuthRoutes({
       </script></body></html>`);
     } catch (err) {
       logger.error("Discord OAuth error", { reqId: req.id, err: err?.message, stack: err?.stack });
-      res.status(500).send("Erreur OAuth Discord");
+      res.status(500).send("Discord OAuth error");
     }
   });
 }

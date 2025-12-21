@@ -1,0 +1,57 @@
+{
+  "loading": "[en] Loading page",
+  "title": "[en] Users",
+  "subtitle": "[en] Manage quotas and usage per tenant.",
+  "totalUsage": "[en] Total usage",
+  "units": {
+    "mo": "[en] MB"
+  },
+  "usage": {
+    "custom": "[en] custom",
+    "undefinedQuota": "[en] quota not set"
+  },
+  "globalQuota": {
+    "label": "[en] Default global quota (MB)",
+    "updateButton": "[en] Update",
+    "loadError": "[en] Unable to load global quota.",
+    "invalid": "[en] Enter a valid value (>0).",
+    "success": "[en] Global quota updated.",
+    "updateError": "[en] Update failed."
+  },
+  "confirm": {
+    "title": "[en] Confirmation",
+    "deleteUser": "[en] Delete this account permanently?",
+    "cta": "[en] Confirm"
+  },
+  "actions": {
+    "editQuota": "[en] Custom quota",
+    "delete": "[en] Delete"
+  },
+  "table": {
+    "loading": "[en] Loading...",
+    "empty": "[en] No users",
+    "columns": {
+      "name": "[en] Name",
+      "tenant": "[en] Tenant",
+      "images": "[en] Images",
+      "audio": "[en] Audio",
+      "usage": "[en] Usage",
+      "lastLogin": "[en] Last login",
+      "actions": "[en] Actions"
+    }
+  },
+  "tenantQuota": {
+    "title": "[en] Custom quota",
+    "desc": "[en] Set a quota (MB) for",
+    "fallbackUser": "[en] this user",
+    "clear": "[en] Leave empty to apply the global quota.",
+    "label": "[en] Quota (MB)",
+    "placeholder": "[en] Global quota",
+    "invalid": "[en] Enter a positive number or leave empty for global quota.",
+    "updateError": "[en] Unable to update quota."
+  },
+  "common": {
+    "cancel": "[en] Cancel",
+    "save": "[en] Save"
+  }
+}

@@ -1,4 +1,5 @@
 import { DEFAULT_SCENARIO_ICON } from './icon-picker-utils.js';
+import { loadLocale, t as translate } from './i18n.js';
 
 export function coreSection() {
   return {
@@ -18,6 +19,8 @@ export function coreSection() {
     quotaDisplay: '—',
     quotaPercent: 0,
     zoomUrl: '',
+    lang: (localStorage.getItem('lang') || (navigator.language || 'fr').slice(0, 2) || 'fr').toLowerCase(),
+    texts: {},
     confirmModal: {
       open: false,
       message: '',
@@ -31,6 +34,9 @@ export function coreSection() {
       if (window.API_READY && typeof window.API_READY.then === 'function') {
         try { await window.API_READY; } catch (e) {}
       }
+      await this.fetchTenantConfigLang();
+      this.texts = await loadLocale(this.lang, 'layout');
+      try { document.documentElement.setAttribute('lang', this.lang); } catch (_) {}
       if (window.PIXABAY_KEY) {
         this.pixabayKey = window.PIXABAY_KEY;
       }
@@ -196,12 +202,61 @@ export function coreSection() {
       document.documentElement.classList.toggle('dark', this.theme === 'dark');
     },
 
+    t(key, fallback = '') {
+      return translate(this.texts, key, fallback);
+    },
+
     setBreadcrumb() {
       const map = {
-        galerie: 'Galerie', audio: 'Audio', tension: 'Tension', users: 'Utilisateurs', quotas: 'Quotas', scenarios: 'Scénarios'
+        galerie: this.t('nav.gallery', 'Galerie'),
+        audio: this.t('nav.audio', 'Audio'),
+        tension: this.t('nav.tension', 'Tension'),
+        users: this.t('nav.users', 'Utilisateurs'),
+        quotas: this.t('nav.quotas', 'Quotas'),
+        scenarios: this.t('nav.scenarios', 'Scénarios'),
+        admin: this.t('nav.admin', 'Administration')
       };
-      this.breadcrumb = 'Administration / ' + (map[this.section] || '');
-      this.title = map[this.section] || 'Administration';
+      const adminLabel = this.t('nav.admin', 'Administration');
+      this.breadcrumb = `${adminLabel} / ${map[this.section] || ''}`;
+      this.title = map[this.section] || adminLabel;
+    },
+
+    async saveTenantLang(lang) {
+      if (!this.tenantId) return;
+      try {
+        await fetch(`${this.API}/api/${this.tenantId}/config/lang`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', ...this.headersAuth() },
+          body: JSON.stringify({ lang })
+        });
+      } catch (_) {
+        // silent
+      }
+    },
+
+    async setLanguage(lang) {
+      const normalized = (lang || '').toLowerCase();
+      if (!normalized) return;
+      this.lang = normalized;
+      try { localStorage.setItem('lang', normalized); } catch (_) {}
+      await this.saveTenantLang(normalized);
+      try { document.documentElement.setAttribute('lang', normalized); } catch (_) {}
+      try { window.location.reload(); } catch (_) {}
+    },
+
+    async fetchTenantConfigLang() {
+      if (!this.tenantId) return;
+      try {
+        const res = await fetch(`${this.API}/api/${this.tenantId}/config`, { headers: this.headersAuth() });
+        if (!res.ok) return;
+        const cfg = await res.json();
+        if (cfg && typeof cfg.lang === 'string' && cfg.lang.trim()) {
+          this.lang = cfg.lang.trim().toLowerCase();
+          try { localStorage.setItem('lang', this.lang); } catch (_) {}
+        }
+      } catch (_) {
+        // silent
+      }
     },
 
     askConfirm(message, action) {

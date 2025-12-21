@@ -177,7 +177,7 @@ function registerSessionsScenesRoutes({
       const scene = {
         id: `scene_${Date.now()}`,
         tenantId,
-        title: "Scène 1" || 'Nouvelle scène',
+        title: "Scene 1",
         parentSession: parentId,
         order: 1,
         images: [],
@@ -204,7 +204,7 @@ function registerSessionsScenesRoutes({
       res.json(list);
     } catch (err) {
       logger.error("List sessions failed", { tenantId, err: err?.message });
-      res.status(500).json({ error: "Impossible de lister les sessions" });
+      res.status(500).json({ error: "Unable to list sessions" });
     }
   });
 
@@ -225,7 +225,7 @@ function registerSessionsScenesRoutes({
       return res.status(403).json({ error: "Forbidden tenant" });
     }
     const payload = sanitizeSessionInput({ ...req.body, tenantId });
-    if (!payload.title) return res.status(400).json({ error: "Titre requis" });
+    if (!payload.title) return res.status(400).json({ error: "Title is required" });
     writeSessionFile(tenantId, payload);
     attachSessionToScenario(tenantId, payload);
     ensureDefaultSceneForSession(tenantId, payload);
@@ -287,7 +287,7 @@ function registerSessionsScenesRoutes({
       res.json(list);
     } catch (err) {
       logger.error("List scenes failed", { tenantId, err: err?.message });
-      res.status(500).json({ error: "Impossible de lister les scènes" });
+      res.status(500).json({ error: "Unable to list scenes" });
     }
   });
 
@@ -308,7 +308,7 @@ function registerSessionsScenesRoutes({
       return res.status(403).json({ error: "Forbidden tenant" });
     }
     const payload = sanitizeSceneInput({ ...req.body, tenantId });
-    if (!payload.title) return res.status(400).json({ error: "Titre requis" });
+    if (!payload.title) return res.status(400).json({ error: "Title is required" });
     writeScene(tenantId, payload);
     touchSessionUpdated(tenantId, payload.parentSession);
     touchScenarioFromSession(tenantId, payload.parentSession);
@@ -372,7 +372,7 @@ function registerSessionsScenesRoutes({
       res.json({ success: true });
     } catch (err) {
       logger.error("Reorder scenes failed", { tenantId, err: err?.message });
-      res.status(500).json({ error: "Impossible de réordonner les scènes" });
+      res.status(500).json({ error: "Unable to reorder scenes" });
     }
   });
 

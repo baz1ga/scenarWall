@@ -1,8 +1,8 @@
 <div id="session-fragment">
    <template x-if="loading">
-    <div class="justify-center max-w-4xl mx-auto rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-6 shadow-sm flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+   <div class="justify-center max-w-4xl mx-auto rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-6 shadow-sm flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
       <div class="h-5 w-5 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
-      Chargement de la page
+      <span x-text="t('loadingOverlay', 'Chargement de la page')"></span>
     </div>
   </template>
   <template x-if="error">
@@ -12,21 +12,21 @@
     <section class="space-y-6 max-w-7xl mx-auto">
       <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div class="flex items-center gap-3">
-          <span class="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-lime-50 text-amber-500 dark:bg-lime-900/30">
-            <i class="fa-solid fa-bolt text-lg"></i>
-          </span>
-          <div>
-            <h1 class="text-2xl font-semibold audio-text">Barre de tension</h1>
-            <p class="text-sm text-slate-500 dark:text-slate-200">Customiser la barre de tension</p>
+            <span class="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-lime-50 text-amber-500 dark:bg-lime-900/30">
+              <i class="fa-solid fa-bolt text-lg"></i>
+            </span>
+            <div>
+            <h1 class="text-2xl font-semibold audio-text" x-text="t('tension.title', 'Barre de tension')"></h1>
+            <p class="text-sm text-slate-500 dark:text-slate-200" x-text="t('tension.subtitle', 'Customiser la barre de tension')"></p>
+            </div>
           </div>
-        </div>
       </div>      
       <div class="space-y-4 max-w-4xl mx-auto">
         <div class="rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-6 shadow-sm space-y-4">
           <div class="flex items-center justify-between gap-3">
             <span class="text-sm font-semibold text-slate-900 dark:text-slate-100">
-              <span x-show="!tensionEnabled">Activer la barre de tension</span>
-              <span x-show="tensionEnabled">Désactiver la barre de tension</span>
+              <span x-show="!tensionEnabled" x-text="t('tension.enable', 'Activer la barre de tension')"></span>
+              <span x-show="tensionEnabled" x-text="t('tension.disable', 'Désactiver la barre de tension')"></span>
             </span>
             <label class="relative inline-flex items-center cursor-pointer">
               <input type="checkbox" class="sr-only peer" x-model="tensionEnabled">
@@ -35,57 +35,57 @@
             </label>
           </div>      
           <div class="space-y-2">
-            <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Style de texte</h3>
+            <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100" x-text="t('tension.textStyle', 'Style de texte')"></h3>
           </div>
           <div class="grid gap-3 sm:grid-cols-2">
             <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-900/20">
                 <input type="radio" class="text-rose-600" name="tensionFont" value="Audiowide" x-model="tensionFont">
-              <span style="font-family: 'Audiowide', sans-serif;" class="text-base">Futuriste (Audiowide)</span>
+              <span style="font-family: 'Audiowide', sans-serif;" class="text-base" x-text="t('tension.fonts.audiowide', 'Futuriste (Audiowide)')"></span>
             </label>
             <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-900/20">
               <input type="radio" class="text-rose-600" name="tensionFont" value="Metal Mania" x-model="tensionFont">
-              <span style="font-family: 'Metal Mania', cursive;" class="text-base">Horrifique (Metal Mania)</span>
+              <span style="font-family: 'Metal Mania', cursive;" class="text-base" x-text="t('tension.fonts.metal', 'Horrifique (Metal Mania)')"></span>
             </label>
             <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-900/20">
               <input type="radio" class="text-rose-600" name="tensionFont" value="Rye" x-model="tensionFont">
-              <span style="font-family: 'Rye', cursive;" class="text-base">Saloon (Rye)</span>
+              <span style="font-family: 'Rye', cursive;" class="text-base" x-text="t('tension.fonts.rye', 'Saloon (Rye)')"></span>
             </label>
             <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-900/20">
               <input type="radio" class="text-rose-600" name="tensionFont" value="Share Tech Mono" x-model="tensionFont">
-              <span style="font-family: 'Share Tech Mono', monospace;" class="text-base">Techno (Share Tech Mono)</span>
+              <span style="font-family: 'Share Tech Mono', monospace;" class="text-base" x-text="t('tension.fonts.shareTech', 'Techno (Share Tech Mono)')"></span>
             </label>
             <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-900/20">
               <input type="radio" class="text-rose-600" name="tensionFont" value="Bangers" x-model="tensionFont">
-              <span style="font-family: 'Bangers', cursive;" class="text-base">Cartoon (Bangers)</span>
+              <span style="font-family: 'Bangers', cursive;" class="text-base" x-text="t('tension.fonts.bangers', 'Cartoon (Bangers)')"></span>
             </label>
             <label class="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-900/20">
               <input type="radio" class="text-rose-600" name="tensionFont" value="Great Vibes" x-model="tensionFont">
-              <span style="font-family: 'Great Vibes', cursive;" class="text-base">Manuscrit (Great Vibes)</span>
+              <span style="font-family: 'Great Vibes', cursive;" class="text-base" x-text="t('tension.fonts.greatVibes', 'Manuscrit (Great Vibes)')"></span>
             </label>
           </div>
 
           <div class="space-y-2">
-            <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100">Niveaux, couleurs et audio des niveaux</h3>
+            <h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100" x-text="t('tension.levelsTitle', 'Niveaux, couleurs et audio des niveaux')"></h3>
           <template x-for="level in ['level1','level2','level3','level4','level5']" :key="level">
             <div class="rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100">
               <div class="flex flex-wrap items-center gap-3">
-                  <span class="font-semibold" x-text="`Niveau ${level.replace('level','')}`"></span>
+                  <span class="font-semibold" x-text="tensionLabels[level] ?? ''"></span>
                   <div class="ml-auto flex items-center gap-3 flex-wrap justify-end">
                     <div class="flex items-center gap-2">
-                      <span class="text-xs text-slate-500 dark:text-slate-200">Label</span>
+                      <span class="text-xs text-slate-500 dark:text-slate-200" x-text="t('tension.fields.label', 'Label')"></span>
                       <input type="text" maxlength="4" class="w-20 rounded border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-2 py-1 text-sm text-slate-900 dark:text-slate-100" x-model="tensionLabels[level]">
                     </div>
                     <div class="flex items-center gap-2">
-                      <span class="text-xs text-slate-500 dark:text-slate-200">Couleur</span>
+                      <span class="text-xs text-slate-500 dark:text-slate-200" x-text="t('tension.fields.color', 'Couleur')"></span>
                       <input type="color" class="h-9 w-12 rounded border border-slate-300 dark:border-gray-700 bg-transparent cursor-pointer" x-model="tensionColors[level]">
                     </div>
                   <div class="flex items-center gap-2 min-w-[180px]">
-                      <span class="text-xs text-slate-500 dark:text-slate-200 whitespace-nowrap">Audio</span>
+                      <span class="text-xs text-slate-500 dark:text-slate-200 whitespace-nowrap" x-text="t('tension.fields.audio', 'Audio')"></span>
                       <select class="flex-1 rounded border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-2 py-1 text-sm text-slate-900 dark:text-slate-100"
                               x-model="tensionAudio[level]">
-                        <option :value="null">Aucun</option>
+                        <option :value="null" x-text="t('tension.fields.audioNone', 'Aucun')"></option>
                         <template x-if="tensionAudio[level] && !tenantAudio.some(a => a.name === tensionAudio[level])">
-                          <option :value="tensionAudio[level]" :selected="true" x-text="`${tensionAudio[level]} (manquant)`"></option>
+                          <option :value="tensionAudio[level]" :selected="true" x-text="`${tensionAudio[level]} ${t('tension.fields.audioMissing', '(manquant)')}`"></option>
                         </template>
                         <template x-for="audio in tenantAudio" :key="audio.name">
                           <option :value="audio.name" :selected="tensionAudio[level] === audio.name" x-text="audio.name"></option>
@@ -104,13 +104,13 @@
                       @click="resetTensionDefaults()"
                       :disabled="tensionSaving">
                 <i class="fa-solid fa-rotate-left"></i>
-                <span>Réinitialiser</span>
+                <span x-text="t('tension.reset', 'Réinitialiser')"></span>
               </button>
               <button class="px-4 py-2 rounded-lg bg-stone-700 border border-stone-700 text-white text-sm font-semibold hover:bg-stone-400 transition disabled:opacity-60 disabled:cursor-not-allowed"
                       @click="saveSessionTension()"
                       :disabled="tensionSaving">
-                <span x-show="!tensionSaving">Enregistrer</span>
-                <span x-show="tensionSaving">Enregistrement...</span>
+                <span x-show="!tensionSaving" x-text="t('common.save', 'Enregistrer')"></span>
+                <span x-show="tensionSaving" x-text="t('tension.saving', 'Enregistrement...')"></span>
               </button>
             </div>
           </div>
@@ -130,17 +130,17 @@
             <i class="fa-solid fa-triangle-exclamation"></i>
           </div>
           <div class="space-y-1">
-            <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Supprimer cette session ?</h3>
+            <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100" x-text="t('confirm.deleteSession', 'Supprimer cette session ?')"></h3>
             <p class="text-sm text-slate-600 dark:text-slate-300">
-              <span x-text="sessionTitle || session?.id"></span> et ses scènes seront supprimées.
+              <span x-text="sessionTitle || session?.id"></span> <span x-text="t('editSession.confirm.sessionDeleted', 'et ses scènes seront supprimées.')"></span>
             </p>
           </div>
         </div>
         <div class="flex justify-end gap-2">
           <button class="px-4 py-2 rounded-lg border border-slate-200 dark:border-gray-700 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                  @click="cancelDeleteSession()">Annuler</button>
+                  @click="cancelDeleteSession()" x-text="t('common.cancel', 'Annuler')"></button>
           <button class="px-4 py-2 rounded-lg bg-rose-600 text-white text-sm font-semibold hover:bg-rose-500 transition"
-                  @click="confirmDeleteSession()">Supprimer</button>
+                  @click="confirmDeleteSession()" x-text="t('confirm.deleteSessionAction', 'Supprimer')"></button>
         </div>
       </div>
     </div>

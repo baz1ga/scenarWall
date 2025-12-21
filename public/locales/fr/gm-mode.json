@@ -1,0 +1,33 @@
+{
+  "scenarDeck": "ScenarDeck",
+  "timer": {
+    "start": "Timer",
+    "stop": "Stop",
+    "reset": "Reset"
+  },
+  "slide": {
+    "prev": "Slide -",
+    "next": "Slide +"
+  },
+  "hourglass": {
+    "toggle": {
+      "show": "Afficher",
+      "hide": "Masquer"
+    }
+  },
+  "header": {
+    "present": "Présenter",
+    "sessionFallback": "Session"
+  },
+  "scenes": {
+    "title": "Scènes"
+  },
+  "tension": {
+    "launch": "Lancer le niveau"
+  },
+  "common": {
+    "loading": "Chargement...",
+    "confirm": "Confirmer",
+    "cancel": "Annuler"
+  }
+}

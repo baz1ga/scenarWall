@@ -277,7 +277,7 @@
                       :style="`background:${level.color}; border:1px solid ${level.color}; color:${level.textColor};`"
                       :class="selectedTension === level.key ? 'ring-2 ring-offset-1 ring-indigo-400 dark:ring-indigo-500/80 shadow-md scale-[1.03]' : ''"
                       @click="playTension(level.key)"
-                      :aria-label="`Lancer le niveau ${level.label}`"
+                      :aria-label="`${t('tension.launch', 'Lancer le niveau')} ${level.label}`"
                     >
                       <span x-text="level.label"></span>
                     </div>

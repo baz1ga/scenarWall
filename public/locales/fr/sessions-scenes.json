@@ -1,0 +1,206 @@
+{
+  "loading": "Chargement de la page",
+  "title": "Scènes",
+  "subtitle": "Pour rythmer votre partie",
+  "duplicateScene": "Dupliquer la scène",
+  "addScene": "Ajouter une scène",
+  "sceneFallback": "Scène",
+  "reorder": {
+    "prev": "Précédente",
+    "next": "Suivante"
+  },
+  "notes": {
+    "edit": "Éditer la note",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "create": "Créer une note",
+    "placeholder": "Vos notes de session...",
+    "saving": "Sauvegarde...",
+    "all": "Toutes les notes"
+  },
+  "confirm": {
+    "title": "Confirmation",
+    "deleteScene": "Supprimer cette scène ?",
+    "deleteSession": "Supprimer cette session ?"
+  },
+  "modals": {
+    "createScene": "Ajouter une scène",
+    "editScene": "Éditer la scène",
+    "titleLabel": "Titre de la scène",
+    "orderLabel": "Ordre",
+    "save": "Enregistrer",
+    "cancel": "Annuler"
+  },
+  "editSession": {
+    "fields": {
+      "iconChoose": "Choisir "
+    }
+  },
+  "empty": "Aucune scène",
+  "tabs": {
+    "images": "Images",
+    "audio": "Audio",
+    "notes": "Notes"
+  },
+  "errors": {
+    "sessionNotFound": "Session introuvable",
+    "sessionLoad": "Impossible de charger la session",
+    "deleteSession": "Suppression impossible",
+    "deleteSessionGeneric": "Erreur lors de la suppression de la session",
+    "sceneLoad": "Impossible de charger les scènes",
+    "reorder": "Erreur lors du réordonnancement",
+    "titleRequired": "Le titre est requis",
+    "sceneNotFound": "Scène introuvable",
+    "update": "Mise à jour impossible",
+    "save": "Erreur lors de la sauvegarde",
+    "createScene": "Création impossible",
+    "createSceneGeneric": "Erreur lors de la création",
+    "images": "Images",
+    "audio": "Audio"
+  },
+  "breadcrumb": {
+    "scenario": "Scénario",
+    "session": "Session"
+  },
+  "pixabay": {
+    "missingKey": "Clé API Pixabay manquante.",
+    "error": "Erreur Pixabay.",
+    "noResult": "Aucun résultat.",
+    "importOk": "Image importée depuis Pixabay.",
+    "importFail": "Import Pixabay impossible."
+  },
+  "upload": {
+    "fromUrlSuccess": "Image importée avec succès.",
+    "fromUrlError": "Import depuis URL impossible."
+  },
+  "pnj": {
+    "title": "PNJ",
+    "subtitle": "Pour gérer les PNJ de la session",
+    "soon": "(bientôt)"
+  },
+  "loadingOverlay": "Chargement de la page",
+  "header": {
+    "title": "Scènes",
+    "subtitle": "Pour rythmer votre partie"
+  },
+  "actions": {
+    "duplicateScene": "Dupliquer la scène",
+    "addScene": "Ajouter une scène"
+  },
+  "cards": {
+    "sceneFallback": "Scène"
+  },
+  "images": {
+    "title": "Images de la scène",
+    "add": "Ajouter",
+    "none": "Aucune image",
+    "previewAlt": "Image de la scène",
+    "previewMissing": "Aperçu indisponible",
+    "dragHint": "Glisser pour déplacer",
+    "remove": "Retirer l'image de la scène",
+    "zoom": "Zoom",
+    "associate": "Associer à la scène",
+    "reorder": "Glisser pour réordonner",
+    "library": "Votre bibliothèque",
+    "openGallery": "Ouvrir la galerie",
+    "loading": "Chargement...",
+    "associateHint": "Cliquer pour associer"
+  },
+  "audio": {
+    "title": "Audio de la scène",
+    "add": "Ajouter (< 1 Mo)",
+    "none": "Aucun audio",
+    "all": "Tous vos audios",
+    "open": "Ouvrir les audios",
+    "loading": "Chargement...",
+    "remove": "Retirer l'audio de la scène",
+    "associate": "Associer l'audio à la scène"
+  },
+  "confirm": {
+    "title": "Confirmation",
+    "deleteScene": "Supprimer cette scène ?",
+    "deleteSession": "Supprimer cette session ?",
+    "deleteSessionAction": "Supprimer",
+    "deleteSceneTitle": "Supprimer cette scène ?",
+    "deleteSceneBody": "sera définitivement supprimée.",
+    "deleteSceneAction": "Supprimer la scène",
+    "deleteSceneAndSession": "Supprimer scène + session"
+  },
+  "rename": {
+    "title": "Renommer la scène",
+    "placeholder": "Titre de la scène"
+  },
+  "create": {
+    "title": "Nouvelle scène",
+    "desc": "Une scène sera ajoutée à cette session.",
+    "placeholder": "Titre de la scène",
+    "submit": "Créer",
+    "saving": "Création..."
+  },
+  "common": {
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "saving": "Sauvegarde..."
+  },
+  "nav": {
+    "sessionFallback": "Session",
+    "scenes": "Scènes",
+    "tension": "Tension",
+    "players": "Joueurs",
+    "pnj": "PNJ",
+    "settings": "Paramètres",
+    "gm": "Game Master"
+  },
+  "editSession": {
+    "title": "Paramètres de la session",
+    "subtitle": "Mettre à jour le titre et l'icône de la session",
+    "fields": {
+      "titleLabel": "Titre",
+      "titlePlaceholder": "Titre de la session",
+      "iconLabel": "Icône",
+      "preview": "Aperçu",
+      "noIcon": "Aucun icône correspondant."
+    },
+    "actions": {
+      "delete": "Supprimer la session"
+    },
+    "confirm": {
+      "sessionDeleted": "et ses scènes seront supprimées."
+    }
+  },
+  "table": {
+    "title": "Table",
+    "subtitle": "Pour gérer les joueurs de la session",
+    "soon": "(bientôt)"
+  },
+  "tension": {
+    "title": "Barre de tension",
+    "subtitle": "Customiser la barre de tension",
+    "enable": "Activer la barre de tension",
+    "disable": "Désactiver la barre de tension",
+    "textStyle": "Style de texte",
+    "levelsTitle": "Niveaux, couleurs et audio des niveaux",
+    "fields": {
+      "label": "Label",
+      "color": "Couleur",
+      "audio": "Audio",
+      "audioNone": "Aucun",
+      "audioMissing": "(manquant)"
+    },
+    "fonts": {
+      "audiowide": "Futuriste (Audiowide)",
+      "metal": "Horrifique (Metal Mania)",
+      "rye": "Saloon (Rye)",
+      "shareTech": "Techno (Share Tech Mono)",
+      "bangers": "Cartoon (Bangers)",
+      "greatVibes": "Manuscrit (Great Vibes)"
+    },
+    "reset": "Réinitialiser",
+    "saving": "Enregistrement..."
+  },
+  "layoutLoader": {
+    "defaultFragmentError": "Impossible de charger le fragment par défaut (edit-scenes)",
+    "viewError": "Impossible de charger view.html pour session-layout-loader",
+    "slotMissing": "Slot data-session-content-slot introuvable dans view.html"
+  }
+}

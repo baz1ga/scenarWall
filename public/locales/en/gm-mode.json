@@ -1,0 +1,33 @@
+{
+  "scenarDeck": "[en] ScenarDeck",
+  "timer": {
+    "start": "[en] Timer",
+    "stop": "[en] Stop",
+    "reset": "[en] Reset"
+  },
+  "slide": {
+    "prev": "[en] Slide -",
+    "next": "[en] Slide +"
+  },
+  "hourglass": {
+    "toggle": {
+      "show": "[en] Show",
+      "hide": "[en] Hide"
+    }
+  },
+  "header": {
+    "present": "[en] Present",
+    "sessionFallback": "[en] Session"
+  },
+  "scenes": {
+    "title": "[en] Scenes"
+  },
+  "tension": {
+    "launch": "[en] Launch level"
+  },
+  "common": {
+    "loading": "[en] Loading...",
+    "confirm": "[en] Confirm",
+    "cancel": "[en] Cancel"
+  }
+}

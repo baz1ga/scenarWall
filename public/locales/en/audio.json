@@ -1,0 +1,34 @@
+{
+  "title": "[en] Audio files",
+  "subtitle": "[en] Audio library available for your scenes.",
+  "loading": "[en] Loading page",
+  "upload": "[en] Add (< 1 MB)",
+  "none": "[en] No audio",
+  "reorderHint": "[en] Drag to reorder",
+  "renameDialog": {
+    "title": "[en] Rename audio",
+    "current": "[en] Current name:",
+    "label": "[en] New name",
+    "placeholder": "[en] ex: ambiance.mp3",
+    "cancel": "[en] Cancel",
+    "confirm": "[en] Rename",
+    "sameName": "[en] Name is identical.",
+    "empty": "[en] Enter a name."
+  },
+  "confirm": {
+    "title": "[en] Confirmation",
+    "cancel": "[en] Cancel",
+    "confirm": "[en] Confirm",
+    "deleteOne": "[en] Delete this audio?",
+    "deleteMany": "[en] Delete permanently {count} audio{plural}{impact}?",
+    "impact": "[en] {count} impacted scene{plural}"
+  },
+  "messages": {
+    "added": "[en] {count} file(s) added.",
+    "errors": "[en] Some uploads failed.",
+    "deletedScenes": "[en] {count} scene(s) cleaned.",
+    "deleteFailed": "[en] Deletion failed.",
+    "renameOk": "[en] Name updated.",
+    "renameFail": "[en] Rename failed."
+  }
+}

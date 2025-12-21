@@ -11,7 +11,7 @@
   <template x-if="loading">
     <div class="justify-center max-w-4xl mx-auto rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-6 shadow-sm flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
       <div class="h-5 w-5 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
-      Chargement de la page
+      <span x-text="t('loading', 'Chargement de la page')"></span>
     </div>
   </template>
   <template x-if="!loading">      
@@ -23,15 +23,15 @@
           </span>
           <div>
             <h1 class="text-2xl font-semibold inline-flex items-center gap-2 notes-text">
-              Notes
+              <span x-text="t('title', 'Notes')"></span>
             </h1>
-            <p class="text-sm text-slate-500 dark:text-slate-200">Consultez et gérez l’ensemble des notes par scénario et session.</p>
+            <p class="text-sm text-slate-500 dark:text-slate-200" x-text="t('subtitle', 'Consultez et gérez l’ensemble des notes par scénario et session.')"></p>
           </div>
         </div>
       </div>
       <div class="space-y-4">
         <template x-if="groupedNotes().scenarios.length === 0 && groupedNotes().unlinked.length === 0">
-          <div class="text-sm max-w-4xl mx-auto text-center text-slate-600 dark:text-slate-200 border border-dashed border-slate-300 dark:border-gray-800 rounded-lg p-4">Aucune note</div>
+          <div class="text-sm max-w-4xl mx-auto text-center text-slate-600 dark:text-slate-200 border border-dashed border-slate-300 dark:border-gray-800 rounded-lg p-4" x-text="t('none', 'Aucune note')"></div>
         </template>
 
         <div class="space-y-4 max-w-4xl mx-auto">
@@ -107,7 +107,7 @@
 
           <template x-if="groupedNotes().unlinked.length">
             <div class="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-4 shadow-sm space-y-2">
-              <div class="text-lg font-semibold text-slate-900 dark:text-slate-100">Non liées</div>
+              <div class="text-lg font-semibold text-slate-900 dark:text-slate-100" x-text="t('unlinked', 'Non liées')"></div>
               <div class="space-y-2">
                 <template x-for="note in groupedNotes().unlinked" :key="note.name">
                   <div class="rounded-lg border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 shadow-sm flex items-center justify-between gap-3">
@@ -134,16 +134,16 @@
   <div x-show="showEditModal" x-transition class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full mx-4 p-4 space-y-3">
       <div class="flex items-center justify-between">
-        <h2 class="text-lg font-semibold notes-text">Éditer la note</h2>
+        <h2 class="text-lg font-semibold notes-text" x-text="t('modals.editTitle', 'Éditer la note')"></h2>
         <button class="text-slate-500 hover:text-slate-800" @click="cancelModals()"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="text-sm text-slate-500 dark:text-slate-300" x-text="activeNote?.sceneTitle || activeNote?.name"></div>
       <textarea class="w-full h-64 border border-slate-200 dark:border-gray-700 rounded-lg p-3 font-mono text-sm bg-slate-50 dark:bg-slate-800"
                 x-model="editContent"></textarea>
       <div class="flex justify-end gap-2">
-        <button class="px-3 py-2 rounded-lg border border-slate-200 dark:border-gray-700 text-sm" @click="cancelModals()">Annuler</button>
+        <button class="px-3 py-2 rounded-lg border border-slate-200 dark:border-gray-700 text-sm" @click="cancelModals()" x-text="t('actions.cancel', 'Annuler')"></button>
         <button class="px-3 py-2 rounded-lg notes-bg text-sm font-semibold hover:brightness-110 transition"
-                @click="saveEdit()">Enregistrer</button>
+                @click="saveEdit()" x-text="t('actions.save', 'Enregistrer')"></button>
       </div>
     </div>
   </div>
@@ -151,16 +151,16 @@
   <div x-show="showDeleteModal" x-transition class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full mx-4 p-4 space-y-3">
       <div class="flex items-center justify-between">
-        <h2 class="text-lg font-semibold text-rose-600">Supprimer la note</h2>
+        <h2 class="text-lg font-semibold text-rose-600" x-text="t('modals.deleteTitle', 'Supprimer la note')"></h2>
         <button class="text-slate-500 hover:text-slate-800" @click="cancelModals()"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <p class="text-sm text-slate-600 dark:text-slate-300">
-        Confirmer la suppression de la note <span class="font-semibold" x-text="activeNote?.sceneTitle || activeNote?.name"></span> ?
+        <span x-text="t('modals.deleteConfirm', 'Confirmer la suppression de la note {name} ?').replace('{name}', activeNote?.sceneTitle || activeNote?.name || '')"></span>
       </p>
       <div class="flex justify-end gap-2">
-        <button class="px-3 py-2 rounded-lg border border-slate-200 dark:border-gray-700 text-sm" @click="cancelModals()">Annuler</button>
+        <button class="px-3 py-2 rounded-lg border border-slate-200 dark:border-gray-700 text-sm" @click="cancelModals()" x-text="t('actions.cancel', 'Annuler')"></button>
         <button class="px-3 py-2 rounded-lg border border-rose-200 text-rose-600 text-sm font-semibold hover:bg-rose-50 dark:hover:bg-rose-900/30 transition"
-                @click="confirmDelete()">Supprimer</button>
+                @click="confirmDelete()" x-text="t('actions.delete', 'Supprimer')"></button>
       </div>
     </div>
   </div>

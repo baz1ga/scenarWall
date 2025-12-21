@@ -1,0 +1,227 @@
+{
+  "loading": "[en] Loading page",
+  "title": "[en] Scenes",
+  "subtitle": "[en] To pace your game",
+  "duplicateScene": "[en] Duplicate scene",
+  "addScene": "[en] Add a scene",
+  "sceneFallback": "[en] Scene",
+  "reorder": {
+    "prev": "[en] Previous",
+    "next": "[en] Next"
+  },
+  "notes": {
+    "edit": "[en] Edit note",
+    "save": "[en] Save",
+    "cancel": "[en] Cancel",
+    "create": "[en] Create a note",
+    "placeholder": "[en] Your session notes...",
+    "saving": "[en] Saving...",
+    "all": "[en] All notes"
+  },
+  "confirm": {
+    "title": "[en] Confirmation",
+    "deleteScene": "[en] Delete this scene?",
+    "deleteSession": "[en] Delete this session?",
+    "deleteSessionAction": "[en] Delete",
+    "deleteSceneTitle": "[en] Delete this scene?",
+    "deleteSceneBody": "[en] will be permanently deleted.",
+    "deleteSceneAction": "[en] Delete scene",
+    "deleteSceneAndSession": "[en] Delete scene + session"
+  },
+  "modals": {
+    "createScene": "[en] Add a scene",
+    "editScene": "[en] Edit scene",
+    "titleLabel": "[en] Scene title",
+    "orderLabel": "[en] Order",
+    "save": "[en] Save",
+    "cancel": "[en] Cancel"
+  },
+  "editSession": {
+    "fields": {
+      "iconChoose": "[en] Choose "
+    }
+  },
+  "empty": "[en] No scene",
+  "tabs": {
+    "images": "[en] Images",
+    "audio": "[en] Audio",
+    "notes": "[en] Notes"
+  },
+  "errors": {
+    "sessionNotFound": "[en] Session not found",
+    "sessionLoad": "[en] Unable to load session",
+    "deleteSession": "[en] Delete failed",
+    "deleteSessionGeneric": "[en] Error while deleting session",
+    "sceneLoad": "[en] Unable to load scenes",
+    "reorder": "[en] Ordering error",
+    "titleRequired": "[en] Title is required",
+    "sceneNotFound": "[en] Scene not found",
+    "update": "[en] Update failed",
+    "save": "[en] Save failed",
+    "createScene": "[en] Creation failed",
+    "createSceneGeneric": "[en] Error while creating",
+    "images": "[en] Images",
+    "audio": "[en] Audio"
+  },
+  "breadcrumb": {
+    "scenario": "[en] Scenario",
+    "session": "[en] Session"
+  },
+  "pixabay": {
+    "missingKey": "[en] Pixabay API key missing.",
+    "error": "[en] Pixabay error.",
+    "noResult": "[en] No result.",
+    "importOk": "[en] Image imported from Pixabay.",
+    "importFail": "[en] Pixabay import failed."
+  },
+  "upload": {
+    "fromUrlSuccess": "[en] Image imported successfully.",
+    "fromUrlError": "[en] Import from URL failed."
+  },
+  "images": {
+    "title": "[en] Scene images",
+    "add": "[en] Add",
+    "none": "[en] No image",
+    "previewAlt": "[en] Scene image",
+    "previewMissing": "[en] Preview unavailable",
+    "dragHint": "[en] Drag to move",
+    "remove": "[en] Remove image from scene",
+    "zoom": "[en] Zoom",
+    "associate": "[en] Attach to scene",
+    "reorder": "[en] Drag to reorder",
+    "library": "[en] Your library",
+    "openGallery": "[en] Open gallery",
+    "loading": "[en] Loading...",
+    "associateHint": "[en] Click to attach"
+  },
+  "audio": {
+    "title": "[en] Scene audio",
+    "add": "[en] Add (< 1 MB)",
+    "none": "[en] No audio",
+    "all": "[en] All your audio",
+    "open": "[en] Open audio",
+    "loading": "[en] Loading...",
+    "remove": "[en] Remove audio from scene",
+    "associate": "[en] Attach audio to scene"
+  },
+  "pnj": {
+    "title": "[en] NPCs",
+    "subtitle": "[en] Manage the session's NPCs",
+    "soon": "[en] (coming soon)"
+  },
+  "loadingOverlay": "[en] Loading page",
+  "header": {
+    "title": "[en] Scenes",
+    "subtitle": "[en] To pace your game"
+  },
+  "actions": {
+    "duplicateScene": "[en] Duplicate scene",
+    "addScene": "[en] Add a scene"
+  },
+  "cards": {
+    "sceneFallback": "[en] Scene"
+  },
+  "images": {
+    "title": "[en] Scene images",
+    "add": "[en] Add",
+    "none": "[en] No image",
+    "previewAlt": "[en] Scene image",
+    "previewMissing": "[en] Preview unavailable",
+    "dragHint": "[en] Drag to move",
+    "remove": "[en] Remove image from scene",
+    "zoom": "[en] Zoom",
+    "associate": "[en] Attach to scene",
+    "reorder": "[en] Drag to reorder",
+    "library": "[en] Your library",
+    "openGallery": "[en] Open gallery",
+    "loading": "[en] Loading...",
+    "associateHint": "[en] Click to associate"
+  },
+  "audio": {
+    "title": "[en] Scene audio",
+    "add": "[en] Add (< 1 MB)",
+    "none": "[en] No audio",
+    "all": "[en] All your audios",
+    "open": "[en] Open audios",
+    "loading": "[en] Loading...",
+    "remove": "[en] Remove audio from scene",
+    "associate": "[en] Attach audio to scene"
+  },
+  "rename": {
+    "title": "[en] Rename scene",
+    "placeholder": "[en] Scene title"
+  },
+  "create": {
+    "title": "[en] New scene",
+    "desc": "[en] A scene will be added to this session.",
+    "placeholder": "[en] Scene title",
+    "submit": "[en] Create",
+    "saving": "[en] Creating..."
+  },
+  "common": {
+    "cancel": "[en] Cancel",
+    "save": "[en] Save",
+    "saving": "[en] Saving..."
+  },
+  "nav": {
+    "sessionFallback": "[en] Session",
+    "scenes": "[en] Scenes",
+    "tension": "[en] Tension",
+    "players": "[en] Players",
+    "pnj": "[en] NPCs",
+    "settings": "[en] Settings",
+    "gm": "[en] Game Master"
+  },
+  "editSession": {
+    "title": "[en] Session settings",
+    "subtitle": "[en] Update the session title and icon",
+    "fields": {
+      "titleLabel": "[en] Title",
+      "titlePlaceholder": "[en] Session title",
+      "iconLabel": "[en] Icon",
+      "preview": "[en] Preview",
+      "noIcon": "[en] No matching icon."
+    },
+    "actions": {
+      "delete": "[en] Delete session"
+    },
+    "confirm": {
+      "sessionDeleted": "[en] and its scenes will be deleted."
+    }
+  },
+  "table": {
+    "title": "[en] Table",
+    "subtitle": "[en] Manage the session players",
+    "soon": "[en] (coming soon)"
+  },
+  "tension": {
+    "title": "[en] Tension bar",
+    "subtitle": "[en] Customize the tension bar",
+    "enable": "[en] Enable tension bar",
+    "disable": "[en] Disable tension bar",
+    "textStyle": "[en] Text style",
+    "levelsTitle": "[en] Levels, colors and audio",
+    "fields": {
+      "label": "[en] Label",
+      "color": "[en] Color",
+      "audio": "[en] Audio",
+      "audioNone": "[en] None",
+      "audioMissing": "[en] (missing)"
+    },
+    "fonts": {
+      "audiowide": "[en] Futuristic (Audiowide)",
+      "metal": "[en] Horror (Metal Mania)",
+      "rye": "[en] Saloon (Rye)",
+      "shareTech": "[en] Techno (Share Tech Mono)",
+      "bangers": "[en] Cartoon (Bangers)",
+      "greatVibes": "[en] Script (Great Vibes)"
+    },
+    "reset": "[en] Reset",
+    "saving": "[en] Saving..."
+  },
+  "layoutLoader": {
+    "defaultFragmentError": "[en] Unable to load the default fragment (edit-scenes)",
+    "viewError": "[en] Unable to load view.html for session-layout-loader",
+    "slotMissing": "[en] Slot data-session-content-slot not found in view.html"
+  }
+}

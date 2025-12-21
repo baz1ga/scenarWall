@@ -1,4 +1,5 @@
 import { coreSection } from '/admin/js/core.js';
+import { loadLocale, t as translate } from '/admin/js/i18n.js';
 
 function formatDate(ts) {
   if (!ts) return '';
@@ -24,6 +25,8 @@ export function notesPage() {
     showDeleteModal: false,
     activeNote: null,
     editContent: "",
+    lang: localStorage.getItem("lang") || (navigator.language || "fr").slice(0, 2) || "fr",
+    texts: {},
 
     async init() {
       if (typeof baseInit === 'function') {
@@ -31,6 +34,7 @@ export function notesPage() {
       }
       const params = new URLSearchParams(window.location.search || '');
       this.initialSceneParam = params.get('scene') || '';
+      this.texts = await loadLocale(this.lang, "notes");
       await Promise.all([
         this.fetchScenarios(),
         this.fetchSessions(),
@@ -245,6 +249,10 @@ export function notesPage() {
       this.showDeleteModal = false;
       this.activeNote = null;
       this.editContent = "";
+    },
+
+    t(key, fallback) {
+      return translate(this.texts, key, fallback);
     },
 
     formatDate

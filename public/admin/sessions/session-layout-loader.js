@@ -3,6 +3,31 @@
   window.__SW_SESSION_LAYOUT_APPLIED = true;
 
   async function applyLayout() {
+    const lang = (localStorage.getItem('lang') || (navigator.language || 'fr').slice(0, 2) || 'fr').toLowerCase();
+    let texts = {};
+    const t = (key, fallback = '') => {
+      if (!key) return fallback || '';
+      const parts = key.split('.');
+      let cur = texts;
+      for (const p of parts) {
+        if (cur && Object.prototype.hasOwnProperty.call(cur, p)) {
+          cur = cur[p];
+        } else {
+          cur = undefined;
+          break;
+        }
+      }
+      if (cur === undefined || cur === null) return fallback || key;
+      if (typeof cur === 'string' || typeof cur === 'number') return cur;
+      return fallback || key;
+    };
+    try {
+      const res = await fetch(`/locales/${lang}/sessions-scenes.json`);
+      texts = res.ok ? await res.json() : {};
+    } catch (_) {
+      texts = {};
+    }
+
     if (window.__SW_SESSION_LAYOUT_DONE) return;
     window.__SW_SESSION_LAYOUT_DONE = true;
     const fragmentEl = document.querySelector('#session-fragment');
@@ -18,7 +43,7 @@
         const fallback = parsed.querySelector('#session-fragment');
         fragmentHtml = fallback ? fallback.outerHTML : '';
       } catch (err) {
-        console.error('Impossible de charger le fragment par défaut (edit-scenes)', err);
+        console.error(t('layoutLoader.defaultFragmentError', 'Impossible de charger le fragment par défaut (edit-scenes)'), err);
       }
     }
 
@@ -38,7 +63,7 @@
       const res = await fetch(`/admin/sessions/view.html${search}`, { cache: 'no-cache' });
       viewHtml = await res.text();
     } catch (err) {
-      console.error('Impossible de charger view.html pour session-layout-loader', err);
+      console.error(t('layoutLoader.viewError', 'Impossible de charger view.html pour session-layout-loader'), err);
       return;
     }
 
@@ -46,7 +71,7 @@
     const parsed = parser.parseFromString(viewHtml, 'text/html');
     const slot = parsed.querySelector('[data-session-content-slot]');
     if (!slot) {
-      console.error('Slot data-session-content-slot introuvable dans view.html');
+      console.error(t('layoutLoader.slotMissing', 'Slot data-session-content-slot introuvable dans view.html'));
       return;
     }
     slot.innerHTML = fragmentHtml;
