@@ -1,12 +1,8 @@
-//------------------------------------------------------------
-//  SCENARWALL — SERVER.JS (Option 2 : tenant dans l’URL)
-//------------------------------------------------------------
 const express = require("express");
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
-// Force le fuseau horaire (par défaut Europe/Paris si non fourni dans l'env avant le démarrage).
 process.env.TZ = process.env.TZ || "Europe/Paris";
 const crypto = require("crypto");
 const session = require("express-session");
@@ -201,22 +197,40 @@ const audioUpload = multer({
 });
 // Logger simple vers stdout/stderr (compatible PM2) avec heure locale TZ.
 const logger = {
-  info: (msg, meta) => {
-    const now = new Date();
-    const tz = process.env.TZ || "Europe/Paris";
-    console.log(JSON.stringify({ level: "info", time: now.toISOString(), localTime: now.toLocaleString("fr-FR", { timeZone: tz }), tz, message: msg, ...meta }));
+  info: (msg, meta = {}) => {
+    console.log(JSON.stringify({
+      level: "info",
+      time: new Date().toLocaleString("fr-FR", {
+        timeZone: "Europe/Paris"
+      }),
+      message: msg,
+      ...meta
+    }));
   },
-  warn: (msg, meta) => {
-    const now = new Date();
-    const tz = process.env.TZ || "Europe/Paris";
-    console.warn(JSON.stringify({ level: "warn", time: now.toISOString(), localTime: now.toLocaleString("fr-FR", { timeZone: tz }), tz, message: msg, ...meta }));
+
+  warn: (msg, meta = {}) => {
+    console.warn(JSON.stringify({
+      level: "warn",
+      time: new Date().toLocaleString("fr-FR", {
+        timeZone: "Europe/Paris"
+      }),
+      message: msg,
+      ...meta
+    }));
   },
-  error: (msg, meta) => {
-    const now = new Date();
-    const tz = process.env.TZ || "Europe/Paris";
-    console.error(JSON.stringify({ level: "error", time: now.toISOString(), localTime: now.toLocaleString("fr-FR", { timeZone: tz }), tz, message: msg, ...meta }));
+
+  error: (msg, meta = {}) => {
+    console.error(JSON.stringify({
+      level: "error",
+      time: new Date().toLocaleString("fr-FR", {
+        timeZone: "Europe/Paris"
+      }),
+      message: msg,
+      ...meta
+    }));
   }
 };
+
 
 // Ajoute un identifiant de requête pour le suivi des logs.
 const requestId = (req, res, next) => {
