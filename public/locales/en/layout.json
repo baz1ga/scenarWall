@@ -1,42 +1,46 @@
 {
   "nav": {
-    "library": "[en] Library",
-    "admin": "[en] Administration",
-    "scenarios": "[en] Scenarios",
-    "gallery": "[en] Gallery",
-    "audio": "[en] Audio",
-    "tension": "[en] Tension",
-    "quotas": "[en] Quotas",
-    "notes": "[en] Notes",
-    "games": "[en] Played games",
-    "users": "[en] Users"
+    "library": "Library",
+    "admin": "Administration",
+    "scenarios": "Scenarios",
+    "gallery": "Gallery",
+    "audio": "Audio",
+    "tension": "Tension",
+    "quotas": "Quotas",
+    "notes": "Notes",
+    "games": "Played games",
+    "users": "Users"
   },
   "donation": {
-    "cta": "[en] A little help for hosting and 🍺",
-    "button": "[en] Support us"
+    "cta": "A little help for hosting and 🍺",
+    "button": "Support us"
   },
   "feedback": {
-    "cta": "[en] 🎲 Want to improve .ScenarWall. ?"
+    "cta": "🎲 Want to improve .ScenarWall. ?"
   },
   "sidebar": {
-    "expand": "[en] Expand sidebar",
-    "collapse": "[en] Collapse sidebar",
-    "expandShort": "[en] Expand",
-    "collapseShort": "[en] Collapse"
+    "expand": "Expand sidebar",
+    "collapse": "Collapse sidebar",
+    "expandShort": "Expand",
+    "collapseShort": "Collapse"
   },
   "userMenu": {
-    "loggedAs": "[en] Logged as",
-    "quota": "[en] Quota",
+    "loggedAs": "Logged as",
+    "quota": "Quota",
     "theme": {
-      "light": "[en] Light mode",
-      "dark": "[en] Dark mode"
+      "light": "Light mode",
+      "dark": "Dark mode"
     },
-    "roadmap": "[en] Roadmap .ScenarWall.",
-    "logout": "[en] Logout"
+    "language": {
+      "fr": "Français",
+      "en": "English"
+    },
+    "roadmap": "Roadmap .ScenarWall.",
+    "logout": "Logout"
   },
   "layoutLoader": {
-    "layoutError": "[en] Unable to load admin layout",
-    "placeholderError": "[en] Admin layout: placeholder {{CONTENT}} not found",
-    "fragmentError": "[en] Unable to load fragment"
+    "layoutError": "Unable to load admin layout",
+    "placeholderError": "Admin layout: placeholder {{CONTENT}} not found",
+    "fragmentError": "Unable to load fragment"
   }
 }

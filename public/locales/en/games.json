@@ -1,23 +1,21 @@
 {
-  "title": "[en] Played games",
-  "subtitle": "[en] Track and filter your runs by tenant and session.",
-  "refresh": "[en] Refresh",
-  "refreshing": "[en] Refreshing...",
-  "hideShort": "[en] Hide < 5m",
-  "searchPlaceholder": "[en] Search a tenant...",
-  "loadingOverlay": "[en] Refreshing...",
+  "title": "Played games",
+  "subtitle": "Track and filter your runs by tenant and session.",
+  "hideShort": "Hide < 5m",
+  "searchPlaceholder": "Search a tenant...",
+  "loadingOverlay": "Refreshing...",
   "columns": {
-    "tenant": "[en] Tenant",
-    "session": "[en] Session",
-    "date": "[en] Date",
-    "duration": "[en] Duration"
+    "tenant": "Tenant",
+    "session": "Session",
+    "date": "Date",
+    "duration": "Duration"
   },
-  "noRuns": "[en] No games played",
+  "noRuns": "No games played",
   "buttons": {
-    "refresh": "[en] Refresh runs",
-    "refreshing": "[en] Refreshing..."
+    "refresh": "Refresh runs",
+    "refreshing": "Refreshing..."
   },
   "aria": {
-    "search": "[en] Search a tenant"
+    "search": "Search a tenant"
   }
 }

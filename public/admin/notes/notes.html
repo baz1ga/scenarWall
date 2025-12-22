@@ -156,9 +156,9 @@
       <textarea class="w-full h-64 border border-slate-200 dark:border-gray-700 rounded-lg p-3 font-mono text-sm bg-slate-50 dark:bg-slate-800"
                 x-model="editContent"></textarea>
       <div class="flex justify-end gap-2">
-        <button class="px-3 py-2 rounded-lg border border-slate-200 dark:border-gray-700 text-sm" @click="cancelModals()" x-text="t('actions.cancel', 'Annuler')"></button>
+        <button class="px-3 py-2 rounded-lg border border-slate-200 dark:border-gray-700 text-sm" @click="cancelModals()" x-text="t('buttons.cancel', 'Annuler')"></button>
         <button class="px-3 py-2 rounded-lg notes-bg text-sm font-semibold hover:brightness-110 transition"
-                @click="saveEdit()" x-text="t('actions.save', 'Enregistrer')"></button>
+                @click="saveEdit()" x-text="t('buttons.save', 'Enregistrer')"></button>
       </div>
     </div>
   </div>
@@ -180,9 +180,9 @@
         <span x-text="t('modals.deleteConfirm', 'Confirmer la suppression de la note {name} ?').replace('{name}', activeNote?.sceneTitle || activeNote?.name || '')"></span>
       </p>
       <div class="flex justify-end gap-2">
-        <button class="px-3 py-2 rounded-lg border border-slate-200 dark:border-gray-700 text-sm" @click="cancelModals()" x-text="t('actions.cancel', 'Annuler')"></button>
+        <button class="px-3 py-2 rounded-lg border border-slate-200 dark:border-gray-700 text-sm" @click="cancelModals()" x-text="t('buttons.cancel', 'Annuler')"></button>
         <button class="px-3 py-2 rounded-lg border border-rose-200 text-rose-600 text-sm font-semibold hover:bg-rose-50 dark:hover:bg-rose-900/30 transition"
-                @click="confirmDelete()" x-text="t('actions.delete', 'Supprimer')"></button>
+                @click="confirmDelete()" x-text="t('buttons.delete', 'Supprimer')"></button>
       </div>
     </div>
   </div>

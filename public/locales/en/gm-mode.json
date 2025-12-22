@@ -1,93 +1,87 @@
 {
-  "scenarDeck": "[en] ScenarDeck",
+  "scenarDeck": "ScenarDeck",
   "timer": {
-    "start": "[en] Timer",
-    "stop": "[en] Stop",
-    "reset": "[en] Reset"
+    "start": "Timer",
+    "stop": "Stop",
+    "reset": "Reset"
   },
   "slide": {
-    "prev": "[en] Slide -",
-    "next": "[en] Slide +"
-  },
-  "hourglass": {
-    "toggle": {
-      "show": "[en] Show",
-      "hide": "[en] Hide"
-    }
+    "prev": "Slide -",
+    "next": "Slide +"
   },
   "header": {
-    "present": "[en] Present",
-    "sessionFallback": "[en] Session"
+    "present": "Present",
+    "sessionFallback": "Session"
   },
   "scenes": {
-    "title": "[en] Scenes",
-    "untitled": "[en] Scene"
+    "title": "Scenes",
+    "untitled": "Scene"
   },
   "notes": {
-    "title": "[en] Scene notes",
-    "placeholder": "[en] Your notes for this scene..."
+    "title": "Scene notes",
+    "placeholder": "Your notes for this scene..."
   },
   "tension": {
-    "title": "[en] Tension",
-    "launch": "[en] Launch level"
+    "title": "Tension",
+    "launch": "Launch level"
   },
   "slideshow": {
-    "title": "[en] Slideshow",
-    "loading": "[en] Loading images...",
-    "empty": "[en] No image available.",
-    "nextScene": "[en] Go to next scene",
-    "nextImage": "[en] Next image",
-    "prevImage": "[en] Previous image",
-    "prevAlt": "[en] Previous image",
-    "currentAlt": "[en] Current image",
-    "nextAlt": "[en] Next image"
+    "title": "Slideshow",
+    "loading": "Loading images...",
+    "empty": "No image available.",
+    "nextScene": "Go to next scene",
+    "nextImage": "Next image",
+    "prevImage": "Previous image",
+    "prevAlt": "Previous image",
+    "currentAlt": "Current image",
+    "nextAlt": "Next image"
   },
   "playlist": {
-    "title": "[en] Playlist",
-    "loading": "[en] Loading...",
-    "empty": "[en] No audio file."
+    "title": "Playlist",
+    "loading": "Loading...",
+    "empty": "No audio file."
   },
   "hourglass": {
-    "modalTitle": "[en] Hourglass duration",
-    "sliderLabel": "[en] Duration (slider, max 30min)",
-    "minLabel": "[en] 30s",
-    "maxLabel": "[en] 30min",
-    "showTimerLabel": "[en] Show duration",
-    "start": "[en] Start",
-    "stop": "[en] Stop",
-    "display": "[en] Duration",
+    "modalTitle": "Hourglass duration",
+    "sliderLabel": "Duration (slider, max 30min)",
+    "minLabel": "30s",
+    "maxLabel": "30min",
+    "showTimerLabel": "Show duration",
+    "start": "Start",
+    "stop": "Stop",
+    "display": "Duration",
     "toggle": {
-      "show": "[en] Show",
-      "hide": "[en] Hide"
+      "show": "Show",
+      "hide": "Hide"
     }
   },
   "leave": {
-    "title": "[en] Exit Game Master mode?",
-    "body": "[en] You will return to the session page.",
-    "cancel": "[en] Cancel",
-    "proceed": "[en] Continue"
+    "title": "Exit Game Master mode?",
+    "body": "You will return to the session page.",
+    "cancel": "Cancel",
+    "proceed": "Continue"
   },
   "buttons": {
-    "closeScenarDeck": "[en] Close ScenarDeck",
-    "closeModal": "[en] Close modal"
+    "closeScenarDeck": "Close ScenarDeck",
+    "closeModal": "Close modal"
   },
   "gm": {
     "session": {
-      "loadError": "[en] Unable to load sessions"
+      "loadError": "Unable to load sessions"
     },
     "scenes": {
-      "loadError": "[en] Unable to load scenes"
+      "loadError": "Unable to load scenes"
     },
     "slideshow": {
-      "error": "[en] Slideshow error"
+      "error": "Slideshow error"
     },
     "playlist": {
-      "error": "[en] Playlist error"
+      "error": "Playlist error"
     }
   },
   "common": {
-    "loading": "[en] Loading...",
-    "confirm": "[en] Confirm",
-    "cancel": "[en] Cancel"
+    "loading": "Loading...",
+    "confirm": "Confirm",
+    "cancel": "Cancel"
   }
 }

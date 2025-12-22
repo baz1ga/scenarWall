@@ -23,10 +23,6 @@
     "deleteUser": "Supprimer définitivement ce compte ?",
     "cta": "Confirmer"
   },
-  "actions": {
-    "editQuota": "Quota personnalisé",
-    "delete": "Supprimer"
-  },
   "buttons": {
     "editQuota": "Quota personnalisé",
     "delete": "Supprimer l'utilisateur",

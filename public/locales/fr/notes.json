@@ -4,16 +4,11 @@
   "subtitle": "Consultez et gérez l’ensemble des notes par scénario et session.",
   "none": "Aucune note",
   "unlinked": "Non liées",
-  "actions": {
-    "edit": "Éditer",
-    "delete": "Supprimer",
-    "save": "Enregistrer",
-    "cancel": "Annuler",
-    "confirm": "Confirmer"
-  },
   "buttons": {
     "edit": "Éditer la note",
     "delete": "Supprimer la note",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
     "closeModal": "Fermer la modale"
   },
   "modals": {

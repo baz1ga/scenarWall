@@ -9,12 +9,6 @@
     "prev": "Slide précédent",
     "next": "Slide suivant"
   },
-  "hourglass": {
-    "toggle": {
-      "show": "Afficher",
-      "hide": "Masquer"
-    }
-  },
   "header": {
     "present": "Présenter",
     "sessionFallback": "Session"

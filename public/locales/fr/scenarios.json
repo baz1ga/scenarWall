@@ -25,24 +25,25 @@
   },
   "create": {
     "title": "Nouveau scénario",
-    "iconLabel": "Icône du scénario",
-    "iconPreview": "Aperçu",
-    "iconSearch": "Rechercher une icône",
-    "iconChoose": "Choisir ",
-    "iconNone": "Aucun icône correspondant.",
-    "cancel": "Annuler",
-    "create": "Créer",
-    "creating": "Création..."
+    "placeholder": "Titre du scénario",
+    "submit": "Créer"
   },
   "edit": {
     "title": "Éditer le scénario",
     "createdAt": "Créé le",
-    "iconLabel": "Icône du scénario",
-    "iconPreview": "Aperçu",
-    "iconNone": "Aucun icône correspondant.",
-    "namePlaceholder": "Titre du scénario",
+    "namePlaceholder": "Titre du scénario"
+  },
+  "icon": {
+    "label": "Icône du scénario",
+    "preview": "Aperçu",
+    "search": "Rechercher une icône",
+    "choose": "Choisir ",
+    "none": "Aucun icône correspondant."
+  },
+  "common": {
     "cancel": "Annuler",
     "save": "Enregistrer",
+    "creating": "Création...",
     "saving": "Enregistrement..."
   }
 }

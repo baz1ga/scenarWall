@@ -8,10 +8,10 @@
     .games-bg { background-color: var(--games-accent); color: #fff; border-color: var(--games-accent); }
   </style>
   <template x-if="loading">
-    <div class="justify-center max-w-4xl mx-auto rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-6 shadow-sm flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
-      <div class="h-5 w-5 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
-      <span x-text="t('loadingOverlay', 'Rafraîchissement...')"></span>
-    </div>
+      <div class="justify-center max-w-4xl mx-auto rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-6 shadow-sm flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+        <div class="h-5 w-5 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
+        <span x-text="t('buttons.refreshing', 'Rafraîchissement...')"></span>
+      </div>
   </template>
   <template x-if="error">
     <div class="max-w-4xl mx-auto rounded-2xl border border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900 dark:bg-rose-900/20 dark:text-rose-100 px-4 py-3 text-sm" x-text="error"></div>
@@ -33,11 +33,11 @@
             class="inline-flex items-center gap-2 h-10 rounded-lg border border-amber-400 text-slate-700 dark:text-slate-200 bg-white dark:bg-gray-900 px-3 text-sm hover:bg-amber-50 dark:hover:bg-amber-900/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
             :disabled="loading"
             @click="fetchStates()"
-            :title="loading ? t('refreshing', 'Rafraîchissement...') : t('refresh', 'Rafraîchir')"
+            :title="loading ? t('buttons.refreshing', 'Rafraîchissement...') : t('buttons.refresh', 'Refresh runs')"
             :aria-label="loading ? t('buttons.refreshing', 'Refreshing...') : t('buttons.refresh', 'Refresh runs')"
           >
             <i class="fa-solid fa-rotate" :class="loading ? 'animate-spin' : ''"></i>
-            <span x-text="loading ? t('refreshing', 'Rafraîchissement...') : t('refresh', 'Rafraîchir')"></span>
+            <span x-text="loading ? t('buttons.refreshing', 'Rafraîchissement...') : t('buttons.refresh', 'Refresh runs')"></span>
           </button>
           <label class="inline-flex items-center gap-2 h-10 text-sm text-slate-700 dark:text-slate-200 border border-amber-400 dark:border-amber-500 rounded-lg px-3 bg-white dark:bg-gray-900 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition">
             <input type="checkbox" class="rounded text-amber-500 border-slate-300 dark:border-gray-600"

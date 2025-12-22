@@ -31,6 +31,10 @@
       "light": "Mode clair",
       "dark": "Mode sombre"
     },
+    "language": {
+      "fr": "Français",
+      "en": "English"
+    },
     "roadmap": "Roadmap .ScenarWall.",
     "logout": "Logout"
   },

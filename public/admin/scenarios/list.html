@@ -168,32 +168,32 @@
               </label>
               <div class="space-y-3">
                 <div class="flex items-center justify-between gap-3">
-                  <span class="text-sm font-semibold text-slate-900 dark:text-slate-100" x-text="t('create.iconLabel', 'Icône du scénario')"></span>
+                  <span class="text-sm font-semibold text-slate-900 dark:text-slate-100" x-text="t('icon.label', 'Icône du scénario')"></span>
                   <div class="inline-flex items-center gap-2 text-xs text-slate-500 dark:text-slate-300">
                     <i class="text-lg" :class="createModal.icon || defaultScenarioIcon"></i>
-                    <span x-text="t('create.iconPreview', 'Aperçu')"></span>
+                    <span x-text="t('icon.preview', 'Aperçu')"></span>
                   </div>
                 </div>
                 <input type="search"
                       class="w-full rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm"
-                      :placeholder="t('create.iconSearch', 'Rechercher une icône')"
+                      :placeholder="t('icon.search', 'Rechercher une icône')"
                       x-model="createModal.iconSearch"
-                      :aria-label="t('create.iconSearch', 'Rechercher une icône')">
+                      :aria-label="t('icon.search', 'Rechercher une icône')">
                 <div class="grid grid-cols-8 gap-1 sm:grid-cols-8 max-h-48 overflow-y-auto pr-1">
                   <template x-for="option in filteredIcons(createModal.iconSearch)" :key="option.value">
                     <button type="button"
-                            class="rounded-2xl bg-white dark:bg-gray-950 px-2 py-3 flex flex-col items-center gap-1 text-[9px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-100 transition dark:hover:text-emerald-500"
-                            :class="createModal.icon === option.value ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600' : ''"
-                            :aria-pressed="createModal.icon === option.value"
-                            :aria-label="t('create.iconChoose', 'Choisir ') + option.label"
-                            :title="option.label"
-                            @click="createModal.icon = option.value">
+                          class="rounded-2xl bg-white dark:bg-gray-950 px-2 py-3 flex flex-col items-center gap-1 text-[9px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-100 transition dark:hover:text-emerald-500"
+                          :class="createModal.icon === option.value ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600' : ''"
+                          :aria-pressed="createModal.icon === option.value"
+                          :aria-label="t('icon.choose', 'Choisir ') + option.label"
+                          :title="option.label"
+                          @click="createModal.icon = option.value">
                       <i class="text-xl" :class="option.value"></i>
                     </button>
                   </template>
                   <template x-if="filteredIcons(createModal.iconSearch).length === 0">
                     <div class="col-span-full rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-center text-xs text-slate-500 dark:border-gray-700 dark:bg-gray-900/60 dark:text-slate-400">
-                      <span x-text="t('create.iconNone', 'Aucun icône correspondant.')"></span>
+                      <span x-text="t('icon.none', 'Aucun icône correspondant.')"></span>
                     </div>
                   </template>
                 </div>              
@@ -207,7 +207,7 @@
           class="px-4 py-2 text-sm rounded-lg border border-slate-300 dark:border-gray-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
           @click="closeCreateModal()"
           :disabled="createModal.saving"
-          x-text="t('create.cancel', 'Annuler')"
+          x-text="t('common.cancel', 'Annuler')"
           :aria-label="t('buttons.closeModal','Close modal')"
           :title="t('buttons.closeModal','Close modal')"
         ></button>
@@ -215,13 +215,13 @@
           class="px-4 py-2 text-sm rounded-lg bg-emerald-500 text-slate-900 font-semibold hover:bg-emerald-400 transition inline-flex items-center gap-2"
           @click="submitCreate()"
           :disabled="createModal.saving"
-          :aria-label="createModal.saving ? t('buttons.refreshing','Refreshing...') : t('buttons.new','Create scenario')"
-          :title="createModal.saving ? t('buttons.refreshing','Refreshing...') : t('buttons.new','Create scenario')"
+          :aria-label="createModal.saving ? t('common.saving','Sauvegarde...') : t('buttons.new','Create scenario')"
+          :title="createModal.saving ? t('common.saving','Sauvegarde...') : t('buttons.new','Create scenario')"
         >
-                <span x-show="!createModal.saving" x-text="t('create.create', 'Créer')"></span>
+                <span x-show="!createModal.saving" x-text="t('create.submit', 'Créer')"></span>
                 <span class="flex items-center gap-2" x-show="createModal.saving">
                   <span class="h-4 w-4 rounded-full border-2 border-emerald-800 border-t-transparent animate-spin"></span>
-                  <span x-text="t('create.creating', 'Création...')"></span>
+                  <span x-text="t('common.creating', 'Création...')"></span>
                 </span>
               </button>
             </div>
@@ -247,32 +247,32 @@
               </label>
               <div class="space-y-3">
                 <div class="flex items-center justify-between gap-3">
-                  <span class="text-sm font-semibold text-slate-900 dark:text-slate-100" x-text="t('edit.iconLabel', 'Icône du scénario')"></span>
+                  <span class="text-sm font-semibold text-slate-900 dark:text-slate-100" x-text="t('icon.label', 'Icône du scénario')"></span>
                   <div class="inline-flex items-center gap-2 text-xs text-slate-500 dark:text-slate-300">
                     <i class="text-lg" :class="editModal.icon || defaultScenarioIcon"></i>
-                    <span x-text="t('edit.iconPreview', 'Aperçu')"></span>
+                    <span x-text="t('icon.preview', 'Aperçu')"></span>
                   </div>
                 </div>
                 <input type="search"
                       class="w-full rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm"
-                      :placeholder="t('create.iconSearch', 'Rechercher une icône')"
+                      :placeholder="t('icon.search', 'Rechercher une icône')"
                       x-model="editModal.iconSearch"
-                      :aria-label="t('create.iconSearch', 'Rechercher une icône')">
+                      :aria-label="t('icon.search', 'Rechercher une icône')">
                 <div class="grid grid-cols-8 gap-1 sm:grid-cols-8 max-h-48 overflow-y-auto pr-1">
                   <template x-for="option in filteredIcons(editModal.iconSearch)" :key="option.value">
                     <button type="button"
-                            class="rounded-2xl bg-white dark:bg-gray-950 px-2 py-3 flex flex-col items-center gap-1 text-[9px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-100 transition dark:hover:text-emerald-500"
-                            :class="editModal.icon === option.value ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600' : ''"
-                            :aria-pressed="editModal.icon === option.value"
-                            :aria-label="t('create.iconChoose', 'Choisir ') + option.label"
-                            :title="option.label"
-                            @click="editModal.icon = option.value">
+                          class="rounded-2xl bg-white dark:bg-gray-950 px-2 py-3 flex flex-col items-center gap-1 text-[9px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-100 transition dark:hover:text-emerald-500"
+                          :class="editModal.icon === option.value ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600' : ''"
+                          :aria-pressed="editModal.icon === option.value"
+                          :aria-label="t('icon.choose', 'Choisir ') + option.label"
+                          :title="option.label"
+                          @click="editModal.icon = option.value">
                       <i class="text-xl" :class="option.value"></i>
                     </button>
                   </template>
                   <template x-if="filteredIcons(editModal.iconSearch).length === 0">
                     <div class="col-span-full rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-center text-xs text-slate-500 dark:border-gray-700 dark:bg-gray-900/60 dark:text-slate-400"
-                         x-text="t('edit.iconNone', 'Aucun icône correspondant.')">
+                         x-text="t('icon.none', 'Aucun icône correspondant.')">
                     </div>
                   </template>
                 </div>
@@ -283,13 +283,13 @@
             </div>
             <div class="flex items-center justify-end gap-2">
               <button class="px-4 py-2 text-sm rounded-lg border border-slate-300 dark:border-gray-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                      @click="closeEditModal()" :disabled="editModal.saving" x-text="t('edit.cancel', 'Annuler')"></button>
+                      @click="closeEditModal()" :disabled="editModal.saving" x-text="t('common.cancel', 'Annuler')"></button>
               <button class="px-4 py-2 text-sm rounded-lg bg-emerald-500 text-slate-900 font-semibold hover:bg-emerald-400 transition inline-flex items-center gap-2"
                       @click="submitEdit()" :disabled="editModal.saving">
-                <span x-show="!editModal.saving" x-text="t('edit.save', 'Enregistrer')"></span>
+                <span x-show="!editModal.saving" x-text="t('common.save', 'Enregistrer')"></span>
                 <span class="flex items-center gap-2" x-show="editModal.saving">
                   <span class="h-4 w-4 rounded-full border-2 border-emerald-800 border-t-transparent animate-spin"></span>
-                  <span x-text="t('edit.saving', 'Sauvegarde...')"></span>
+                  <span x-text="t('common.saving', 'Sauvegarde...')"></span>
                 </span>
               </button>
             </div>
@@ -312,24 +312,24 @@
               </label>
               <div class="space-y-3">
                 <div class="flex items-center justify-between gap-3">
-                  <span class="text-sm font-semibold text-slate-900 dark:text-slate-100"></span>
+                  <span class="text-sm font-semibold text-slate-900 dark:text-slate-100" x-text="t('icon.label', 'Icône du scénario')"></span>
                   <div class="inline-flex items-center gap-2 text-xs text-slate-500 dark:text-slate-300">
                     <i class="text-lg" :class="sessionModal.icon || defaultSessionIcon"></i>
-                    <span>Aperçu</span>
+                    <span x-text="t('icon.preview', 'Aperçu')"></span>
                   </div>
                 </div>
                 <input type="search"
                       class="w-full rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm"
-                      placeholder="Rechercher une icône"
+                      :placeholder="t('icon.search', 'Rechercher une icône')"
                       x-model="sessionModal.iconSearch"
-                      :aria-label="t('create.iconSearch', 'Rechercher une icône')">
+                      :aria-label="t('icon.search', 'Rechercher une icône')">
                 <div class="grid grid-cols-8 gap-1 sm:grid-cols-8 max-h-48 overflow-y-auto pr-1">
                   <template x-for="option in filteredIcons(sessionModal.iconSearch)" :key="option.value">
                     <button type="button"
                             class="rounded-2xl bg-white dark:bg-gray-950 px-2 py-3 flex flex-col items-center gap-1 text-[9px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-100 transition dark:hover:text-emerald-500"
                             :class="sessionModal.icon === option.value ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600' : ''"
                             :aria-pressed="sessionModal.icon === option.value"
-                            :aria-label="t('create.iconChoose', 'Choisir ') + option.label"
+                            :aria-label="t('icon.choose', 'Choisir ') + option.label"
                             :title="option.label"
                             @click="sessionModal.icon = option.value">
                       <i class="text-xl" :class="option.value"></i>
@@ -337,7 +337,7 @@
                   </template>
                   <template x-if="filteredIcons(sessionModal.iconSearch).length === 0">
                     <div class="col-span-full rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-center text-xs text-slate-500 dark:border-gray-700 dark:bg-gray-900/60 dark:text-slate-400">
-                      Aucun icône correspondant.
+                      <span x-text="t('icon.none', 'Aucun icône correspondant.')"></span>
                     </div>
                   </template>
                 </div>

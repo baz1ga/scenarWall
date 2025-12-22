@@ -1,24 +1,19 @@
 {
-  "loading": "[en] Loading page",
-  "title": "[en] Notes",
-  "subtitle": "[en] View and manage notes by scenario and session.",
-  "none": "[en] No notes",
-  "unlinked": "[en] Unlinked",
-  "actions": {
-    "edit": "[en] Edit",
-    "delete": "[en] Delete",
-    "save": "[en] Save",
-    "cancel": "[en] Cancel",
-    "confirm": "[en] Confirm"
-  },
+  "loading": "Loading page",
+  "title": "Notes",
+  "subtitle": "View and manage notes by scenario and session.",
+  "none": "No notes",
+  "unlinked": "Unlinked",
   "buttons": {
-    "edit": "[en] Edit note",
-    "delete": "[en] Delete note",
-    "closeModal": "[en] Close modal"
+    "edit": "Edit note",
+    "delete": "Delete note",
+    "cancel": "Cancel",
+    "save": "Save",
+    "closeModal": "Close modal"
   },
   "modals": {
-    "editTitle": "[en] Edit note",
-    "deleteTitle": "[en] Delete note",
-    "deleteConfirm": "[en] Confirm deletion of note {name}?"
+    "editTitle": "Edit note",
+    "deleteTitle": "Delete note",
+    "deleteConfirm": "Confirm deletion of note {name}?"
   }
 }

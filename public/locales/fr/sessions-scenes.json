@@ -1,87 +1,15 @@
 {
   "loading": "Chargement de la page",
+  "loadingOverlay": "Chargement de la page",
   "title": "Scènes",
   "subtitle": "Pour rythmer votre partie",
-  "duplicateScene": "Dupliquer la scène",
-  "addScene": "Ajouter une scène",
-  "sceneFallback": "Scène",
-  "reorder": {
-    "prev": "Précédente",
-    "next": "Suivante"
-  },
-  "notes": {
-    "edit": "Éditer la note",
-    "save": "Enregistrer",
-    "cancel": "Annuler",
-    "create": "Créer une note",
-    "placeholder": "Vos notes de session...",
-    "saving": "Sauvegarde...",
-    "all": "Toutes les notes"
-  },
-  "confirm": {
-    "title": "Confirmation",
-    "deleteScene": "Supprimer cette scène ?",
-    "deleteSession": "Supprimer cette session ?"
-  },
-  "modals": {
-    "createScene": "Ajouter une scène",
-    "editScene": "Éditer la scène",
-    "titleLabel": "Titre de la scène",
-    "orderLabel": "Ordre",
-    "save": "Enregistrer",
-    "cancel": "Annuler"
-  },
-  "editSession": {
-    "fields": {
-      "iconChoose": "Choisir "
-    }
-  },
-  "empty": "Aucune scène",
-  "tabs": {
-    "images": "Images",
-    "audio": "Audio",
-    "notes": "Notes"
-  },
-  "errors": {
-    "sessionNotFound": "Session introuvable",
-    "sessionLoad": "Impossible de charger la session",
-    "deleteSession": "Suppression impossible",
-    "deleteSessionGeneric": "Erreur lors de la suppression de la session",
-    "sceneLoad": "Impossible de charger les scènes",
-    "reorder": "Erreur lors du réordonnancement",
-    "titleRequired": "Le titre est requis",
-    "sceneNotFound": "Scène introuvable",
-    "update": "Mise à jour impossible",
-    "save": "Erreur lors de la sauvegarde",
-    "createScene": "Création impossible",
-    "createSceneGeneric": "Erreur lors de la création",
-    "images": "Images",
-    "audio": "Audio"
+  "header": {
+    "title": "Scènes",
+    "subtitle": "Pour rythmer votre partie"
   },
   "breadcrumb": {
     "scenario": "Scénario",
     "session": "Session"
-  },
-  "pixabay": {
-    "missingKey": "Clé API Pixabay manquante.",
-    "error": "Erreur Pixabay.",
-    "noResult": "Aucun résultat.",
-    "importOk": "Image importée depuis Pixabay.",
-    "importFail": "Import Pixabay impossible."
-  },
-  "upload": {
-    "fromUrlSuccess": "Image importée avec succès.",
-    "fromUrlError": "Import depuis URL impossible."
-  },
-  "pnj": {
-    "title": "PNJ",
-    "subtitle": "Pour gérer les PNJ de la session",
-    "soon": "(bientôt)"
-  },
-  "loadingOverlay": "Chargement de la page",
-  "header": {
-    "title": "Scènes",
-    "subtitle": "Pour rythmer votre partie"
   },
   "actions": {
     "duplicateScene": "Dupliquer la scène",
@@ -113,8 +41,44 @@
     "viewSettings": "Voir les paramètres",
     "openGm": "Ouvrir l'espace Game Master"
   },
-  "cards": {
-    "sceneFallback": "Scène"
+  "notes": {
+    "edit": "Éditer la note",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "create": "Créer une note",
+    "placeholder": "Vos notes de session...",
+    "saving": "Sauvegarde...",
+    "all": "Toutes les notes"
+  },
+  "confirm": {
+    "title": "Confirmation",
+    "deleteScene": "Supprimer cette scène ?",
+    "deleteSession": "Supprimer cette session ?",
+    "deleteSessionAction": "Supprimer",
+    "deleteSceneTitle": "Supprimer cette scène ?",
+    "deleteSceneBody": "sera définitivement supprimée.",
+    "deleteSceneAction": "Supprimer la scène",
+    "deleteSceneAndSession": "Supprimer scène + session"
+  },
+  "modals": {
+    "createScene": "Ajouter une scène",
+    "editScene": "Éditer la scène",
+    "titleLabel": "Titre de la scène",
+    "orderLabel": "Ordre",
+    "save": "Enregistrer",
+    "cancel": "Annuler"
+  },
+  "create": {
+    "title": "Nouvelle scène",
+    "desc": "Une scène sera ajoutée à cette session.",
+    "placeholder": "Titre de la scène",
+    "submit": "Créer",
+    "saving": "Création..."
+  },
+  "common": {
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "saving": "Sauvegarde..."
   },
   "images": {
     "title": "Images de la scène",
@@ -142,31 +106,50 @@
     "remove": "Retirer l'audio de la scène",
     "associate": "Associer l'audio à la scène"
   },
-  "confirm": {
-    "title": "Confirmation",
-    "deleteScene": "Supprimer cette scène ?",
-    "deleteSession": "Supprimer cette session ?",
-    "deleteSessionAction": "Supprimer",
-    "deleteSceneTitle": "Supprimer cette scène ?",
-    "deleteSceneBody": "sera définitivement supprimée.",
-    "deleteSceneAction": "Supprimer la scène",
-    "deleteSceneAndSession": "Supprimer scène + session"
+  "pixabay": {
+    "missingKey": "Clé API Pixabay manquante.",
+    "error": "Erreur Pixabay.",
+    "noResult": "Aucun résultat.",
+    "importOk": "Image importée depuis Pixabay.",
+    "importFail": "Import Pixabay impossible."
+  },
+  "upload": {
+    "fromUrlSuccess": "Image importée avec succès.",
+    "fromUrlError": "Import depuis URL impossible."
+  },
+  "pnj": {
+    "title": "PNJ",
+    "subtitle": "Pour gérer les PNJ de la session",
+    "soon": "(bientôt)"
+  },
+  "empty": "Aucune scène",
+  "tabs": {
+    "images": "Images",
+    "audio": "Audio",
+    "notes": "Notes"
+  },
+  "errors": {
+    "sessionNotFound": "Session introuvable",
+    "sessionLoad": "Impossible de charger la session",
+    "deleteSession": "Suppression impossible",
+    "deleteSessionGeneric": "Erreur lors de la suppression de la session",
+    "sceneLoad": "Impossible de charger les scènes",
+    "reorder": "Erreur lors du réordonnancement",
+    "titleRequired": "Le titre est requis",
+    "sceneNotFound": "Scène introuvable",
+    "update": "Mise à jour impossible",
+    "save": "Erreur lors de la sauvegarde",
+    "createScene": "Création impossible",
+    "createSceneGeneric": "Erreur lors de la création",
+    "images": "Images",
+    "audio": "Audio"
+  },
+  "cards": {
+    "sceneFallback": "Scène"
   },
   "rename": {
     "title": "Renommer la scène",
     "placeholder": "Titre de la scène"
-  },
-  "create": {
-    "title": "Nouvelle scène",
-    "desc": "Une scène sera ajoutée à cette session.",
-    "placeholder": "Titre de la scène",
-    "submit": "Créer",
-    "saving": "Création..."
-  },
-  "common": {
-    "cancel": "Annuler",
-    "save": "Enregistrer",
-    "saving": "Sauvegarde..."
   },
   "nav": {
     "sessionFallback": "Session",

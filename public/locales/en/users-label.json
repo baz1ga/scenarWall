@@ -1,63 +1,59 @@
 {
-  "loading": "[en] Loading page",
-  "title": "[en] Users",
-  "subtitle": "[en] Manage quotas and usage per tenant.",
-  "totalUsage": "[en] Total usage",
+  "loading": "Loading page",
+  "title": "Users",
+  "subtitle": "Manage quotas and usage per tenant.",
+  "totalUsage": "Total usage",
   "units": {
-    "mo": "[en] MB"
+    "mo": "MB"
   },
   "usage": {
-    "custom": "[en] custom",
-    "undefinedQuota": "[en] quota not set"
+    "custom": "custom",
+    "undefinedQuota": "quota not set"
   },
   "globalQuota": {
-    "label": "[en] Default global quota (MB)",
-    "updateButton": "[en] Update",
-    "loadError": "[en] Unable to load global quota.",
-    "invalid": "[en] Enter a valid value (>0).",
-    "success": "[en] Global quota updated.",
-    "updateError": "[en] Update failed."
+    "label": "Default global quota (MB)",
+    "updateButton": "Update",
+    "loadError": "Unable to load global quota.",
+    "invalid": "Enter a valid value (>0).",
+    "success": "Global quota updated.",
+    "updateError": "Update failed."
   },
   "confirm": {
-    "title": "[en] Confirmation",
-    "deleteUser": "[en] Delete this account permanently?",
-    "cta": "[en] Confirm"
-  },
-  "actions": {
-    "editQuota": "[en] Custom quota",
-    "delete": "[en] Delete"
+    "title": "Confirmation",
+    "deleteUser": "Delete this account permanently?",
+    "cta": "Confirm"
   },
   "buttons": {
-    "editQuota": "[en] Edit quota",
-    "delete": "[en] Delete user",
-    "closeModal": "[en] Close modal",
-    "save": "[en] Save quota"
+    "editQuota": "Edit quota",
+    "delete": "Delete user",
+    "closeModal": "Close modal",
+    "save": "Save quota"
   },
   "table": {
-    "loading": "[en] Loading...",
-    "empty": "[en] No users",
+    "loading": "Loading...",
+    "empty": "No users",
     "columns": {
-      "name": "[en] Name",
-      "tenant": "[en] Tenant",
-      "images": "[en] Images",
-      "audio": "[en] Audio",
-      "usage": "[en] Usage",
-      "lastLogin": "[en] Last login",
-      "actions": "[en] Actions"
+      "name": "Name",
+      "tenant": "Tenant",
+      "images": "Images",
+      "audio": "Audio",
+      "usage": "Usage",
+      "lastLogin": "Last login",
+      "actions": "Actions"
     }
   },
   "tenantQuota": {
-    "title": "[en] Custom quota",
-    "desc": "[en] Set a quota (MB) for",
-    "fallbackUser": "[en] this user",
-    "clear": "[en] Leave empty to apply the global quota.",
-    "label": "[en] Quota (MB)",
-    "placeholder": "[en] Global quota",
-    "invalid": "[en] Enter a positive number or leave empty for global quota.",
-    "updateError": "[en] Unable to update quota."
+    "title": "Custom quota",
+    "desc": "Set a quota (MB) for",
+    "fallbackUser": "this user",
+    "clear": "Leave empty to apply the global quota.",
+    "label": "Quota (MB)",
+    "placeholder": "Global quota",
+    "invalid": "Enter a positive number or leave empty for global quota.",
+    "updateError": "Unable to update quota."
   },
   "common": {
-    "cancel": "[en] Cancel",
-    "save": "[en] Save"
+    "cancel": "Cancel",
+    "save": "Save"
   }
 }

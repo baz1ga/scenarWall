@@ -1,48 +1,49 @@
 {
-  "loading": "[en] Loading page",
-  "title": "[en] Scenarios",
-  "subtitle": "[en] Manage your stories and their sessions.",
-  "new": "[en] New",
-  "loadingList": "[en] Loading scenarios...",
-  "empty": "[en] No scenarios yet. Click “New” to get started.",
-  "untitled": "[en] Untitled",
-  "newSession": "[en] New session",
+  "loading": "Loading page",
+  "title": "Scenarios",
+  "subtitle": "Manage your stories and their sessions.",
+  "new": "New",
+  "loadingList": "Loading scenarios...",
+  "empty": "No scenarios yet. Click “New” to get started.",
+  "untitled": "Untitled",
+  "newSession": "New session",
   "confirm": {
-    "title": "[en] Confirmation",
-    "cancel": "[en] Cancel",
-    "delete": "[en] Delete",
-    "message": "[en] Delete this scenario?",
-    "deleteMessageBase": "[en] Delete this scenario, its sessions and scenes?",
-    "deleteError": "[en] Delete failed"
+    "title": "Confirmation",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "message": "Delete this scenario?",
+    "deleteMessageBase": "Delete this scenario, its sessions and scenes?",
+    "deleteError": "Delete failed"
   },
   "buttons": {
-    "new": "[en] Create scenario",
-    "edit": "[en] Edit scenario",
-    "delete": "[en] Delete scenario",
-    "newSession": "[en] Add session",
-    "gameMaster": "[en] Open Game Master",
-    "closeModal": "[en] Close modal"
+    "new": "Create scenario",
+    "edit": "Edit scenario",
+    "delete": "Delete scenario",
+    "newSession": "Add session",
+    "gameMaster": "Open Game Master",
+    "closeModal": "Close modal"
   },
   "create": {
-    "title": "[en] New scenario",
-    "iconLabel": "[en] Scenario icon",
-    "iconPreview": "[en] Preview",
-    "iconSearch": "[en] Search an icon",
-    "iconChoose": "[en] Choose ",
-    "iconNone": "[en] No matching icon.",
-    "cancel": "[en] Cancel",
-    "create": "[en] Create",
-    "creating": "[en] Creating..."
+    "title": "New scenario",
+    "placeholder": "Scenario title",
+    "submit": "Create"
   },
   "edit": {
-    "title": "[en] Edit scenario",
-    "createdAt": "[en] Created on",
-    "iconLabel": "[en] Scenario icon",
-    "iconPreview": "[en] Preview",
-    "iconNone": "[en] No matching icon.",
-    "namePlaceholder": "[en] Scenario title",
-    "cancel": "[en] Cancel",
-    "save": "[en] Save",
-    "saving": "[en] Saving..."
+    "title": "Edit scenario",
+    "createdAt": "Created on",
+    "namePlaceholder": "Scenario title"
+  },
+  "icon": {
+    "label": "Scenario icon",
+    "preview": "Preview",
+    "search": "Search an icon",
+    "choose": "Choose ",
+    "none": "No matching icon."
+  },
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "creating": "Creating...",
+    "saving": "Saving..."
   }
 }

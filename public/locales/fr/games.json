@@ -1,8 +1,6 @@
 {
   "title": "Parties jouées",
   "subtitle": "Suivez et filtrez vos runs par tenant et session.",
-  "refresh": "Rafraîchir",
-  "refreshing": "Rafraîchissement...",
   "hideShort": "Masquer < 5m",
   "searchPlaceholder": "Rechercher un tenant...",
   "loadingOverlay": "Rafraîchissement...",

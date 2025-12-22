@@ -1,39 +1,38 @@
 {
-  "title": "[en] Audio files",
-  "subtitle": "[en] Audio library available for your scenes.",
-  "loading": "[en] Loading page",
-  "upload": "[en] Add (max 1 MB)",
-  "none": "[en] No audio",
-  "reorderHint": "[en] Drag to reorder",
+  "title": "Audio files",
+  "subtitle": "Audio library available for your scenes.",
+  "loading": "Loading page",
+  "none": "No audio",
+  "reorderHint": "Drag to reorder",
   "renameDialog": {
-    "title": "[en] Rename audio",
-    "current": "[en] Current name:",
-    "label": "[en] New name",
-    "placeholder": "[en] ex: ambiance.mp3",
-    "cancel": "[en] Cancel",
-    "confirm": "[en] Rename",
-    "sameName": "[en] Name is identical.",
-    "empty": "[en] Enter a name."
+    "title": "Rename audio",
+    "current": "Current name:",
+    "label": "New name",
+    "placeholder": "ex: ambiance.mp3",
+    "cancel": "Cancel",
+    "confirm": "Rename",
+    "sameName": "Name is identical.",
+    "empty": "Enter a name."
   },
   "confirm": {
-    "title": "[en] Confirmation",
-    "cancel": "[en] Cancel",
-    "confirm": "[en] Confirm",
-    "deleteOne": "[en] Delete this audio?",
-    "deleteMany": "[en] Delete permanently {count} audio{plural}{impact}?",
-    "impact": "[en] {count} impacted scene{plural}"
+    "title": "Confirmation",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "deleteOne": "Delete this audio?",
+    "deleteMany": "Delete permanently {count} audio{plural}{impact}?",
+    "impact": "{count} impacted scene{plural}"
   },
   "buttons": {
-    "rename": "[en] Rename audio",
-    "delete": "[en] Delete audio"
+    "upload": "Add (max 1 MB)",
+    "rename": "Rename audio",
+    "delete": "Delete audio"
   },
-  "upload": "[en] Add (max 1 MB)",
   "messages": {
-    "added": "[en] {count} file(s) added.",
-    "errors": "[en] Some uploads failed.",
-    "deletedScenes": "[en] {count} scene(s) cleaned.",
-    "deleteFailed": "[en] Deletion failed.",
-    "renameOk": "[en] Name updated.",
-    "renameFail": "[en] Rename failed."
+    "added": "{count} file(s) added.",
+    "errors": "Some uploads failed.",
+    "deletedScenes": "{count} scene(s) cleaned.",
+    "deleteFailed": "Deletion failed.",
+    "renameOk": "Name updated.",
+    "renameFail": "Rename failed."
   }
 }
