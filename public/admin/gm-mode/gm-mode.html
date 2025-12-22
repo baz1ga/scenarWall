@@ -154,9 +154,9 @@
           <span class="tracking-tight" x-text="`${timerParts().h}:${timerParts().m}:${timerParts().s}`"></span>
         </div>
       <button class="inline-flex items-center gap-2 rounded-lg border font-semibold px-4 py-2 text-sm transition"
-              :class="frontOnline ? 'border-slate-300 bg-slate-100 text-slate-400 cursor-not-allowed' : 'border-indigo-500 bg-indigo-500 text-white hover:bg-indigo-400 dark:bg-gray-800 dark:border-indigo-500 dark:text-indigo-100 dark:hover:bg-slate-800'"
+              :class="frontOnline || !slideshowImages.length ? 'border-slate-300 bg-slate-100 text-slate-400 cursor-not-allowed' : 'border-indigo-500 bg-indigo-500 text-white hover:bg-indigo-400 dark:bg-gray-800 dark:border-indigo-500 dark:text-indigo-100 dark:hover:bg-slate-800'"
               @click="openFront"
-              :disabled="frontOnline"
+              :disabled="frontOnline || !slideshowImages.length"
               x-show="selectedSessionId">
         <i class="fa-solid fa-film"></i>
         <span x-text="t('header.present', 'Présenter')"></span>
