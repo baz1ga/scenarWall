@@ -11,6 +11,11 @@
     "cancel": "Annuler",
     "confirm": "Confirmer"
   },
+  "buttons": {
+    "edit": "Éditer la note",
+    "delete": "Supprimer la note",
+    "closeModal": "Fermer la modale"
+  },
   "modals": {
     "editTitle": "Éditer la note",
     "deleteTitle": "Supprimer la note",

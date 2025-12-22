@@ -87,6 +87,32 @@
     "duplicateScene": "Dupliquer la scène",
     "addScene": "Ajouter une scène"
   },
+  "accessibility": {
+    "duplicateScene": "Dupliquer la scène",
+    "addScene": "Ajouter une scène",
+    "moveScenePrev": "Déplacer la scène vers le haut",
+    "moveSceneNext": "Déplacer la scène vers le bas",
+    "deleteScene": "Supprimer la scène",
+    "deleteNote": "Supprimer la note",
+    "closeZoom": "Fermer la vue agrandie",
+    "tensionToggle": "Activer/désactiver la barre de tension",
+    "tensionLabel": "Champ Label du niveau",
+    "tensionColor": "Sélecteur de couleur du niveau",
+    "tensionAudio": "Sélecteur d'audio du niveau",
+    "resetTension": "Réinitialiser les tensions",
+    "saveTension": "Enregistrer les tensions",
+    "sessionTitleInput": "Champ titre de la session",
+    "deleteSession": "Supprimer cette session",
+    "saveSession": "Enregistrer la session",
+    "cancelDelete": "Annuler la suppression",
+    "confirmDelete": "Confirmer la suppression",
+    "viewScenes": "Voir les scènes",
+    "viewTension": "Voir les réglages de tension",
+    "viewPlayers": "Voir les joueurs",
+    "viewPnj": "Gérer les PNJ",
+    "viewSettings": "Voir les paramètres",
+    "openGm": "Ouvrir l'espace Game Master"
+  },
   "cards": {
     "sceneFallback": "Scène"
   },

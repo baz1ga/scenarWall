@@ -59,5 +59,13 @@
     "pixabayImportOk": "[en] Image imported from Pixabay.",
     "pixabayImportFail": "[en] Pixabay import failed."
   },
+  "buttons": {
+    "selectImages": "[en] Select images",
+    "hideSelected": "[en] Hide selection",
+    "add": "[en] Add to gallery",
+    "showHidden": "[en] Restore to library",
+    "deleteSelection": "[en] Delete selection",
+    "closeZoom": "[en] Close preview"
+  },
   "zoomClose": "[en] Click to close"
 }

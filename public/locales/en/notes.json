@@ -11,6 +11,11 @@
     "cancel": "[en] Cancel",
     "confirm": "[en] Confirm"
   },
+  "buttons": {
+    "edit": "[en] Edit note",
+    "delete": "[en] Delete note",
+    "closeModal": "[en] Close modal"
+  },
   "modals": {
     "editTitle": "[en] Edit note",
     "deleteTitle": "[en] Delete note",

@@ -72,6 +72,10 @@
     "cancel": "Annuler",
     "proceed": "Continuer"
   },
+  "buttons": {
+    "closeScenarDeck": "Fermer ScenarDeck",
+    "closeModal": "Fermer la modale"
+  },
   "gm": {
     "session": {
       "loadError": "Impossible de charger les sessions"

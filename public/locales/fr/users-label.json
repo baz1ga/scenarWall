@@ -27,6 +27,12 @@
     "editQuota": "Quota personnalisé",
     "delete": "Supprimer"
   },
+  "buttons": {
+    "editQuota": "Quota personnalisé",
+    "delete": "Supprimer l'utilisateur",
+    "closeModal": "Fermer la modale",
+    "save": "Enregistrer le quota"
+  },
   "table": {
     "loading": "Chargement...",
     "empty": "Aucun utilisateur",

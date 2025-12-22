@@ -98,14 +98,22 @@
                 </td>
                 <td class="px-4 py-2" x-text="u.lastLogin ? new Date(u.lastLogin).toLocaleString(lang || 'fr') : '—'"></td>
                 <td class="px-4 py-2">
-                  <div class="flex items-center gap-2">
-                    <button class="h-8 w-8 inline-flex items-center justify-center rounded-lg border users-border users-text hover:bg-lime-50 dark:hover:bg-lime-900/30 transition" 
-                            @click="editTenantQuota(u)" :title="t('actions.editQuota', 'Quota personnalisé')">
+                <div class="flex items-center gap-2">
+                    <button
+                      class="h-8 w-8 inline-flex items-center justify-center rounded-lg border users-border users-text hover:bg-lime-50 dark:hover:bg-lime-900/30 transition"
+                      @click="editTenantQuota(u)"
+                      :title="t('buttons.editQuota', 'Edit quota')"
+                      :aria-label="t('buttons.editQuota', 'Edit quota')"
+                    >
                       <i class="fa-solid fa-chart-pie"></i>
                     </button>
                     <template x-if="!u.admin">
-                      <button class="h-8 w-8 inline-flex items-center justify-center rounded-lg border notes-border notes-text hover:bg-lime-50 dark:hover:bg-lime-900/30 transition" 
-                            @click="deleteUser(u.email)" :title="t('actions.delete', 'Supprimer')">
+                      <button
+                        class="h-8 w-8 inline-flex items-center justify-center rounded-lg border notes-border notes-text hover:bg-lime-50 dark:hover:bg-lime-900/30 transition"
+                        @click="deleteUser(u.email)"
+                        :title="t('buttons.delete', 'Delete user')"
+                        :aria-label="t('buttons.delete', 'Delete user')"
+                      >
                         <i class="fa-solid fa-trash"></i>
                       </button>
                     </template>
@@ -152,9 +160,20 @@
         <p class="text-xs text-rose-500" x-text="tenantQuotaModal.error" x-show="tenantQuotaModal.error"></p>
       </div>
       <div class="flex justify-end gap-2 pt-2">
-        <button class="px-4 py-2 rounded-lg border border-slate-300 dark:border-gray-700 text-slate-700 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800" @click="closeTenantQuotaModal()" x-text="t('common.cancel', 'Annuler')"></button>
-        <button class="px-4 py-2 rounded-lg text-white font-semibold users-bg hover:brightness-110 transition"
-                @click="saveTenantQuota()" x-text="t('common.save', 'Enregistrer')"></button>
+        <button
+          class="px-4 py-2 rounded-lg border border-slate-300 dark:border-gray-700 text-slate-700 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800"
+          @click="closeTenantQuotaModal()"
+          x-text="t('common.cancel', 'Annuler')"
+          :aria-label="t('buttons.closeModal','Close modal')"
+          :title="t('buttons.closeModal','Close modal')"
+        ></button>
+        <button
+          class="px-4 py-2 rounded-lg text-white font-semibold users-bg hover:brightness-110 transition"
+          @click="saveTenantQuota()"
+          x-text="t('common.save', 'Enregistrer')"
+          :aria-label="t('buttons.save', 'Save quota')"
+          :title="t('buttons.save', 'Save quota')"
+        ></button>
       </div>
     </div>
   </div>
@@ -176,8 +195,20 @@
       </div>
       <p class="text-sm text-slate-600 dark:text-slate-300" x-text="confirmModal.message"></p>
       <div class="flex justify-end gap-2 pt-2">
-        <button class="px-4 py-2 rounded-lg border border-slate-300 dark:border-gray-700 text-slate-700 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800" @click="closeConfirm()" x-text="t('common.cancel', 'Annuler')"></button>
-        <button class="px-4 py-2 rounded-lg bg-rose-600 text-white font-semibold hover:bg-rose-500" @click="confirmYes()" x-text="t('confirm.cta', 'Confirmer')"></button>
+        <button
+          class="px-4 py-2 rounded-lg border border-slate-300 dark:border-gray-700 text-slate-700 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800"
+          @click="closeConfirm()"
+          x-text="t('common.cancel', 'Annuler')"
+          :aria-label="t('buttons.closeModal','Close modal')"
+          :title="t('buttons.closeModal','Close modal')"
+        ></button>
+        <button
+          class="px-4 py-2 rounded-lg bg-rose-600 text-white font-semibold hover:bg-rose-500"
+          @click="confirmYes()"
+          x-text="t('confirm.cta', 'Confirmer')"
+          :aria-label="t('buttons.delete','Delete user')"
+          :title="t('buttons.delete','Delete user')"
+        ></button>
       </div>
     </div>
   </div>

@@ -59,5 +59,13 @@
     "pixabayImportOk": "Image importée depuis Pixabay.",
     "pixabayImportFail": "Import Pixabay impossible."
   },
+  "buttons": {
+    "selectImages": "Sélectionner des images",
+    "hideSelected": "Mettre de côté",
+    "add": "Ajouter à la bibliothèque",
+    "showHidden": "Restaurer dans la bibliothèque",
+    "deleteSelection": "Supprimer la sélection",
+    "closeZoom": "Fermer la prévisualisation"
+  },
   "zoomClose": "Cliquer pour fermer"
 }

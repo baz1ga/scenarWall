@@ -19,6 +19,7 @@
       <a :href="session?.id ? `/admin/sessions/edit-scenes.html?id=${session.id}` : '/admin/sessions/edit-scenes.html'"
         class="flex items-center justify-between pl-2 py-2 transition hover:border-emerald-400 hover:bg-emerald-50/60 dark:hover:border-emerald-700 dark:hover:bg-emerald-900/20"
         :class="location.pathname.includes('edit-scenes') ? 'bg-emerald-50/60 dark:bg-emerald-900/20' : ''"
+        :aria-label="t('accessibility.viewScenes','Voir les scènes')"
         >
           <span
             class="inline-flex items-center gap-2 font-semibold"
@@ -30,6 +31,7 @@
       <a :href="session?.id ? `/admin/sessions/edit-tension.html?id=${session.id}` : '/admin/sessions/edit-tension.html'"
         class="flex items-center justify-between pl-2 py-2 transition hover:border-emerald-400 hover:bg-emerald-50/60 dark:hover:border-emerald-700 dark:hover:bg-emerald-900/20"
         :class="location.pathname.includes('edit-tension') ? 'bg-emerald-50/60 dark:bg-emerald-900/20' : ''"
+        :aria-label="t('accessibility.viewTension','Voir la tension')"
         >
           <span
             class="inline-flex items-center gap-2 font-semibold"
@@ -41,6 +43,7 @@
       <a :href="session?.id ? `/admin/sessions/edit-table.html?id=${session.id}` : '/admin/sessions/edit-table.html'"
         class="flex items-center justify-between pl-2 py-2 transition hover:border-emerald-400 hover:bg-emerald-50/60 dark:hover:border-emerald-700 dark:hover:bg-emerald-900/20"
         :class="location.pathname.includes('edit-table') ? 'bg-emerald-50/60 dark:bg-emerald-900/20' : ''"
+        :aria-label="t('accessibility.viewPlayers','Voir les joueurs')"
         >
           <span
             class="inline-flex items-center gap-2 font-semibold"
@@ -52,6 +55,7 @@
       <a :href="session?.id ? `/admin/sessions/edit-pnj.html?id=${session.id}` : '/admin/sessions/edit-pnj.html'"
         class="flex items-center justify-between pl-2 py-2 transition hover:border-emerald-400 hover:bg-emerald-50/60 dark:hover:border-emerald-700 dark:hover:bg-emerald-900/20"
         :class="location.pathname.includes('edit-pnj') ? 'bg-emerald-50/60 dark:bg-emerald-900/20' : ''"
+        :aria-label="t('accessibility.viewPnj','Voir les PNJ')"
         >
           <span
             class="inline-flex items-center gap-2 font-semibold"
@@ -63,6 +67,7 @@
       <a :href="session?.id ? `/admin/sessions/edit-sessions.html?id=${session.id}` : '/admin/sessions/edit-sessions.html'"
         class="flex items-center justify-between pl-2 py-2 transition hover:border-emerald-400 hover:bg-emerald-50/60 dark:hover:border-emerald-700 dark:hover:bg-emerald-900/20"
         :class="location.pathname.includes('edit-sessions') ? 'bg-emerald-50/60 dark:bg-emerald-900/20' : ''"
+        :aria-label="t('accessibility.viewSettings','Voir les paramètres')"
         >
           <span
             class="inline-flex items-center gap-2 font-semibold"
@@ -78,6 +83,8 @@
               type="button"
               class="w-full inline-flex items-center justify-center gap-2 h-10 rounded-lg border border-indigo-300 text-indigo-700 dark:text-indigo-200 bg-white dark:bg-gray-900 text-sm font-semibold hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition px-3"
               @click="openGameMaster(session?.id || (new URLSearchParams(window.location.search || '').get('id')))">
+        :aria-label="t('accessibility.openGm','Ouvrir le tableau du GM')"
+        :title="t('accessibility.openGm','Ouvrir le tableau du GM')">
         <i class="fa-solid fa-hat-wizard"></i> <span x-text="t('nav.gm', 'Game Master')"></span>
       </button>
     </div>

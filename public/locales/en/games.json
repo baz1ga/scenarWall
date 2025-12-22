@@ -12,5 +12,12 @@
     "date": "[en] Date",
     "duration": "[en] Duration"
   },
-  "noRuns": "[en] No games played"
+  "noRuns": "[en] No games played",
+  "buttons": {
+    "refresh": "[en] Refresh runs",
+    "refreshing": "[en] Refreshing..."
+  },
+  "aria": {
+    "search": "[en] Search a tenant"
+  }
 }

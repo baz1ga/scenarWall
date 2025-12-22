@@ -2,7 +2,7 @@
   "title": "[en] Audio files",
   "subtitle": "[en] Audio library available for your scenes.",
   "loading": "[en] Loading page",
-  "upload": "[en] Add (< 1 MB)",
+  "upload": "[en] Add (max 1 MB)",
   "none": "[en] No audio",
   "reorderHint": "[en] Drag to reorder",
   "renameDialog": {
@@ -23,6 +23,11 @@
     "deleteMany": "[en] Delete permanently {count} audio{plural}{impact}?",
     "impact": "[en] {count} impacted scene{plural}"
   },
+  "buttons": {
+    "rename": "[en] Rename audio",
+    "delete": "[en] Delete audio"
+  },
+  "upload": "[en] Add (max 1 MB)",
   "messages": {
     "added": "[en] {count} file(s) added.",
     "errors": "[en] Some uploads failed.",

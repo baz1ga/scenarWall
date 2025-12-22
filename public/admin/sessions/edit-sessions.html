@@ -29,7 +29,9 @@
                 <label class="space-y-1 block">
                   <span class="text-sm font-semibold text-slate-900 dark:text-slate-100" x-text="t('editSession.fields.titleLabel', 'Titre')"></span>
                   <input type="text" class="w-full rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm"
-                        x-model="editModal.title" :placeholder="t('editSession.fields.titlePlaceholder', 'Titre de la session')" required>
+                        x-model="editModal.title" :placeholder="t('editSession.fields.titlePlaceholder', 'Titre de la session')" required
+                        :aria-label="t('accessibility.sessionTitleInput','Titre de la session')"
+                        :title="t('accessibility.sessionTitleInput','Titre de la session')">
                 </label>
                 <div class="space-y-3">
                   <div class="flex items-center justify-between gap-3">
@@ -60,12 +62,16 @@
                 </div>
               </div>
               <div class="flex flex-wrap justify-end gap-2">
-                <button class="px-4 py-2 rounded-lg border border-rose-300 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-sm font-semibold hover:bg-rose-50 dark:hover:bg-rose-900/20 transition"
-                        @click="deleteSessionConfirm()" :disabled="editModal.saving">
+                    <button class="px-4 py-2 rounded-lg border border-rose-300 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-sm font-semibold hover:bg-rose-50 dark:hover:bg-rose-900/20 transition"
+                        @click="deleteSessionConfirm()" :disabled="editModal.saving"
+                        :aria-label="t('accessibility.deleteSession','Supprimer la session')"
+                        :title="t('accessibility.deleteSession','Supprimer la session')">
                   <i class="fa-solid fa-trash"></i> <span x-text="t('editSession.actions.delete', 'Supprimer la session')"></span>
                 </button>
                 <button class="px-4 py-2 rounded-lg bg-emerald-500 text-slate-900 text-sm font-semibold hover:bg-emerald-400 transition inline-flex items-center gap-2"
-                        @click="submitEdit()" :disabled="editModal.saving">
+                        @click="submitEdit()" :disabled="editModal.saving"
+                        :aria-label="t('accessibility.saveSession','Enregistrer les paramètres de session')"
+                        :title="t('accessibility.saveSession','Enregistrer les paramètres de session')">
                   <span x-show="!editModal.saving" x-text="t('common.save', 'Enregistrer')"></span>
                   <span class="flex items-center gap-2" x-show="editModal.saving">
                     <span class="h-4 w-4 rounded-full border-2 border-emerald-800 border-t-transparent animate-spin"></span>
@@ -95,9 +101,13 @@
         </div>
         <div class="flex justify-end gap-2">
           <button class="px-4 py-2 rounded-lg border border-slate-200 dark:border-gray-700 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                  @click="cancelDeleteSession()" x-text="t('common.cancel', 'Annuler')"></button>
+                  @click="cancelDeleteSession()" x-text="t('common.cancel', 'Annuler')"
+                  :aria-label="t('accessibility.cancelDelete','Annuler la suppression')"
+                  :title="t('accessibility.cancelDelete','Annuler la suppression')"></button>
           <button class="px-4 py-2 rounded-lg bg-rose-600 text-white text-sm font-semibold hover:bg-rose-500 transition"
-                  @click="confirmDeleteSession()" x-text="t('confirm.deleteSessionAction', 'Supprimer')"></button>
+                  @click="confirmDeleteSession()" x-text="t('confirm.deleteSessionAction', 'Supprimer')"
+                  :aria-label="t('accessibility.confirmDelete','Confirmer la suppression')"
+                  :title="t('accessibility.confirmDelete','Confirmer la suppression')"></button>
         </div>
       </div>
     </div>

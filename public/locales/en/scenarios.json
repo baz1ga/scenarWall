@@ -15,6 +15,14 @@
     "deleteMessageBase": "[en] Delete this scenario, its sessions and scenes?",
     "deleteError": "[en] Delete failed"
   },
+  "buttons": {
+    "new": "[en] Create scenario",
+    "edit": "[en] Edit scenario",
+    "delete": "[en] Delete scenario",
+    "newSession": "[en] Add session",
+    "gameMaster": "[en] Open Game Master",
+    "closeModal": "[en] Close modal"
+  },
   "create": {
     "title": "[en] New scenario",
     "iconLabel": "[en] Scenario icon",

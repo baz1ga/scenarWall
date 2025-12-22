@@ -32,7 +32,9 @@
             <input type="file" class="hidden" multiple accept="audio/*" @change="uploadAudio($event)" x-ref="audioInput">
             <button type="button"
                     class="inline-flex items-center gap-2 h-10 rounded-lg bg-lime-500 text-slate-900 font-semibold px-4 text-sm shadow-sm hover:bg-lime-400 transition"
-                    @click="$refs.audioInput.click()">
+                    @click="$refs.audioInput.click()"
+                    :aria-label="t('buttons.upload', 'Upload audio (< 1 MB)')"
+                    :title="t('buttons.upload', 'Upload audio (< 1 MB)')">
               <i class="fa-solid fa-upload"></i> <span x-text="t('upload', 'Ajouter (< 1 Mo)')"></span>
             </button>
           </div>
@@ -70,12 +72,20 @@
             </div>
             <audio :src="audio.url" controls class="w-80 h-10"></audio>
             <div class="flex items-center gap-2">
-              <button class="h-8 w-8 inline-flex items-center justify-center rounded-lg border audio-border audio-text hover:bg-lime-50 dark:hover:bg-lime-900/30 transition" 
-                @click="openRenameAudioModal(audio.name)">
+              <button
+                class="h-8 w-8 inline-flex items-center justify-center rounded-lg border audio-border audio-text hover:bg-lime-50 dark:hover:bg-lime-900/30 transition"
+                @click="openRenameAudioModal(audio.name)"
+                :aria-label="t('buttons.rename', 'Rename audio')"
+                :title="t('buttons.rename', 'Rename audio')"
+              >
                 <i class="fa-solid fa-pen"></i>
               </button>
-              <button class="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-rose-200 dark:border-rose-900 bg-white dark:bg-gray-950 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition"
-                @click="deleteAudio(audio.name)">
+              <button
+                class="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-rose-200 dark:border-rose-900 bg-white dark:bg-gray-950 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition"
+                @click="deleteAudio(audio.name)"
+                :aria-label="t('buttons.delete', 'Delete audio')"
+                :title="t('buttons.delete', 'Delete audio')"
+              >
                 <i class="fa-solid fa-trash"></i>
               </button>
         </div>

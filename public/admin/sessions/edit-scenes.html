@@ -68,11 +68,15 @@
           <!-- Boutons -->  
           <div x-show="scenes.length <= 1" class="flex items-center gap-2 sm:ml-auto">
             <button class="btn-ghost inline-flex items-center gap-2 h-10 rounded-lg border border-emerald-400 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 px-3 py-1.5 text-xs dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                    @click="currentScene && duplicateScene(currentScene)" :disabled="!currentScene">
+                    @click="currentScene && duplicateScene(currentScene)" :disabled="!currentScene"
+                    :aria-label="t('accessibility.duplicateScene','Dupliquer la scène')"
+                    :title="t('accessibility.duplicateScene','Dupliquer la scène')">
               <i class="fa-regular fa-clone"></i> <span x-text="t('actions.duplicateScene', 'Dupliquer la scène')"></span>
             </button>
             <button class="inline-flex items-center gap-2 h-10 rounded-lg bg-emerald-500 text-slate-900 font-semibold px-4 text-sm shadow-sm hover:bg-emerald-400 transition"
-                    @click="openSceneModal()">
+                    @click="openSceneModal()"
+                    :aria-label="t('accessibility.addScene','Ajouter une scène')"
+                    :title="t('accessibility.addScene','Ajouter une scène')">
               <i class="fa-solid fa-plus"></i> <span x-text="t('actions.addScene', 'Ajouter une scène')"></span>
             </button>
           </div>
@@ -106,11 +110,15 @@
                     </div>
                       <div class="absolute bottom-2 right-2 flex items-center gap-1">
                         <button class="h-6 w-6 inline-flex items-center justify-center rounded-md border border-slate-200 dark:border-gray-400 dark:text-slate-300 text-slate-500 hover:text-emerald-600 hover:border-emerald-400 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                                @click.stop="moveScene(index, -1)" :disabled="index === 0">
+                                @click.stop="moveScene(index, -1)" :disabled="index === 0"
+                                :aria-label="t('accessibility.moveScenePrev','Déplacer la scène vers le haut')"
+                                :title="t('accessibility.moveScenePrev','Déplacer la scène vers le haut')">
                           <i class="fa-solid fa-chevron-left"></i>
                         </button>
                         <button class="h-6 w-6 inline-flex items-center justify-center rounded-md border border-slate-200 dark:border-gray-400 dark:text-slate-300 text-slate-500 hover:text-emerald-600 hover:border-emerald-400 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                                @click.stop="moveScene(index, 1)" :disabled="index === scenes.length - 1">
+                                @click.stop="moveScene(index, 1)" :disabled="index === scenes.length - 1"
+                                :aria-label="t('accessibility.moveSceneNext','Déplacer la scène vers le bas')"
+                                :title="t('accessibility.moveSceneNext','Déplacer la scène vers le bas')">
                           <i class="fa-solid fa-chevron-right"></i>
                         </button>
                       </div>
@@ -118,7 +126,9 @@
                   </template>
 
                     <button class="h-[80px] min-h-[80px] w-full inline-flex flex-col items-center justify-center rounded-lg border border-dashed border-emerald-400 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition text-sm font-semibold"
-                            @click="openSceneModal()">
+                            @click="openSceneModal()"
+                            :aria-label="t('accessibility.addScene','Ajouter une scène')"
+                            :title="t('accessibility.addScene','Ajouter une scène')">
                       <i class="fa-solid fa-plus text-lg"></i>
                       <span class="truncate" x-text="t('actions.addScene', 'Ajouter une scène')"></span>
                     </button>
@@ -178,13 +188,17 @@
           <div class="flex items-center gap-2">
             <template x-if="scenes.length > 1">
               <button class="btn-ghost inline-flex h-[34px] items-center gap-2 rounded-lg border border-emerald-400 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 px-3 py-1.5 text-xs dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                      @click="currentScene && duplicateScene(currentScene)" :disabled="!currentScene">
+                      @click="currentScene && duplicateScene(currentScene)" :disabled="!currentScene"
+                      :aria-label="t('accessibility.duplicateScene','Dupliquer la scène')"
+                      :title="t('accessibility.duplicateScene','Dupliquer la scène')">
                 <i class="fa-regular fa-clone"></i> <span x-text="t('actions.duplicateScene', 'Dupliquer la scène')"></span>
               </button>
             </template>
             <template x-if="scenes.length > 1">
               <button class="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-rose-200 dark:border-rose-900 bg-white dark:bg-gray-950 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition"
-                      @click="currentScene && deleteScene(currentScene)" :disabled="!currentScene">
+                      @click="currentScene && deleteScene(currentScene)" :disabled="!currentScene"
+                      :aria-label="t('accessibility.deleteScene','Supprimer la scène')"
+                      :title="t('accessibility.deleteScene','Supprimer la scène')">
                 <i class="fa-solid fa-trash"></i>
               </button>
             </template>
@@ -409,7 +423,9 @@
                   </a>
                   <button class="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-rose-200 dark:border-rose-900 bg-white dark:bg-gray-950 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition"
                           x-show="currentScene?.notes"
-                          @click="deleteSceneNote()">
+                          @click="deleteSceneNote()"
+                          :aria-label="t('accessibility.deleteNote','Supprimer la note')"
+                          :title="t('accessibility.deleteNote','Supprimer la note')">
                     <i class="fa-solid fa-trash"></i>
                   </button>                  
                 </div>
@@ -459,7 +475,9 @@
       <div class="relative max-w-4xl w-full px-4">
         <div class="flex justify-end mb-2">
           <button class="h-10 w-10 inline-flex items-center justify-center rounded-full bg-white text-slate-700 shadow hover:bg-slate-100"
-                  @click="closeZoom()">
+                  @click="closeZoom()"
+                  :aria-label="t('accessibility.closeZoom','Fermer la vue agrandie')"
+                  :title="t('accessibility.closeZoom','Fermer la vue agrandie')">
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>

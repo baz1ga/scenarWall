@@ -118,6 +118,32 @@
     "duplicateScene": "[en] Duplicate scene",
     "addScene": "[en] Add a scene"
   },
+  "accessibility": {
+    "duplicateScene": "[en] Duplicate scene",
+    "addScene": "[en] Add a scene",
+    "moveScenePrev": "[en] Move scene up",
+    "moveSceneNext": "[en] Move scene down",
+    "deleteScene": "[en] Delete scene",
+    "deleteNote": "[en] Delete note",
+    "closeZoom": "[en] Close enlarged view",
+    "tensionToggle": "[en] Toggle tension bar",
+    "tensionLabel": "[en] Level label input",
+    "tensionColor": "[en] Level color picker",
+    "tensionAudio": "[en] Level audio selector",
+    "resetTension": "[en] Reset tension settings",
+    "saveTension": "[en] Save tension settings",
+    "sessionTitleInput": "[en] Session title input",
+    "deleteSession": "[en] Delete this session",
+    "saveSession": "[en] Save session settings",
+    "cancelDelete": "[en] Cancel session deletion",
+    "confirmDelete": "[en] Confirm session deletion",
+    "viewScenes": "[en] View scenes",
+    "viewTension": "[en] View tension settings",
+    "viewPlayers": "[en] View players tabletop",
+    "viewPnj": "[en] Manage NPCs",
+    "viewSettings": "[en] View session settings",
+    "openGm": "[en] Open Game Master panel"
+  },
   "cards": {
     "sceneFallback": "[en] Scene"
   },

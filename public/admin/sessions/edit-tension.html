@@ -29,7 +29,9 @@
               <span x-show="tensionEnabled" x-text="t('tension.disable', 'Désactiver la barre de tension')"></span>
             </span>
             <label class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" class="sr-only peer" x-model="tensionEnabled">
+              <input type="checkbox" class="sr-only peer" x-model="tensionEnabled"
+                     :aria-label="t('accessibility.tensionToggle','Activer/désactiver la barre de tension')"
+                     :title="t('accessibility.tensionToggle','Activer/désactiver la barre de tension')">
               <div class="w-11 h-6 bg-slate-500 peer-focus:outline-none rounded-full peer peer-checked:bg-emerald-600 transition"></div>
               <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition peer-checked:translate-x-5"></div>
             </label>
@@ -73,16 +75,21 @@
                   <div class="ml-auto flex items-center gap-3 flex-wrap justify-end">
                     <div class="flex items-center gap-2">
                       <span class="text-xs text-slate-500 dark:text-slate-200" x-text="t('tension.fields.label', 'Label')"></span>
-                      <input type="text" maxlength="4" class="w-20 rounded border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-2 py-1 text-sm text-slate-900 dark:text-slate-100" x-model="tensionLabels[level]">
+                      <input type="text" maxlength="4" class="w-20 rounded border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-2 py-1 text-sm text-slate-900 dark:text-slate-100" x-model="tensionLabels[level]"
+                             :aria-label="t('accessibility.tensionLabel','Label du niveau')">
                     </div>
                     <div class="flex items-center gap-2">
                       <span class="text-xs text-slate-500 dark:text-slate-200" x-text="t('tension.fields.color', 'Couleur')"></span>
-                      <input type="color" class="h-9 w-12 rounded border border-slate-300 dark:border-gray-700 bg-transparent cursor-pointer" x-model="tensionColors[level]">
+                      <input type="color" class="h-9 w-12 rounded border border-slate-300 dark:border-gray-700 bg-transparent cursor-pointer" x-model="tensionColors[level]"
+                             :aria-label="t('accessibility.tensionColor','Couleur du niveau')"
+                             :title="t('accessibility.tensionColor','Couleur du niveau')">
                     </div>
                   <div class="flex items-center gap-2 min-w-[180px]">
                       <span class="text-xs text-slate-500 dark:text-slate-200 whitespace-nowrap" x-text="t('tension.fields.audio', 'Audio')"></span>
                       <select class="flex-1 rounded border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-2 py-1 text-sm text-slate-900 dark:text-slate-100"
-                              x-model="tensionAudio[level]">
+                              x-model="tensionAudio[level]"
+                              :aria-label="t('accessibility.tensionAudio','Audio du niveau')"
+                              :title="t('accessibility.tensionAudio','Audio du niveau')">
                         <option :value="null" x-text="t('tension.fields.audioNone', 'Aucun')"></option>
                         <template x-if="tensionAudio[level] && !tenantAudio.some(a => a.name === tensionAudio[level])">
                           <option :value="tensionAudio[level]" :selected="true" x-text="`${tensionAudio[level]} ${t('tension.fields.audioMissing', '(manquant)')}`"></option>
@@ -102,13 +109,17 @@
             <div class="flex gap-2">
               <button class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-stone-400 text-sm text-stone-700 bg-white dark:bg-gray-900 dark:border-gray-700 dark:text-slate-200 hover:bg-stone-50 dark:hover:bg-stone-800/30 transition"
                       @click="resetTensionDefaults()"
-                      :disabled="tensionSaving">
+                      :disabled="tensionSaving"
+                      :aria-label="t('accessibility.resetTension','Réinitialiser la barre de tension')"
+                      :title="t('accessibility.resetTension','Réinitialiser la barre de tension')">
                 <i class="fa-solid fa-rotate-left"></i>
                 <span x-text="t('tension.reset', 'Réinitialiser')"></span>
               </button>
               <button class="px-4 py-2 rounded-lg bg-stone-700 border border-stone-700 text-white text-sm font-semibold hover:bg-stone-400 transition disabled:opacity-60 disabled:cursor-not-allowed"
                       @click="saveSessionTension()"
-                      :disabled="tensionSaving">
+                      :disabled="tensionSaving"
+                      :aria-label="t('accessibility.saveTension','Enregistrer la barre de tension')"
+                      :title="t('accessibility.saveTension','Enregistrer la barre de tension')">
                 <span x-show="!tensionSaving" x-text="t('common.save', 'Enregistrer')"></span>
                 <span x-show="tensionSaving" x-text="t('tension.saving', 'Enregistrement...')"></span>
               </button>
@@ -137,10 +148,10 @@
           </div>
         </div>
         <div class="flex justify-end gap-2">
-          <button class="px-4 py-2 rounded-lg border border-slate-200 dark:border-gray-700 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                  @click="cancelDeleteSession()" x-text="t('common.cancel', 'Annuler')"></button>
-          <button class="px-4 py-2 rounded-lg bg-rose-600 text-white text-sm font-semibold hover:bg-rose-500 transition"
-                  @click="confirmDeleteSession()" x-text="t('confirm.deleteSessionAction', 'Supprimer')"></button>
+                  <button class="px-4 py-2 rounded-lg border border-slate-200 dark:border-gray-700 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                          @click="cancelDeleteSession()" x-text="t('common.cancel', 'Annuler')"></button>
+                  <button class="px-4 py-2 rounded-lg bg-rose-600 text-white text-sm font-semibold hover:bg-rose-500 transition"
+                          @click="confirmDeleteSession()" x-text="t('confirm.deleteSessionAction', 'Supprimer')"></button>
         </div>
       </div>
     </div>

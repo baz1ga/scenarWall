@@ -34,6 +34,7 @@
             @click="hideSelectedVisible()"
             :disabled="galleryLoading || selectedVisible.length === 0"
             :title="selectedVisible.length === 0 ? t('selectImages', 'Sélectionnez des images') : t('hideTooltip', 'Mettre de côté')"
+            :aria-label="selectedVisible.length === 0 ? t('buttons.selectImages', 'Select images') : t('buttons.hideSelected', 'Hide selection')"
           >
             <i class="fa-solid fa-eye-slash"></i> <span x-text="t('hideSelected', 'Mettre de côté')"></span>
             <span class="badge-count" x-text="selectedVisible.length" x-show="selectedVisible.length > 0"></span>
@@ -42,6 +43,8 @@
             class="inline-flex items-center gap-2 h-10 rounded-lg bg-yellow-500 text-slate-900 font-semibold px-4 text-sm shadow-sm hover:bg-yellow-400 transition"
             x-show="tenantId"
             @click="openUploadModal()"
+            :aria-label="t('buttons.add', 'Add to gallery')"
+            :title="t('buttons.add', 'Add to gallery')"
           >
             <i class="fa-solid fa-upload"></i> <span x-text="t('add', 'Ajouter')"></span>
           </button>
@@ -127,6 +130,7 @@
               @click="showSelectedHidden()"
               :disabled="galleryLoading || selectedHidden.length === 0"
               :title="selectedHidden.length === 0 ? t('selectImages', 'Sélectionnez des images') : t('addToLibrary', 'Ajouter à la bibliothèque')"
+              :aria-label="selectedHidden.length === 0 ? t('buttons.selectImages', 'Select images') : t('buttons.showHidden', 'Restore to library')"
             >
               <i class="fa-regular fa-eye"></i> <span x-text="t('addToLibrary', 'Ajouter à la bibliothèque')"></span>
               <span class="badge-count" x-text="selectedHidden.length" x-show="selectedHidden.length > 0"></span>
@@ -136,6 +140,7 @@
               @click="deleteSelectedHidden()"
               :disabled="galleryLoading || selectedHidden.length === 0"
               :title="selectedHidden.length === 0 ? t('selectImages', 'Sélectionnez des images') : t('deleteSelection', 'Supprimer la sélection')"
+              :aria-label="selectedHidden.length === 0 ? t('buttons.selectImages', 'Select images') : t('buttons.deleteSelection', 'Delete selection')"
             >
               <i class="fa-solid fa-trash"></i>
             </button>
@@ -294,7 +299,12 @@
 
     <div class="fixed inset-0 bg-black/80 flex items-center justify-center z-50" x-show="zoomUrl" x-transition x-cloak @click="zoomUrl = ''" :title="t('zoomClose', 'Cliquer pour fermer')">
       <div class="relative max-w-4xl w-full px-6">
-        <button class="absolute -top-10 right-0 text-slate-200 text-xl" @click="zoomUrl = ''">✕</button>
+        <button
+          class="absolute -top-10 right-0 text-slate-200 text-xl"
+          @click="zoomUrl = ''"
+          :aria-label="t('buttons.closeZoom', 'Close preview')"
+          :title="t('buttons.closeZoom', 'Close preview')"
+        >✕</button>
         <img :src="zoomUrl" class="w-full rounded-xl border border-slate-700 shadow-2xl">
       </div>
     </div>

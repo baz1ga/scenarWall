@@ -12,5 +12,12 @@
     "date": "Date",
     "duration": "Durée"
   },
-  "noRuns": "Aucune partie jouée"
+  "noRuns": "Aucune partie jouée",
+  "buttons": {
+    "refresh": "Rafraîchir les parties",
+    "refreshing": "Rafraîchissement..."
+  },
+  "aria": {
+    "search": "Rechercher un tenant"
+  }
 }

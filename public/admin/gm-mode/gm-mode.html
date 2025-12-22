@@ -37,7 +37,14 @@
            x-transition:leave-end="translate-y-8 opacity-0 scale-92">
         <div class="flex items-center justify-between">
           <h3 class="text-lg font-semibold inline-flex items-center gap-2 text-indigo-600 dark:text-indigo-300"><i class="fa-solid fa-th-large"></i> <span x-text="t('scenarDeck', 'ScenarDeck')"></span></h3>
-          <button class="text-slate-500 hover:text-slate-800 dark:hover:text-slate-200" @click="scenarDeckOpen = false"><i class="fa-solid fa-minus"></i></button>
+          <button
+            class="text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+            @click="scenarDeckOpen = false"
+            :aria-label="t('buttons.closeScenarDeck', 'Close ScenarDeck')"
+            :title="t('buttons.closeScenarDeck', 'Close ScenarDeck')"
+          >
+            <i class="fa-solid fa-minus"></i>
+          </button>
         </div>
         <div class="grid grid-cols-3 grid-rows-3 gap-x-3 gap-y-3 justify-items-center">
             <button
@@ -395,7 +402,14 @@
     <div class="bg-white dark:bg-gray-950 rounded-xl shadow-2xl border border-slate-200 dark:border-gray-800 w-full max-w-sm p-5 space-y-4">
       <div class="flex items-center justify-between">
         <h3 class="text-lg font-semibold inline-flex items-center gap-2"><i class="fa-solid fa-hourglass-half text-indigo-500"></i> <span x-text="t('hourglass.modalTitle', 'Durée du sablier')"></span></h3>
-        <button class="text-slate-500 hover:text-slate-800 dark:hover:text-slate-200" @click="closeHourglassModal()"><i class="fa-solid fa-xmark"></i></button>
+        <button
+          class="text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+          @click="closeHourglassModal()"
+          :aria-label="t('buttons.closeModal', 'Close modal')"
+          :title="t('buttons.closeModal', 'Close modal')"
+        >
+          <i class="fa-solid fa-xmark"></i>
+        </button>
       </div>
       <div class="space-y-2">    
         <div class="flex flex-wrap gap-2">

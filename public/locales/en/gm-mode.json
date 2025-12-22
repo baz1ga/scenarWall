@@ -67,6 +67,10 @@
     "cancel": "[en] Cancel",
     "proceed": "[en] Continue"
   },
+  "buttons": {
+    "closeScenarDeck": "[en] Close ScenarDeck",
+    "closeModal": "[en] Close modal"
+  },
   "gm": {
     "session": {
       "loadError": "[en] Unable to load sessions"

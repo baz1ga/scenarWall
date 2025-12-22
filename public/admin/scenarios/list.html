@@ -26,8 +26,13 @@
             <p class="text-sm text-slate-500 dark:text-slate-200" x-text="t('subtitle', 'Gérez vos intrigues et leurs sessions associées.')"></p>
           </div>
         </div>
-        <button type="button" @click="openCreateModal()"
-                class="inline-flex items-center gap-2 rounded-lg bg-emerald-500 text-slate-900 font-semibold px-4 py-2 text-sm shadow-sm hover:bg-emerald-400 transition">
+        <button
+          type="button"
+          @click="openCreateModal()"
+          class="inline-flex items-center gap-2 rounded-lg bg-emerald-500 text-slate-900 font-semibold px-4 py-2 text-sm shadow-sm hover:bg-emerald-400 transition"
+          :aria-label="t('buttons.new', 'Create scenario')"
+          :title="t('buttons.new', 'Create scenario')"
+        >
           <i class="fa-solid fa-plus"></i> <span x-text="t('new', 'Nouveau')"></span>
         </button>
       </div>
@@ -59,12 +64,20 @@
                     <div class="text-lg font-semibold text-slate-900 dark:text-slate-100 truncate" x-text="scenario.title || t('untitled', 'Sans titre')"></div>
                   </div>
                   <div class="flex items-center gap-2 shrink-0">
-                    <button class="h-8 w-8 inline-flex items-center justify-center rounded-lg border scenario-border scenario-text hover:bg-lime-50 dark:hover:bg-lime-900/30 transition" 
-                            @click="openEditModal(scenario)">
+                    <button
+                      class="h-8 w-8 inline-flex items-center justify-center rounded-lg border scenario-border scenario-text hover:bg-lime-50 dark:hover:bg-lime-900/30 transition"
+                      @click="openEditModal(scenario)"
+                      :aria-label="t('buttons.edit', 'Edit scenario')"
+                      :title="t('buttons.edit', 'Edit scenario')"
+                    >
                       <i class="fa-solid fa-pen"></i>
                     </button>
-                    <button class="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-rose-200 dark:border-rose-900 bg-white dark:bg-gray-950 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition"
-                            @click="deleteScenario(scenario)">
+                    <button
+                      class="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-rose-200 dark:border-rose-900 bg-white dark:bg-gray-950 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition"
+                      @click="deleteScenario(scenario)"
+                      :aria-label="t('buttons.delete','Delete scenario')"
+                      :title="t('buttons.delete','Delete scenario')"
+                    >
                       <i class="fa-solid fa-trash"></i>
                     </button>
                   </div>
@@ -78,17 +91,25 @@
                           <i class="text-emerald-500" :class="sess.icon || defaultSessionIcon"></i>
                           <span class="font-semibold truncate" x-text="sess.title || sess.id"></span>
                         </a>
-                        <button type="button"
-                                class="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-indigo-300 dark:border-indigo-300 text-indigo-600 px-2 py-1 text-xs hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition"
-                                @click="openGameMaster(sess.id)">
+                        <button
+                          type="button"
+                          class="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-indigo-300 dark:border-indigo-300 text-indigo-600 px-2 py-1 text-xs hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition"
+                          @click="openGameMaster(sess.id)"
+                          :aria-label="t('buttons.gameMaster', 'Open Game Master')"
+                          :title="t('buttons.gameMaster', 'Open Game Master')"
+                        >
                           <i class="fa-solid fa-hat-wizard"></i>
                         </button>
                       </div>
                     </div>
                   </template>
-                  <button type="button"
-                          class="w-full text-center rounded-lg border border-dashed border-emerald-400 text-emerald-600 px-3 py-2 text-sm hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition inline-flex items-center justify-center gap-2"
-                          @click="openSessionModal(scenario.id)">
+                  <button
+                    type="button"
+                    class="w-full text-center rounded-lg border border-dashed border-emerald-400 text-emerald-600 px-3 py-2 text-sm hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition inline-flex items-center justify-center gap-2"
+                    @click="openSessionModal(scenario.id)"
+                    :aria-label="t('buttons.newSession', 'Add session')"
+                    :title="t('buttons.newSession', 'Add session')"
+                  >
                     <i class="fa-solid fa-circle-plus"></i> <span x-text="t('newSession', 'Nouvelle session')"></span>
                   </button>
                 </div>
@@ -113,10 +134,20 @@
               </div>
             </div>
             <div class="px-5 py-4 flex items-center justify-end gap-3">
-              <button class="px-4 py-2 text-sm rounded-lg border border-slate-300 dark:border-gray-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                      @click="closeConfirm()" x-text="t('confirm.cancel', 'Annuler')"></button>
-              <button class="px-4 py-2 text-sm rounded-lg bg-rose-500 text-white font-semibold hover:bg-rose-400 transition"
-                      @click="confirmDelete()" x-text="t('confirm.delete', 'Supprimer')"></button>
+        <button
+          class="px-4 py-2 text-sm rounded-lg border border-slate-300 dark:border-gray-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+          @click="closeConfirm()"
+          x-text="t('confirm.cancel', 'Annuler')"
+          :aria-label="t('buttons.closeModal','Close modal')"
+          :title="t('buttons.closeModal','Close modal')"
+        ></button>
+        <button
+          class="px-4 py-2 text-sm rounded-lg bg-rose-500 text-white font-semibold hover:bg-rose-400 transition"
+          @click="confirmDelete()"
+          x-text="t('confirm.delete', 'Supprimer')"
+          :aria-label="t('buttons.delete', 'Delete scenario')"
+          :title="t('buttons.delete', 'Delete scenario')"
+        ></button>
             </div>
           </div>
         </div>
@@ -172,10 +203,21 @@
               </template>
             </div>
             <div class="flex items-center justify-end gap-2">
-              <button class="px-4 py-2 text-sm rounded-lg border border-slate-300 dark:border-gray-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                      @click="closeCreateModal()" :disabled="createModal.saving" x-text="t('create.cancel', 'Annuler')"></button>
-              <button class="px-4 py-2 text-sm rounded-lg bg-emerald-500 text-slate-900 font-semibold hover:bg-emerald-400 transition inline-flex items-center gap-2"
-                      @click="submitCreate()" :disabled="createModal.saving">
+        <button
+          class="px-4 py-2 text-sm rounded-lg border border-slate-300 dark:border-gray-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+          @click="closeCreateModal()"
+          :disabled="createModal.saving"
+          x-text="t('create.cancel', 'Annuler')"
+          :aria-label="t('buttons.closeModal','Close modal')"
+          :title="t('buttons.closeModal','Close modal')"
+        ></button>
+        <button
+          class="px-4 py-2 text-sm rounded-lg bg-emerald-500 text-slate-900 font-semibold hover:bg-emerald-400 transition inline-flex items-center gap-2"
+          @click="submitCreate()"
+          :disabled="createModal.saving"
+          :aria-label="createModal.saving ? t('buttons.refreshing','Refreshing...') : t('buttons.new','Create scenario')"
+          :title="createModal.saving ? t('buttons.refreshing','Refreshing...') : t('buttons.new','Create scenario')"
+        >
                 <span x-show="!createModal.saving" x-text="t('create.create', 'Créer')"></span>
                 <span class="flex items-center gap-2" x-show="createModal.saving">
                   <span class="h-4 w-4 rounded-full border-2 border-emerald-800 border-t-transparent animate-spin"></span>

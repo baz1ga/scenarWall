@@ -15,6 +15,14 @@
     "deleteMessageBase": "Supprimer ce scénario, ses sessions et ses scènes ?",
     "deleteError": "Suppression impossible"
   },
+  "buttons": {
+    "new": "Créer un scénario",
+    "edit": "Éditer le scénario",
+    "delete": "Supprimer le scénario",
+    "newSession": "Ajouter une session",
+    "gameMaster": "Passer en mode Game Master",
+    "closeModal": "Fermer la modale"
+  },
   "create": {
     "title": "Nouveau scénario",
     "iconLabel": "Icône du scénario",

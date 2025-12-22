@@ -27,6 +27,12 @@
     "editQuota": "[en] Custom quota",
     "delete": "[en] Delete"
   },
+  "buttons": {
+    "editQuota": "[en] Edit quota",
+    "delete": "[en] Delete user",
+    "closeModal": "[en] Close modal",
+    "save": "[en] Save quota"
+  },
   "table": {
     "loading": "[en] Loading...",
     "empty": "[en] No users",

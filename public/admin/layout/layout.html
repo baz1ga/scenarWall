@@ -55,11 +55,14 @@
         <div class="text-xl font-semibold text-emerald-500 font-pangolin" x-show="sidebarCollapsed">.SW.</div>
       </div>
       <nav class="flex-1" :class="sidebarCollapsed ? 'px-1' : 'px-3'">
-        <a href="/admin/scenarios/list.html" class="w-full flex items-center rounded-lg text-sm font-medium text-left transition"
+        <a
+          href="/admin/scenarios/list.html"
+          class="w-full flex items-center rounded-lg text-sm font-medium text-left transition"
           :class="[
             sidebarCollapsed ? 'justify-center gap-0 px-0 py-2' : 'justify-start gap-2 px-2 pl-3 py-1',
             section === 'scenarios' ? 'bg-slate-800 text-emerald-300' : 'text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-700 dark:hover:text-emerald-200'
-          ]">
+          ]"
+          :aria-label="tLayout('nav.scenarios','Scénarios')">
           <i class="fa-solid fa-scroll text-base"></i>
           <span x-show="!sidebarCollapsed" x-text="tLayout('nav.scenarios','Scénarios')"></span>
         </a>
@@ -90,27 +93,36 @@
         <div class="mt-3">
           <div class="px-3 text-[11px] mb-1 uppercase tracking-[0.08em] text-slate-500 dark:text-slate-200" x-show="!sidebarCollapsed" x-text="tLayout('nav.library','Bibliothèque')"></div>
           <div :class="[sidebarCollapsed ? '' : 'ml-4']">
-            <a href="/admin/gallery/gallery.html" class="flex items-center rounded-lg text-xs font-medium text-left transition mb-1"
+            <a
+              href="/admin/gallery/gallery.html"
+              class="flex items-center rounded-lg text-xs font-medium text-left transition mb-1"
               :class="[
             sidebarCollapsed ? 'justify-center gap-0 px-0 py-2' : 'justify-start gap-2 px-3 py-1',
               section === 'galerie' ? 'bg-slate-800 text-yellow-300' : 'text-slate-700 dark:text-slate-200 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 hover:text-yellow-700 dark:hover:text-yellow-200'
-            ]">
+            ]"
+              :aria-label="tLayout('nav.gallery','Galerie')">
               <i class="fa-regular fa-image text-base"></i>
               <span x-show="!sidebarCollapsed" x-text="tLayout('nav.gallery','Galerie')"></span>
             </a>
-            <a href="/admin/audio/audio.html" class="flex items-center rounded-lg text-xs font-medium text-left transition mb-1"
+            <a
+              href="/admin/audio/audio.html"
+              class="flex items-center rounded-lg text-xs font-medium text-left transition mb-1"
               :class="[
             sidebarCollapsed ? 'justify-center gap-0 px-0 py-2' : 'justify-start gap-2 px-3 py-1',
               section === 'audio' ? 'bg-slate-800 text-lime-300' : 'text-slate-700 dark:text-slate-200 hover:bg-lime-50 dark:hover:bg-lime-900/20 hover:text-lime-700 dark:hover:text-lime-200'
-            ]">
+            ]"
+              :aria-label="tLayout('nav.audio','Audio')">
               <i class="fa-solid fa-music text-base"></i>
               <span x-show="!sidebarCollapsed" x-text="tLayout('nav.audio','Audio')"></span>
             </a>
-            <a href="/admin/notes/notes.html" class="flex items-center rounded-lg text-xs font-medium text-left transition mb-1"
+            <a
+              href="/admin/notes/notes.html"
+              class="flex items-center rounded-lg text-xs font-medium text-left transition mb-1"
               :class="[
             sidebarCollapsed ? 'justify-center gap-0 px-0 py-2' : 'justify-start gap-2 px-3 py-1',
               section === 'notes' ? 'bg-slate-800 text-sky-400' : 'text-slate-700 dark:text-slate-200 hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:text-sky-700 dark:hover:text-sky-200'
-            ]">
+            ]"
+              :aria-label="tLayout('nav.notes','Notes')">
               <i class="fa-solid fa-note-sticky text-base"></i>
               <span x-show="!sidebarCollapsed" x-text="tLayout('nav.notes','Notes')"></span>
             </a>
@@ -120,19 +132,25 @@
         <div class="mt-3" x-show="isSuperAdmin">
           <div class="px-3 text-[11px] mb-1 uppercase tracking-[0.08em] text-slate-500 dark:text-slate-200" x-show="!sidebarCollapsed" x-text="tLayout('nav.admin','Administration')"></div>
           <div :class="[sidebarCollapsed ? '' : 'ml-4']">
-            <a href="/admin/games/games.html" class="flex items-center rounded-lg text-xs font-medium text-left transition mb-1"
+            <a
+              href="/admin/games/games.html"
+              class="flex items-center rounded-lg text-xs font-medium text-left transition mb-1"
               :class="[
             sidebarCollapsed ? 'justify-center gap-0 px-0 py-2' : 'justify-start gap-2 px-3 py-1',
               section === 'games' ? 'bg-slate-800 text-amber-300' : 'text-slate-700 dark:text-amber-200 hover:bg-amber-50 dark:hover:bg-amber-900/20 hover:text-amber-700 dark:hover:text-amber-200'
-            ]">
+            ]"
+              :aria-label="tLayout('nav.games','Parties jouées')">
               <i class="fa-solid fa-dice text-base"></i>
               <span x-show="!sidebarCollapsed" x-text="tLayout('nav.games','Parties jouées')"></span>
             </a>
-            <a href="/admin/users/users.html" class="flex items-center rounded-lg text-xs font-medium text-left transition mb-1"
+            <a
+              href="/admin/users/users.html"
+              class="flex items-center rounded-lg text-xs font-medium text-left transition mb-1"
               :class="[
             sidebarCollapsed ? 'justify-center gap-0 px-0 py-2' : 'justify-start gap-2 px-3 py-1',
               section === 'users' ? 'bg-slate-800 text-cyan-300' : 'text-slate-700 dark:text-slate-200 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 hover:text-cyan-700 dark:hover:text-cyan-200'
-            ]">
+            ]"
+              :aria-label="tLayout('nav.users','Utilisateurs')">
               <i class="fa-solid fa-user-gear text-base"></i>
               <span x-show="!sidebarCollapsed" x-text="tLayout('nav.users','Utilisateurs')"></span>
             </a>

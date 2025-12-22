@@ -2,7 +2,7 @@
   "title": "Fichiers audio",
   "subtitle": "Bibliothèque audio disponible pour vos scènes.",
   "loading": "Chargement de la page",
-  "upload": "Ajouter (< 1 Mo)",
+  "upload": "Ajouter (max 1 Mo)",
   "none": "Aucun audio",
   "reorderHint": "Glisser pour réordonner",
   "renameDialog": {
@@ -23,6 +23,11 @@
     "deleteMany": "Supprimer définitivement {count} audio{plural}{impact} ?",
     "impact": " ({count} scène{plural} impactée{plural})"
   },
+  "buttons": {
+    "rename": "Renommer l'audio",
+    "delete": "Supprimer l'audio"
+  },
+  "upload": "Ajouter (max 1 Mo)",
   "messages": {
     "added": "{count} fichier(s) ajouté(s).",
     "errors": "Certains uploads ont échoué.",
