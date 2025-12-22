@@ -216,6 +216,14 @@
                   <span class="sr-only" x-text="tLayout('userMenu.language.fr','Français')"></span>
                 </button>
                 <button class="px-2 py-1 rounded border text-xs inline-flex items-center gap-2"
+                        :class="lang === 'de' ? 'border-emerald-500 text-emerald-600 dark:text-emerald-200' : 'border-slate-300 dark:border-gray-700 text-slate-600 dark:text-slate-200'"
+                        @click="setLanguage('de')"
+                        :aria-label="tLayout('userMenu.language.de','Deutsch')"
+                        :title="tLayout('userMenu.language.de','Deutsch')">
+                  <span aria-hidden="true" class="text-lg leading-none">🇩🇪</span>
+                  <span class="sr-only" x-text="tLayout('userMenu.language.de','Deutsch')"></span>
+                </button>
+                <button class="px-2 py-1 rounded border text-xs inline-flex items-center gap-2"
                         :class="lang === 'en' ? 'border-emerald-500 text-emerald-600 dark:text-emerald-200' : 'border-slate-300 dark:border-gray-700 text-slate-600 dark:text-slate-200'"
                         @click="setLanguage('en')"
                         :aria-label="tLayout('userMenu.language.en','English')"

@@ -1,0 +1,59 @@
+{
+  "loading": "Seite wird geladen",
+  "title": "Benutzer",
+  "subtitle": "Kontingente und Nutzung pro Mandant verwalten.",
+  "totalUsage": "Gesamtnutzung",
+  "units": {
+    "mo": "MB"
+  },
+  "usage": {
+    "custom": "individuell",
+    "undefinedQuota": "Kontingent nicht gesetzt"
+  },
+  "globalQuota": {
+    "label": "Standardkontingent (MB)",
+    "updateButton": "Aktualisieren",
+    "loadError": "Globales Kontingent konnte nicht geladen werden.",
+    "invalid": "Gib einen gültigen Wert (>0) ein.",
+    "success": "Globales Kontingent aktualisiert.",
+    "updateError": "Aktualisierung fehlgeschlagen."
+  },
+  "confirm": {
+    "title": "Bestätigung",
+    "deleteUser": "Diesen Account dauerhaft löschen?",
+    "cta": "Bestätigen"
+  },
+  "buttons": {
+    "editQuota": "Kontingent bearbeiten",
+    "delete": "Benutzer löschen",
+    "closeModal": "Modal schließen",
+    "save": "Kontingent speichern"
+  },
+  "table": {
+    "loading": "Lädt…",
+    "empty": "Keine Benutzer",
+    "columns": {
+      "name": "Name",
+      "tenant": "Mandant",
+      "images": "Bilder",
+      "audio": "Audio",
+      "usage": "Nutzung",
+      "lastLogin": "Letzte Anmeldung",
+      "actions": "Aktionen"
+    }
+  },
+  "tenantQuota": {
+    "title": "Benutzerkontingent",
+    "desc": "Setze ein Kontingent (MB) für",
+    "fallbackUser": "diesen Benutzer",
+    "clear": "Leer lassen, um das globale Kontingent zu verwenden.",
+    "label": "Kontingent (MB)",
+    "placeholder": "Globales Kontingent",
+    "invalid": "Gib eine positive Zahl ein oder lass es leer für das globale Kontingent.",
+    "updateError": "Kontingent konnte nicht aktualisiert werden."
+  },
+  "common": {
+    "cancel": "Abbrechen",
+    "save": "Speichern"
+  }
+}

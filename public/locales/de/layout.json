@@ -1,0 +1,47 @@
+{
+  "nav": {
+    "library": "Bibliothek",
+    "admin": "Administration",
+    "scenarios": "Szenarien",
+    "gallery": "Galerie",
+    "audio": "Audio",
+    "tension": "Spannung",
+    "quotas": "Kontingente",
+    "notes": "Notizen",
+    "games": "Gespeicherte Partien",
+    "users": "Benutzer"
+  },
+  "donation": {
+    "cta": "Eine kleine Unterstützung für Hosting und 🍺",
+    "button": "Unterstütze uns"
+  },
+  "feedback": {
+    "cta": "🎲 Möchtest du .ScenarWall. verbessern?"
+  },
+  "sidebar": {
+    "expand": "Seitenleiste ausklappen",
+    "collapse": "Seitenleiste einklappen",
+    "expandShort": "Ausklappen",
+    "collapseShort": "Einklappen"
+  },
+  "userMenu": {
+    "loggedAs": "Eingeloggt als",
+    "quota": "Kontingent",
+    "theme": {
+      "light": "Heller Modus",
+      "dark": "Dunkler Modus"
+    },
+    "language": {
+      "fr": "Français",
+      "en": "English",
+      "de": "Deutsch"
+    },
+    "roadmap": "Roadmap .ScenarWall.",
+    "logout": "Abmelden"
+  },
+  "layoutLoader": {
+    "layoutError": "Admin-Layout konnte nicht geladen werden",
+    "placeholderError": "Admin Layout: Platzhalter {{CONTENT}} nicht gefunden",
+    "fragmentError": "Fragment konnte nicht geladen werden"
+  }
+}

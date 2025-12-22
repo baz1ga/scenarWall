@@ -1,0 +1,21 @@
+{
+  "title": "Gespielte Partien",
+  "subtitle": "Verwalte und filtere deine Runs nach Mandant und Session.",
+  "hideShort": "< 5 Min. ausblenden",
+  "searchPlaceholder": "Mandant suchen…",
+  "loadingOverlay": "Aktualisiere…",
+  "columns": {
+    "tenant": "Mandant",
+    "session": "Session",
+    "date": "Datum",
+    "duration": "Dauer"
+  },
+  "noRuns": "Keine Partien gespielt",
+  "buttons": {
+    "refresh": "Runs aktualisieren",
+    "refreshing": "Aktualisiere…"
+  },
+  "aria": {
+    "search": "Mandant suchen"
+  }
+}

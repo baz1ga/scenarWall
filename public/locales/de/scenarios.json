@@ -1,0 +1,49 @@
+{
+  "loading": "Seite wird geladen",
+  "title": "Szenarien",
+  "subtitle": "Verwalte deine Plotlines und Sessions.",
+  "new": "Neu",
+  "loadingList": "Szenarien werden geladen…",
+  "empty": "Keine Szenarien vorhanden. Klicke auf „Neu“, um zu starten.",
+  "untitled": "Unbenannt",
+  "newSession": "Neue Session",
+  "confirm": {
+    "title": "Bestätigung",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "message": "Dieses Szenario löschen?",
+    "deleteMessageBase": "Dieses Szenario, seine Sessions und Szenen löschen?",
+    "deleteError": "Löschen fehlgeschlagen"
+  },
+  "buttons": {
+    "new": "Szenario erstellen",
+    "edit": "Szenario bearbeiten",
+    "delete": "Szenario löschen",
+    "newSession": "Session hinzufügen",
+    "gameMaster": "Game Master öffnen",
+    "closeModal": "Modal schließen"
+  },
+  "create": {
+    "title": "Neues Szenario",
+    "placeholder": "Szenarioname",
+    "submit": "Erstellen"
+  },
+  "edit": {
+    "title": "Szenario bearbeiten",
+    "createdAt": "Erstellt am",
+    "namePlaceholder": "Szenarioname"
+  },
+  "icon": {
+    "label": "Szenario-Symbol",
+    "preview": "Vorschau",
+    "search": "Icon suchen",
+    "choose": "Wähle ",
+    "none": "Kein passendes Icon gefunden."
+  },
+  "common": {
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "creating": "Wird erstellt…",
+    "saving": "Speichert…"
+  }
+}

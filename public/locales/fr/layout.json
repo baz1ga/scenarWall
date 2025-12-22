@@ -33,7 +33,8 @@
     },
     "language": {
       "fr": "Français",
-      "en": "English"
+      "en": "English",
+      "de": "Deutsch"
     },
     "roadmap": "Roadmap .ScenarWall.",
     "logout": "Logout"

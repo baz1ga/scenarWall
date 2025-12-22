@@ -1,0 +1,38 @@
+{
+  "title": "Audiodateien",
+  "subtitle": "Audio-Bibliothek für deine Szenen.",
+  "loading": "Seite wird geladen",
+  "none": "Kein Audio",
+  "reorderHint": "Ziehen zum Umordnen",
+  "renameDialog": {
+    "title": "Audio umbenennen",
+    "current": "Aktueller Name:",
+    "label": "Neuer Name",
+    "placeholder": "z. B. ambiance.mp3",
+    "cancel": "Abbrechen",
+    "confirm": "Umbenennen",
+    "sameName": "Der Name ist identisch.",
+    "empty": "Bitte gib einen Namen ein."
+  },
+  "confirm": {
+    "title": "Bestätigung",
+    "cancel": "Abbrechen",
+    "confirm": "Bestätigen",
+    "deleteOne": "Diese Audiodatei löschen?",
+    "deleteMany": "{count} Audio-Datei{plural} dauerhaft löschen{impact}?",
+    "impact": "{count} betroffene Szene{plural}"
+  },
+  "buttons": {
+    "upload": "Hinzufügen (max. 1 MB)",
+    "rename": "Audio umbenennen",
+    "delete": "Audio löschen"
+  },
+  "messages": {
+    "added": "{count} Datei{plural} hinzugefügt.",
+    "errors": "Einige Uploads sind fehlgeschlagen.",
+    "deletedScenes": "{count} Szene{plural} bereinigt.",
+    "deleteFailed": "Löschen fehlgeschlagen.",
+    "renameOk": "Name aktualisiert.",
+    "renameFail": "Umbenennen fehlgeschlagen."
+  }
+}

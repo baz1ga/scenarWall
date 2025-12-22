@@ -1,0 +1,87 @@
+{
+  "scenarDeck": "ScenarDeck",
+  "timer": {
+    "start": "Timer",
+    "stop": "Stop",
+    "reset": "Zurücksetzen"
+  },
+  "slide": {
+    "prev": "Slide -",
+    "next": "Slide +"
+  },
+  "header": {
+    "present": "Präsentieren",
+    "sessionFallback": "Session"
+  },
+  "scenes": {
+    "title": "Szenen",
+    "untitled": "Szene"
+  },
+  "notes": {
+    "title": "Szenen-Notizen",
+    "placeholder": "Deine Notizen für diese Szene…"
+  },
+  "tension": {
+    "title": "Spannung",
+    "launch": "Level starten"
+  },
+  "slideshow": {
+    "title": "Diashow",
+    "loading": "Bilder werden geladen…",
+    "empty": "Kein Bild verfügbar.",
+    "nextScene": "Zur nächsten Szene",
+    "nextImage": "Nächstes Bild",
+    "prevImage": "Vorheriges Bild",
+    "prevAlt": "Vorheriges Bild",
+    "currentAlt": "Aktuelles Bild",
+    "nextAlt": "Nächstes Bild"
+  },
+  "playlist": {
+    "title": "Playlist",
+    "loading": "Lädt…",
+    "empty": "Keine Audiodatei."
+  },
+  "hourglass": {
+    "modalTitle": "Sanduhr-Dauer",
+    "sliderLabel": "Dauer (Schieberegler, max. 30 Min.)",
+    "minLabel": "30 s",
+    "maxLabel": "30 Min.",
+    "showTimerLabel": "Anzeige der Dauer",
+    "start": "Start",
+    "stop": "Stopp",
+    "display": "Dauer",
+    "toggle": {
+      "show": "Anzeigen",
+      "hide": "Verbergen"
+    }
+  },
+  "leave": {
+    "title": "Game Master-Modus verlassen?",
+    "body": "Du kehrst zur Session-Seite zurück.",
+    "cancel": "Abbrechen",
+    "proceed": "Fortfahren"
+  },
+  "buttons": {
+    "closeScenarDeck": "ScenarDeck schließen",
+    "closeModal": "Modul schließen"
+  },
+  "gm": {
+    "session": {
+      "loadError": "Sessions konnten nicht geladen werden"
+    },
+    "scenes": {
+      "loadError": "Szenen konnten nicht geladen werden"
+    },
+    "slideshow": {
+      "error": "Diashow-Fehler"
+    },
+    "playlist": {
+      "error": "Playlist-Fehler"
+    }
+  },
+  "common": {
+    "loading": "Lädt…",
+    "confirm": "Bestätigen",
+    "cancel": "Abbrechen"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "loading": "Seite wird geladen",
+  "title": "Notizen",
+  "subtitle": "Notizen nach Szenario und Session verwalten.",
+  "none": "Keine Notizen",
+  "unlinked": "Nicht verknüpft",
+  "buttons": {
+    "edit": "Notiz bearbeiten",
+    "delete": "Notiz löschen",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "closeModal": "Modal schließen"
+  },
+  "modals": {
+    "editTitle": "Notiz bearbeiten",
+    "deleteTitle": "Notiz löschen",
+    "deleteConfirm": "Lösche Notiz {name}?"
+  }
+}

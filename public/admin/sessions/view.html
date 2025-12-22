@@ -82,9 +82,9 @@
       <button x-show="session"
               type="button"
               class="w-full inline-flex items-center justify-center gap-2 h-10 rounded-lg border border-indigo-300 text-indigo-700 dark:text-indigo-200 bg-white dark:bg-gray-900 text-sm font-semibold hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition px-3"
-              @click="openGameMaster(session?.id || (new URLSearchParams(window.location.search || '').get('id')))">
-        :aria-label="t('accessibility.openGm','Ouvrir le tableau du GM')"
-        :title="t('accessibility.openGm','Ouvrir le tableau du GM')">
+              @click="openGameMaster(session?.id || (new URLSearchParams(window.location.search || '').get('id')))"
+              :aria-label="t('accessibility.openGm','Ouvrir le tableau du GM')"
+              :title="t('accessibility.openGm','Ouvrir le tableau du GM')">
         <i class="fa-solid fa-hat-wizard"></i> <span x-text="t('nav.gm', 'Game Master')"></span>
       </button>
     </div>

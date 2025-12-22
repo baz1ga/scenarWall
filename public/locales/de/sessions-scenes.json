@@ -1,0 +1,215 @@
+{
+  "loading": "Seite wird geladen",
+  "loadingOverlay": "Seite wird geladen",
+  "title": "Szenen",
+  "subtitle": "Für deinen Spielrhythmus",
+  "header": {
+    "title": "Szenen",
+    "subtitle": "Für deinen Spielrhythmus"
+  },
+  "breadcrumb": {
+    "scenario": "Szenario",
+    "session": "Session"
+  },
+  "actions": {
+    "duplicateScene": "Szene duplizieren",
+    "addScene": "Szene hinzufügen"
+  },
+  "accessibility": {
+    "duplicateScene": "Szene duplizieren",
+    "addScene": "Szene hinzufügen",
+    "moveScenePrev": "Szene nach oben verschieben",
+    "moveSceneNext": "Szene nach unten verschieben",
+    "deleteScene": "Szene löschen",
+    "deleteNote": "Notiz löschen",
+    "closeZoom": "Vorschau schließen",
+    "tensionToggle": "Spannungsleiste umschalten",
+    "tensionLabel": "Eingabefeld für Ebenen-Label",
+    "tensionColor": "Farbauswahl für Ebene",
+    "tensionAudio": "Audioauswahl für Ebene",
+    "resetTension": "Spannungen zurücksetzen",
+    "saveTension": "Spannungen speichern",
+    "sessionTitleInput": "Eingabefeld für Session-Titel",
+    "deleteSession": "Diese Session löschen",
+    "saveSession": "Session-Einstellungen speichern",
+    "cancelDelete": "Löschen abbrechen",
+    "confirmDelete": "Löschen bestätigen",
+    "viewScenes": "Szenen anzeigen",
+    "viewTension": "Spannungseinstellungen anzeigen",
+    "viewPlayers": "Spieler anzeigen",
+    "viewPnj": "PNJs verwalten",
+    "viewSettings": "Einstellungen anzeigen",
+    "openGm": "Game Master Panel öffnen"
+  },
+  "notes": {
+    "edit": "Notiz bearbeiten",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "create": "Notiz erstellen",
+    "placeholder": "Deine Notizen für diese Session…",
+    "saving": "Wird gespeichert…",
+    "all": "Alle Notizen"
+  },
+  "confirm": {
+    "title": "Bestätigung",
+    "deleteScene": "Diese Szene löschen?",
+    "deleteSession": "Diese Session löschen?",
+    "deleteSessionAction": "Löschen",
+    "deleteSceneTitle": "Diese Szene löschen?",
+    "deleteSceneBody": "wird dauerhaft gelöscht.",
+    "deleteSceneAction": "Szene löschen",
+    "deleteSceneAndSession": "Szene + Session löschen"
+  },
+  "modals": {
+    "createScene": "Szene hinzufügen",
+    "editScene": "Szene bearbeiten",
+    "titleLabel": "Szenentitel",
+    "orderLabel": "Reihenfolge",
+    "save": "Speichern",
+    "cancel": "Abbrechen"
+  },
+  "create": {
+    "title": "Neue Szene",
+    "desc": "Eine Szene wird dieser Session hinzugefügt.",
+    "placeholder": "Szenentitel",
+    "submit": "Erstellen",
+    "saving": "Wird erstellt…"
+  },
+  "common": {
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "saving": "Speichert…"
+  },
+  "images": {
+    "title": "Szenenbilder",
+    "add": "Hinzufügen",
+    "none": "Kein Bild",
+    "previewAlt": "Bild der Szene",
+    "previewMissing": "Vorschau nicht verfügbar",
+    "dragHint": "Ziehen zum Verschieben",
+    "remove": "Bild aus der Szene entfernen",
+    "zoom": "Zoomen",
+    "associate": "An Szene anhängen",
+    "reorder": "Ziehen zum Umordnen",
+    "library": "Deine Bibliothek",
+    "openGallery": "Galerie öffnen",
+    "loading": "Lädt…",
+    "associateHint": "Klicken zum Anhängen"
+  },
+  "audio": {
+    "title": "Szenen-Audio",
+    "add": "Hinzufügen (< 1 MB)",
+    "none": "Kein Audio",
+    "all": "Alle Audio-Dateien",
+    "open": "Audio öffnen",
+    "loading": "Lädt…",
+    "remove": "Audio aus Szene entfernen",
+    "associate": "Audio anhängen"
+  },
+  "pixabay": {
+    "missingKey": "Pixabay-API-Schlüssel fehlt.",
+    "error": "Pixabay-Fehler.",
+    "noResult": "Kein Ergebnis.",
+    "importOk": "Bild von Pixabay importiert.",
+    "importFail": "Pixabay-Import fehlgeschlagen."
+  },
+  "upload": {
+    "fromUrlSuccess": "Bild erfolgreich importiert.",
+    "fromUrlError": "Import über URL fehlgeschlagen."
+  },
+  "pnj": {
+    "title": "PNJs",
+    "subtitle": "Die PNJs der Session verwalten",
+    "soon": "(bald)"
+  },
+  "empty": "Keine Szene",
+  "tabs": {
+    "images": "Bilder",
+    "audio": "Audio",
+    "notes": "Notizen"
+  },
+  "errors": {
+    "sessionNotFound": "Session nicht gefunden",
+    "sessionLoad": "Session konnte nicht geladen werden",
+    "deleteSession": "Löschen fehlgeschlagen",
+    "deleteSessionGeneric": "Fehler beim Löschen",
+    "sceneLoad": "Szenen konnten nicht geladen werden",
+    "reorder": "Fehler beim Umordnen",
+    "titleRequired": "Titel ist erforderlich",
+    "sceneNotFound": "Szene nicht gefunden",
+    "update": "Aktualisierung fehlgeschlagen",
+    "save": "Speichern fehlgeschlagen",
+    "createScene": "Erstellung fehlgeschlagen",
+    "createSceneGeneric": "Fehler beim Erstellen",
+    "images": "Bilder",
+    "audio": "Audio"
+  },
+  "cards": {
+    "sceneFallback": "Szene"
+  },
+  "rename": {
+    "title": "Szene umbenennen",
+    "placeholder": "Szenentitel"
+  },
+  "nav": {
+    "sessionFallback": "Session",
+    "scenes": "Szenen",
+    "tension": "Spannung",
+    "players": "Spieler",
+    "pnj": "PNJs",
+    "settings": "Einstellungen",
+    "gm": "Game Master"
+  },
+  "editSession": {
+    "title": "Session-Einstellungen",
+    "subtitle": "Aktualisiere Titel und Icon der Session",
+    "fields": {
+      "titleLabel": "Titel",
+      "titlePlaceholder": "Session-Titel",
+      "iconLabel": "Icon",
+      "preview": "Vorschau",
+      "noIcon": "Kein passendes Icon."
+    },
+    "actions": {
+      "delete": "Session löschen"
+    },
+    "confirm": {
+      "sessionDeleted": "und ihre Szenen werden gelöscht."
+    }
+  },
+  "table": {
+    "title": "Tisch",
+    "subtitle": "Spieler verwalten",
+    "soon": "(bald)"
+  },
+  "tension": {
+    "title": "Spannungsleiste",
+    "subtitle": "Passe die Leiste an",
+    "enable": "Spannungsleiste aktivieren",
+    "disable": "Spannungsleiste deaktivieren",
+    "textStyle": "Textstil",
+    "levelsTitle": "Level, Farben und Audio",
+    "fields": {
+      "label": "Label",
+      "color": "Farbe",
+      "audio": "Audio",
+      "audioNone": "Keines",
+      "audioMissing": "(fehlt)"
+    },
+    "fonts": {
+      "audiowide": "Futuristisch (Audiowide)",
+      "metal": "Horror (Metal Mania)",
+      "rye": "Saloon (Rye)",
+      "shareTech": "Techno (Share Tech Mono)",
+      "bangers": "Cartoon (Bangers)",
+      "greatVibes": "Script (Great Vibes)"
+    },
+    "reset": "Zurücksetzen",
+    "saving": "Speichert…"
+  },
+  "layoutLoader": {
+    "defaultFragmentError": "Standardfragment (edit-scenes) konnte nicht geladen werden",
+    "viewError": "view.html für Session-Layout konnte nicht geladen werden",
+    "slotMissing": "Slot data-session-content-slot nicht in view.html gefunden"
+  }
+}
