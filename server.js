@@ -381,7 +381,8 @@ const DEFAULT_CONFIG = {
   tensionLabels: { ...DEFAULT_TENSION_LABELS },
   tensionFont: TENSION_DEFAULTS.tensionFont,
   tensionAudio: { ...TENSION_DEFAULTS.tensionAudio },
-  quotaMB: null
+  quotaMB: null,
+  lang: "fr"
 };
 const DEFAULT_TENANT_SESSION = {
   timer: {

@@ -80,7 +80,7 @@ function registerConfigRoutes({
     }
 
     const normalized = typeof lang === "string" ? lang.trim().toLowerCase() : "";
-    if (!["en", "fr"].includes(normalized)) {
+    if (!["en", "fr", "de"].includes(normalized)) {
       return res.status(400).json({ error: "Invalid lang" });
     }
 
