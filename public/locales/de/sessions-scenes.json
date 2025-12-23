@@ -122,6 +122,60 @@
     "subtitle": "Die PNJs der Session verwalten",
     "soon": "(bald)"
   },
+  "characters": {
+    "loading": "Wird geladen...",
+    "empty": "Keine Charaktere für diese Session",
+    "noHistory": "Noch keine Hintergrundgeschichte.",
+    "confirmDelete": "Diesen Charakter löschen?",
+    "role": { "pc": "SC", "npc": "NSC" },
+    "playersTitle": "Spielercharaktere",
+    "npcTitle": "Nichtspielercharaktere",
+    "fields": {
+      "name": "Name",
+      "type": "Klasse / Typ",
+      "race": "Rasse",
+      "avatar": "Avatar",
+      "hp": "Aktuelle TP",
+      "hpMax": "Max. TP",
+      "history": "Hintergrund"
+    },
+    "upload": {
+      "fromComputer": "Von deinem Computer",
+      "fromUrl": "Über URL",
+      "pixabay": "Pixabay",
+      "dropHint": "PNG, JPG, WEBP — bis 3 MB",
+      "browse": "Durchsuchen",
+      "urlPlaceholder": "Bild-URL einfügen",
+      "urlImport": "Importieren",
+      "urlFetchError": "Bild konnte nicht geladen werden.",
+      "urlNotImage": "Der Link zeigt nicht auf ein Bild.",
+      "urlImportFail": "URL-Import fehlgeschlagen.",
+      "urlImported": "Bild importiert.",
+      "search": "Suchen",
+      "pixabayPlaceholder": "Pixabay-Stichwort"
+    },
+    "actions": {
+      "new": "Neuer Charakter",
+      "edit": "Bearbeiten",
+      "delete": "Löschen",
+      "import": "Importieren",
+      "duplicate": "Duplizieren",
+      "use": "Als Vorlage nutzen",
+      "uploadAvatar": "Avatar wählen",
+      "save": "Speichern",
+      "cancel": "Abbrechen"
+    },
+    "modal": {
+      "new": "Neuer Charakter",
+      "edit": "Charakter bearbeiten",
+      "import": "Vorhandenen Charakter importieren"
+    },
+    "errors": {
+      "name": "Name ist erforderlich",
+      "save": "Charakter konnte nicht gespeichert werden"
+    },
+    "importEmpty": "Kein Charakter zum Import verfügbar"
+  },
   "empty": "Keine Szene",
   "tabs": {
     "images": "Bilder",

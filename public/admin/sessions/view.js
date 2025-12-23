@@ -6,6 +6,7 @@ import { loadLocale, t as translate } from '/admin/js/i18n.js';
 
 export function sessionViewSection(baseInit) {
   return {
+    ...pixabayMixin(),
     loading: true,
     error: '',
     session: null,
@@ -40,6 +41,45 @@ export function sessionViewSection(baseInit) {
     sceneSelectionTimer: null,
     selectedSceneId: '',
     pendingSceneId: '',
+    charactersLoading: false,
+    characters: [],
+    availableCharactersLoading: false,
+    availableCharacters: [],
+    characterRole: 'npc',
+    characterModal: {
+      open: false,
+      editing: false,
+      error: '',
+      avatarFile: null,
+      avatarFileName: '',
+      form: {
+        id: '',
+        name: '',
+        role: '',
+        type: '',
+        race: '',
+        history: '',
+        hpCurrent: 0,
+        hpMax: 0,
+        sessions: [],
+        parentScenario: ''
+      }
+    },
+    importModal: {
+      open: false,
+      error: ''
+    },
+    avatarUploadModal: {
+      open: false,
+      tab: 'drop',
+      dragActive: false,
+      message: '',
+      status: 'ok',
+      url: '',
+      urlMessage: '',
+      urlStatus: 'ok',
+      urlLoading: false
+    },
     // Tension (session-level)
     tensionEnabled: true,
     tensionFont: 'Audiowide',
@@ -223,6 +263,7 @@ export function sessionViewSection(baseInit) {
       const params = new URLSearchParams(window.location.search || '');
       const sessionId = params.get('id');
       this.initialSceneParam = params.get('scene') || '';
+      this.characterRole = this.detectCharacterRole();
       if (!sessionId) {
         this.error = this.t('errors.sessionNotFound', 'Session introuvable');
         this.loading = false;
@@ -232,6 +273,7 @@ export function sessionViewSection(baseInit) {
         await this.loadDefaultTension();
         await this.fetchSession(sessionId);
         await this.fetchScenes(sessionId);
+        await this.loadCharacters();
         await this.refreshTenantImages();
         await this.refreshTenantAudio();
         this.showTension = false;
@@ -248,6 +290,339 @@ export function sessionViewSection(baseInit) {
 
     filteredIcons(query = '') {
       return filterIcons(query, this.iconOptions, this.iconTexts);
+    },
+    detectCharacterRole() {
+      const path = (window.location.pathname || '').toLowerCase();
+      if (path.includes('edit-table')) return 'pc';
+      return 'npc';
+    },
+    characterHeading() {
+      return this.characterRole === 'pc'
+        ? this.t('characters.playersTitle', 'Personnages joueurs')
+        : this.t('characters.npcTitle', 'Personnages non-joueurs');
+    },
+    characterRoleLabel() {
+      return this.characterRole === 'pc'
+        ? this.t('characters.role.pc', 'PJ')
+        : this.t('characters.role.npc', 'PNJ');
+    },
+    avatarUrl(ch) {
+      if (!ch?.avatar || !this.tenantId) return '';
+      return `${this.API}/api/tenant/${this.tenantId}/characters/${encodeURIComponent(ch.id)}/avatar`;
+    },
+    avatarThumbUrl(ch) {
+      if (!ch?.avatar || !this.tenantId) return '';
+      return `${this.API}/api/tenant/${this.tenantId}/characters/${encodeURIComponent(ch.id)}/avatar-thumb`;
+    },
+    async loadCharacters() {
+      if (!this.tenantId || !this.session?.id) return;
+      this.charactersLoading = true;
+      try {
+        const role = encodeURIComponent(this.characterRole || '');
+        const sessionId = encodeURIComponent(this.session.id);
+        const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/characters?role=${role}&session=${sessionId}`, {
+          headers: this.headersAuth()
+        });
+        if (!res.ok) throw new Error('characters');
+        this.characters = await res.json();
+      } catch (err) {
+        this.characters = [];
+      }
+      this.charactersLoading = false;
+    },
+    async loadAvailableCharacters() {
+      if (!this.tenantId || !this.session?.id) return;
+      this.availableCharactersLoading = true;
+      try {
+        const role = encodeURIComponent(this.characterRole || '');
+        const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/characters?role=${role}`, {
+          headers: this.headersAuth()
+        });
+        const list = res.ok ? await res.json() : [];
+        const currentSessionId = this.session.id;
+        const currentScenarioId = this.scenarioId;
+        this.availableCharacters = (list || []).filter(ch => {
+          const inSession = Array.isArray(ch.sessions) && ch.sessions.includes(currentSessionId);
+          const sameScenario = currentScenarioId ? (ch.parentScenario === currentScenarioId) : false;
+          return !inSession && !sameScenario;
+        });
+      } catch (err) {
+        this.availableCharacters = [];
+      }
+      this.availableCharactersLoading = false;
+    },
+    openCharacterModal(ch = null) {
+      const base = {
+        id: '',
+        name: '',
+        role: this.characterRole,
+        type: '',
+        race: '',
+        history: '',
+        hpCurrent: 0,
+        hpMax: 0,
+        sessions: this.session?.id ? [this.session.id] : [],
+        parentScenario: this.scenarioId || ''
+      };
+      this.characterModal = {
+        open: true,
+        editing: !!ch,
+        error: '',
+        avatarFile: null,
+        avatarFileName: '',
+        form: ch ? { ...base, ...ch, role: ch.role || this.characterRole } : base
+      };
+    },
+    closeCharacterModal() {
+      this.characterModal = {
+        open: false,
+        editing: false,
+        error: '',
+        avatarFile: null,
+        avatarFileName: '',
+        form: {
+          id: '',
+          name: '',
+          role: this.characterRole,
+          type: '',
+          race: '',
+          history: '',
+          hpCurrent: 0,
+          hpMax: 0,
+          sessions: this.session?.id ? [this.session.id] : [],
+        parentScenario: this.scenarioId || ''
+        }
+      };
+    },
+    openImportModal() {
+      this.importModal = { open: true, error: '' };
+      this.loadAvailableCharacters();
+    },
+    closeImportModal() {
+      this.importModal = { open: false, error: '' };
+    },
+    openAvatarUpload() {
+      this.importModal = { open: false, error: '' }; // close import if open
+      this.avatarUploadModal = {
+        open: true,
+        tab: 'drop',
+        dragActive: false,
+        message: '',
+        status: 'ok',
+        url: '',
+        urlMessage: '',
+        urlStatus: 'ok',
+        urlLoading: false
+      };
+      this.pixabayMessage = '';
+      this.pixabayStatus = 'ok';
+      this.pixabayLoading = false;
+    },
+    closeAvatarUpload() {
+      this.avatarUploadModal = {
+        open: false,
+        tab: 'drop',
+        dragActive: false,
+        message: '',
+        status: 'ok',
+        url: '',
+        urlMessage: '',
+        urlStatus: 'ok',
+        urlLoading: false
+      };
+    },
+    setAvatarUploadTab(tab) {
+      this.avatarUploadModal.tab = tab;
+      this.avatarUploadModal.urlMessage = '';
+      this.avatarUploadModal.urlStatus = 'ok';
+      this.pixabayMessage = '';
+      this.pixabayStatus = 'ok';
+      if (tab === 'pixabay' && !this.pixabayInitialized && !this.pixabayLoading) {
+        if (!this.pixabayKey) {
+          this.pixabayMessage = this.t("upload.pixabayMissingKey", "Clé API Pixabay manquante (PIXABAY_KEY)");
+          this.pixabayStatus = 'error';
+          return;
+        }
+        this.searchPixabay({ allowEmpty: true });
+      }
+    },
+    handleAvatarDrop(event) {
+      event.preventDefault();
+      const files = Array.from(event.dataTransfer?.files || []);
+      this.avatarUploadModal.dragActive = false;
+      if (!files.length) return;
+      this.setAvatarFile(files[0]);
+    },
+    uploadAvatarFile(event) {
+      const file = event?.target?.files?.[0];
+      if (event?.target) event.target.value = '';
+      if (!file) return;
+      this.setAvatarFile(file);
+    },
+    setAvatarFile(file) {
+      if (!file) return;
+      this.characterModal.avatarFile = file;
+      this.characterModal.avatarFileName = file.name || '';
+      this.closeAvatarUpload();
+    },
+    async uploadAvatarFromUrl(urlOverride = '') {
+      const targetUrl = urlOverride || this.avatarUploadModal.url;
+      if (!targetUrl) return;
+      this.avatarUploadModal.urlLoading = true;
+      this.avatarUploadModal.urlMessage = '';
+      this.avatarUploadModal.urlStatus = 'ok';
+      try {
+        const res = await fetch(targetUrl, { mode: 'cors' }).catch(() => null);
+        if (!res || !res.ok) throw new Error(this.t("characters.upload.urlFetchError", "Impossible de récupérer l'image."));
+        const blob = await res.blob();
+        const contentType = res.headers.get('content-type') || '';
+        if (!contentType.startsWith('image/')) throw new Error(this.t("characters.upload.urlNotImage", "Le lien ne pointe pas vers une image."));
+        const urlPath = targetUrl.split('/').pop() || 'avatar';
+        const extFromType = contentType.split('/')[1]?.split(';')[0] || 'jpg';
+        const safeName = urlPath.match(/[^?#]+/)?.[0] || `avatar.${extFromType}`;
+        const fileName = safeName.includes('.') ? safeName : `${safeName}.${extFromType}`;
+        const file = new File([blob], fileName, { type: contentType || 'image/jpeg' });
+        this.setAvatarFile(file);
+        this.avatarUploadModal.urlMessage = this.t("characters.upload.urlImported", "Image importée.");
+        this.avatarUploadModal.urlStatus = 'ok';
+        this.avatarUploadModal.url = '';
+      } catch (err) {
+        this.avatarUploadModal.urlMessage = err.message || this.t("characters.upload.urlImportFail", "Import depuis URL impossible.");
+        this.avatarUploadModal.urlStatus = 'error';
+      }
+      this.avatarUploadModal.urlLoading = false;
+    },
+    async importFromPixabay(hitOrUrl) {
+      const url = typeof hitOrUrl === 'string'
+        ? hitOrUrl
+        : (hitOrUrl?.largeImageURL || hitOrUrl?.webformatURL || hitOrUrl?.previewURL);
+      if (!url) return;
+      this.pixabayMessage = '';
+      this.pixabayStatus = 'ok';
+      await this.uploadAvatarFromUrl(url);
+      if (this.avatarUploadModal.urlStatus === 'ok') {
+        this.pixabayMessage = this.t("messages.pixabayImportOk", "Image importée depuis Pixabay.");
+        this.pixabayStatus = 'ok';
+        this.closeAvatarUpload();
+      } else {
+        this.pixabayMessage = this.avatarUploadModal.urlMessage || this.t("messages.pixabayImportFail", "Import Pixabay impossible.");
+        this.pixabayStatus = 'error';
+      }
+    },
+    async saveCharacter() {
+      if (!this.tenantId || !this.session?.id) return;
+      const form = { ...this.characterModal.form };
+      form.role = (form.role || this.characterRole || '').toLowerCase();
+      if (!form.name.trim()) {
+        this.characterModal.error = this.t('characters.errors.name', 'Nom requis');
+        return;
+      }
+      form.sessions = Array.isArray(form.sessions) && form.sessions.length ? form.sessions : [this.session.id];
+      if (!form.parentScenario && this.scenarioId) form.parentScenario = this.scenarioId;
+      const payload = {
+        ...form,
+        hpCurrent: Number.isFinite(form.hpCurrent) ? form.hpCurrent : 0,
+        hpMax: Number.isFinite(form.hpMax) ? form.hpMax : 0
+      };
+      if (!this.characterModal.editing) {
+        payload.hpCurrent = payload.hpMax;
+      }
+      const editing = this.characterModal.editing && form.id;
+      const url = editing
+        ? `${this.API}/api/tenant/${this.tenantId}/characters/${encodeURIComponent(form.id)}`
+        : `${this.API}/api/tenant/${this.tenantId}/characters`;
+      const method = editing ? 'PUT' : 'POST';
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: { ...this.headersAuth(), 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.error || 'save');
+        let saved = data;
+        if (this.characterModal.avatarFile instanceof File) {
+          try {
+            saved = await this.uploadCharacterAvatar(saved.id, this.characterModal.avatarFile);
+          } catch (err) {
+            this.characterModal.error = err?.message || this.t('characters.errors.save', 'Sauvegarde impossible');
+            return;
+          }
+        }
+        this.closeCharacterModal();
+        await this.loadCharacters();
+      } catch (err) {
+        this.characterModal.error = err?.message || this.t('characters.errors.save', 'Sauvegarde impossible');
+      }
+    },
+    async uploadCharacterAvatar(id, file) {
+      const fd = new FormData();
+      fd.append('avatar', file);
+      const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/characters/${encodeURIComponent(id)}/avatar`, {
+        method: 'POST',
+        headers: this.headersAuth(),
+        body: fd
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || 'upload');
+      return data;
+    },
+    async importCharacter(ch) {
+      if (!ch?.id || !this.tenantId || !this.session?.id) return;
+      const sessions = Array.isArray(ch.sessions) ? Array.from(new Set([...ch.sessions, this.session.id])) : [this.session.id];
+      const payload = { ...ch, sessions };
+      if (!payload.parentScenario && this.scenarioId) payload.parentScenario = this.scenarioId;
+      return payload;
+    },
+    async useCharacter(ch) {
+      try {
+        const payload = await this.importCharacter(ch);
+        if (!payload) return;
+        const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/characters/${encodeURIComponent(ch.id)}`, {
+          method: 'PUT',
+          headers: { ...this.headersAuth(), 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data?.error || 'import');
+        await this.loadCharacters();
+        this.closeImportModal();
+      } catch (err) {
+        this.importModal.error = err?.message || this.t('characters.errors.save', 'Sauvegarde impossible');
+      }
+    },
+    async duplicateCharacter(ch) {
+      try {
+        const payload = await this.importCharacter(ch);
+        if (!payload) return;
+        const clone = { ...payload };
+        delete clone.id;
+        const res = await fetch(`${this.API}/api/tenant/${this.tenantId}/characters`, {
+          method: 'POST',
+          headers: { ...this.headersAuth(), 'Content-Type': 'application/json' },
+          body: JSON.stringify(clone)
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data?.error || 'duplicate');
+        await this.loadCharacters();
+        this.closeImportModal();
+      } catch (err) {
+        this.importModal.error = err?.message || this.t('characters.errors.save', 'Sauvegarde impossible');
+      }
+    },
+    async deleteCharacter(id) {
+      if (!this.tenantId || !id) return;
+      const ok = window.confirm(this.t('characters.confirmDelete', 'Supprimer ce personnage ?'));
+      if (!ok) return;
+      try {
+        await fetch(`${this.API}/api/tenant/${this.tenantId}/characters/${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+          headers: this.headersAuth()
+        });
+        await this.loadCharacters();
+      } catch (err) {
+        // silent
+      }
     },
 
     async deleteSessionConfirm() {

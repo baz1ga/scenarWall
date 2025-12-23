@@ -122,6 +122,60 @@
     "subtitle": "Manage the session's NPCs",
     "soon": "(coming soon)"
   },
+  "characters": {
+    "loading": "Loading...",
+    "empty": "No character for this session",
+    "noHistory": "No backstory yet.",
+    "confirmDelete": "Delete this character?",
+    "role": { "pc": "PC", "npc": "NPC" },
+    "playersTitle": "Player characters",
+    "npcTitle": "Non-player characters",
+    "fields": {
+      "name": "Name",
+      "type": "Class / Type",
+      "race": "Race",
+      "avatar": "Avatar",
+      "hp": "HP",
+      "hpMax": "Max HP",
+      "history": "Backstory"
+    },
+    "upload": {
+      "fromComputer": "From your computer",
+      "fromUrl": "From URL",
+      "pixabay": "Pixabay",
+      "dropHint": "PNG, JPG, WEBP — up to 3MB",
+      "browse": "Browse",
+      "urlPlaceholder": "Paste your image URL",
+      "urlImport": "Import",
+      "urlFetchError": "Unable to fetch the image.",
+      "urlNotImage": "The link is not an image.",
+      "urlImportFail": "URL import failed.",
+      "urlImported": "Image imported.",
+      "search": "Search",
+      "pixabayPlaceholder": "Pixabay keyword"
+    },
+    "actions": {
+      "new": "New character",
+      "edit": "Edit",
+      "delete": "Delete",
+      "import": "Import",
+      "duplicate": "Duplicate",
+      "use": "Use as-is",
+      "uploadAvatar": "Choose an avatar",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "modal": {
+      "new": "New character",
+      "edit": "Edit character",
+      "import": "Import an existing character"
+    },
+    "errors": {
+      "name": "Name is required",
+      "save": "Unable to save character"
+    },
+    "importEmpty": "No character available to import"
+  },
   "empty": "No scene",
   "tabs": {
     "images": "Images",

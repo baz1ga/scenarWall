@@ -122,6 +122,60 @@
     "subtitle": "Pour gérer les PNJ de la session",
     "soon": "(bientôt)"
   },
+  "characters": {
+    "loading": "Chargement...",
+    "empty": "Aucun personnage pour cette session",
+    "noHistory": "Pas d'historique pour l'instant.",
+    "confirmDelete": "Supprimer ce personnage ?",
+    "role": { "pc": "PJ", "npc": "PNJ" },
+    "playersTitle": "Personnages joueurs",
+    "npcTitle": "Personnages non-joueurs",
+    "fields": {
+      "name": "Nom",
+      "type": "Classe / Type",
+      "race": "Race",
+      "avatar": "Avatar",
+      "hp": "PV actuels",
+      "hpMax": "PV max",
+      "history": "Historique"
+    },
+    "upload": {
+      "fromComputer": "Depuis votre ordinateur",
+      "fromUrl": "Depuis une URL",
+      "pixabay": "Pixabay",
+      "dropHint": "PNG, JPG, WEBP — jusqu'à 3 Mo",
+      "browse": "Parcourir",
+      "urlPlaceholder": "Collez l'URL de l'image",
+      "urlImport": "Importer",
+      "urlFetchError": "Impossible de récupérer l'image.",
+      "urlNotImage": "Le lien ne pointe pas vers une image.",
+      "urlImportFail": "Import URL impossible.",
+      "urlImported": "Image importée.",
+      "search": "Rechercher",
+      "pixabayPlaceholder": "Mot-clé Pixabay"
+    },
+    "actions": {
+      "new": "Nouveau personnage",
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "import": "Importer",
+      "duplicate": "Dupliquer",
+      "use": "Utiliser tel quel",
+      "uploadAvatar": "Choisir un avatar",
+      "save": "Enregistrer",
+      "cancel": "Annuler"
+    },
+    "modal": {
+      "new": "Nouveau personnage",
+      "edit": "Modifier le personnage",
+      "import": "Importer un personnage existant"
+    },
+    "errors": {
+      "name": "Nom requis",
+      "save": "Impossible d'enregistrer le personnage"
+    },
+    "importEmpty": "Aucun personnage disponible à importer"
+  },
   "empty": "Aucune scène",
   "tabs": {
     "images": "Images",

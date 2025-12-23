@@ -15,6 +15,7 @@ const { registerRunStateRoutes } = require("./routes/runStateRoutes");
 const { registerGodmodeRoutes } = require("./routes/godmodeRoutes");
 const { registerSessionsScenesRoutes } = require("./routes/sessionsScenesRoutes");
 const { registerScenarioRoutes } = require("./routes/scenarioRoutes");
+const { registerCharacterRoutes } = require("./routes/characterRoutes");
 const { registerNoteRoutes } = require("./routes/noteRoutes");
 const { registerSessionTimerRoutes } = require("./routes/sessionTimerRoutes");
 const { registerImageRoutes } = require("./routes/imageRoutes");
@@ -147,6 +148,30 @@ const LEGACY_TENSION_DEFAULT_FILE = path.join(DATA_DIR, "tension-default.json");
 const CSRF_COOKIE = "XSRF-TOKEN";
 const IMAGE_EXT = /\.(jpg|jpeg|png|webp)$/i;
 const AUDIO_EXT = /\.(mp3|wav|ogg|m4a|aac)$/i;
+const charAvatarUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      const dir = path.join(TENANTS_DIR, req.params.tenant, "characters", "avatars");
+      fs.mkdirSync(dir, { recursive: true });
+      cb(null, dir);
+    },
+    filename: (req, file, cb) => {
+      const ext = (path.extname(file.originalname) || ".png").toLowerCase();
+      const base = sanitizeFilename(path.parse(file.originalname).name, "avatar");
+      const finalName = uniqueFilename(path.join(TENANTS_DIR, req.params.tenant, "characters", "avatars"), base, ext);
+      cb(null, finalName);
+    }
+  }),
+  limits: { fileSize: 3 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const okMime = (file.mimetype || "").startsWith("image/");
+    const okExt = IMAGE_EXT.test(file.originalname || "");
+    if (okMime || okExt) return cb(null, true);
+    const err = new Error("INVALID_IMAGE");
+    err.code = "INVALID_IMAGE";
+    return cb(err);
+  }
+});
 const imageUpload = multer({
   storage: multer.diskStorage({
     destination: (req, file, cb) => {
@@ -1273,6 +1298,15 @@ registerScenarioRoutes({
     writeSessionFile,
     writeScene
   }
+});
+
+registerCharacterRoutes({
+  app,
+  requireLogin,
+  limiterUpload,
+  uploadHandlerAvatar: charAvatarUpload,
+  paths: { TENANTS_DIR },
+  logger
 });
 
 registerSessionsScenesRoutes({
