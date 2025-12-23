@@ -1,12 +1,16 @@
 import { coreSection } from '/admin/js/core.js';
-import { pixabayMixin } from '/admin/js/pixabay.js';
+import { uploadModalMixin } from '/admin/js/upload-modal.js';
 import { DEFAULT_SESSION_ICON, ICON_OPTIONS, filterIcons } from '/admin/js/icon-picker-utils.js';
 import { loadLocale, t as translate } from '/admin/js/i18n.js';
 // SimpleMDE supprimé : éditeur basculé en textarea simple
 
 export function sessionViewSection(baseInit) {
   return {
-    ...pixabayMixin(),
+    ...uploadModalMixin({
+      async onFilesSelected(files, context) {
+        return this.handleUploadSelection(files, context);
+      }
+    }),
     loading: true,
     error: '',
     session: null,
@@ -68,17 +72,6 @@ export function sessionViewSection(baseInit) {
     importModal: {
       open: false,
       error: ''
-    },
-    avatarUploadModal: {
-      open: false,
-      tab: 'drop',
-      dragActive: false,
-      message: '',
-      status: 'ok',
-      url: '',
-      urlMessage: '',
-      urlStatus: 'ok',
-      urlLoading: false
     },
     // Tension (session-level)
     tensionEnabled: true,
@@ -198,14 +191,6 @@ export function sessionViewSection(baseInit) {
     },
     uploadMessage: '',
     uploadStatus: 'ok',
-    uploadModalOpen: false,
-    uploadTab: 'drop',
-    uploadDragActive: false,
-    uploadUrl: '',
-    uploadUrlMessage: '',
-    uploadUrlStatus: 'ok',
-    uploadUrlLoading: false,
-    ...pixabayMixin(),
     imageDragIndex: null,
     imageDragOver: null,
     defaultSessionIcon: DEFAULT_SESSION_ICON,
@@ -402,112 +387,8 @@ export function sessionViewSection(baseInit) {
       this.importModal = { open: false, error: '' };
     },
     openAvatarUpload() {
-      this.importModal = { open: false, error: '' }; // close import if open
-      this.avatarUploadModal = {
-        open: true,
-        tab: 'drop',
-        dragActive: false,
-        message: '',
-        status: 'ok',
-        url: '',
-        urlMessage: '',
-        urlStatus: 'ok',
-        urlLoading: false
-      };
-      this.pixabayMessage = '';
-      this.pixabayStatus = 'ok';
-      this.pixabayLoading = false;
-    },
-    closeAvatarUpload() {
-      this.avatarUploadModal = {
-        open: false,
-        tab: 'drop',
-        dragActive: false,
-        message: '',
-        status: 'ok',
-        url: '',
-        urlMessage: '',
-        urlStatus: 'ok',
-        urlLoading: false
-      };
-    },
-    setAvatarUploadTab(tab) {
-      this.avatarUploadModal.tab = tab;
-      this.avatarUploadModal.urlMessage = '';
-      this.avatarUploadModal.urlStatus = 'ok';
-      this.pixabayMessage = '';
-      this.pixabayStatus = 'ok';
-      if (tab === 'pixabay' && !this.pixabayInitialized && !this.pixabayLoading) {
-        if (!this.pixabayKey) {
-          this.pixabayMessage = this.t("upload.pixabayMissingKey", "Clé API Pixabay manquante (PIXABAY_KEY)");
-          this.pixabayStatus = 'error';
-          return;
-        }
-        this.searchPixabay({ allowEmpty: true });
-      }
-    },
-    handleAvatarDrop(event) {
-      event.preventDefault();
-      const files = Array.from(event.dataTransfer?.files || []);
-      this.avatarUploadModal.dragActive = false;
-      if (!files.length) return;
-      this.setAvatarFile(files[0]);
-    },
-    uploadAvatarFile(event) {
-      const file = event?.target?.files?.[0];
-      if (event?.target) event.target.value = '';
-      if (!file) return;
-      this.setAvatarFile(file);
-    },
-    setAvatarFile(file) {
-      if (!file) return;
-      this.characterModal.avatarFile = file;
-      this.characterModal.avatarFileName = file.name || '';
-      this.closeAvatarUpload();
-    },
-    async uploadAvatarFromUrl(urlOverride = '') {
-      const targetUrl = urlOverride || this.avatarUploadModal.url;
-      if (!targetUrl) return;
-      this.avatarUploadModal.urlLoading = true;
-      this.avatarUploadModal.urlMessage = '';
-      this.avatarUploadModal.urlStatus = 'ok';
-      try {
-        const res = await fetch(targetUrl, { mode: 'cors' }).catch(() => null);
-        if (!res || !res.ok) throw new Error(this.t("characters.upload.urlFetchError", "Impossible de récupérer l'image."));
-        const blob = await res.blob();
-        const contentType = res.headers.get('content-type') || '';
-        if (!contentType.startsWith('image/')) throw new Error(this.t("characters.upload.urlNotImage", "Le lien ne pointe pas vers une image."));
-        const urlPath = targetUrl.split('/').pop() || 'avatar';
-        const extFromType = contentType.split('/')[1]?.split(';')[0] || 'jpg';
-        const safeName = urlPath.match(/[^?#]+/)?.[0] || `avatar.${extFromType}`;
-        const fileName = safeName.includes('.') ? safeName : `${safeName}.${extFromType}`;
-        const file = new File([blob], fileName, { type: contentType || 'image/jpeg' });
-        this.setAvatarFile(file);
-        this.avatarUploadModal.urlMessage = this.t("characters.upload.urlImported", "Image importée.");
-        this.avatarUploadModal.urlStatus = 'ok';
-        this.avatarUploadModal.url = '';
-      } catch (err) {
-        this.avatarUploadModal.urlMessage = err.message || this.t("characters.upload.urlImportFail", "Import depuis URL impossible.");
-        this.avatarUploadModal.urlStatus = 'error';
-      }
-      this.avatarUploadModal.urlLoading = false;
-    },
-    async importFromPixabay(hitOrUrl) {
-      const url = typeof hitOrUrl === 'string'
-        ? hitOrUrl
-        : (hitOrUrl?.largeImageURL || hitOrUrl?.webformatURL || hitOrUrl?.previewURL);
-      if (!url) return;
-      this.pixabayMessage = '';
-      this.pixabayStatus = 'ok';
-      await this.uploadAvatarFromUrl(url);
-      if (this.avatarUploadModal.urlStatus === 'ok') {
-        this.pixabayMessage = this.t("messages.pixabayImportOk", "Image importée depuis Pixabay.");
-        this.pixabayStatus = 'ok';
-        this.closeAvatarUpload();
-      } else {
-        this.pixabayMessage = this.avatarUploadModal.urlMessage || this.t("messages.pixabayImportFail", "Import Pixabay impossible.");
-        this.pixabayStatus = 'error';
-      }
+      this.importModal = { open: false, error: '' };
+      this.openUploadModal('avatar');
     },
     async saveCharacter() {
       if (!this.tenantId || !this.session?.id) return;
@@ -1110,45 +991,22 @@ export function sessionViewSection(baseInit) {
     visibleTenantImages() {
       return Array.isArray(this.tenantImages) ? this.tenantImages.filter(i => !i.hidden) : [];
     },
-    openUploadModal() {
-      this.uploadModalOpen = true;
-      this.uploadTab = 'drop';
-      this.uploadDragActive = false;
-    },
-    closeUploadModal() {
-      this.uploadModalOpen = false;
-      this.uploadDragActive = false;
-    },
-    setUploadTab(tab) {
-      this.uploadTab = tab;
-      this.uploadUrlMessage = '';
-      this.uploadUrlStatus = 'ok';
-      this.pixabayMessage = '';
-      this.pixabayStatus = 'ok';
-      if (tab === 'pixabay' && !this.pixabayInitialized && !this.pixabayLoading) {
-        if (!this.pixabayKey) {
-          this.pixabayMessage = this.t('pixabay.missingKey', 'Clé API Pixabay manquante.');
-          this.pixabayStatus = 'error';
-          return;
-        }
-        this.searchPixabay({ allowEmpty: true });
+    async handleUploadSelection(files, context = 'gallery') {
+      const mode = (context || this.uploadContext || 'gallery').toLowerCase();
+      const list = Array.isArray(files) ? files : [];
+      if (mode === 'avatar') {
+        const file = list[0];
+        if (!file) return false;
+        this.characterModal.avatarFile = file;
+        this.characterModal.avatarFileName = file.name || '';
+        return true;
       }
+      return this.uploadImagesToTenant(list);
     },
-    handleUploadDrop(event) {
-      event.preventDefault();
-      const files = Array.from(event.dataTransfer?.files || []);
-      this.uploadDragActive = false;
-      if (!files.length) return;
-      this.uploadFile(files);
-    },
-    async uploadFile(eventOrFiles) {
-      const files = Array.isArray(eventOrFiles)
-        ? Array.from(eventOrFiles)
-        : Array.from(eventOrFiles?.target?.files || []);
-      if (eventOrFiles?.target) eventOrFiles.target.value = '';
-      if (!files.length || !this.tenantId) return;
+    async uploadImagesToTenant(files = []) {
+      if (!files.length || !this.tenantId) return false;
       let success = 0;
-      let errors = [];
+      const errors = [];
       const uploadedNames = [];
       for (const file of files) {
         const form = new FormData();
@@ -1174,7 +1032,6 @@ export function sessionViewSection(baseInit) {
       if (success > 0) {
         await this.refreshTenantImages();
         await this.fetchQuota?.();
-        this.closeUploadModal();
         if (this.currentScene) {
           uploadedNames.forEach(name => this.addImageToScene(name));
         }
@@ -1190,28 +1047,7 @@ export function sessionViewSection(baseInit) {
         ].join(' ');
         this.setUpload(msg, 'error');
       }
-      return uploadedNames;
-    },
-    async uploadFromUrl(urlOverride = '') {
-      const targetUrl = urlOverride || this.uploadUrl;
-      if (!targetUrl || !this.tenantId) return;
-      this.uploadUrlLoading = true;
-      this.uploadUrlMessage = '';
-      this.uploadUrlStatus = 'ok';
-      try {
-        const res = await fetch(targetUrl);
-        if (!res.ok) throw new Error('URL invalide');
-        const blob = await res.blob();
-        const file = new File([blob], `import_${Date.now()}.jpg`, { type: blob.type || 'image/jpeg' });
-        await this.uploadFile([file]);
-        this.uploadUrlMessage = this.t('upload.fromUrlSuccess', 'Image importée avec succès.');
-        this.uploadUrlStatus = 'ok';
-        this.uploadUrl = '';
-      } catch (err) {
-        this.uploadUrlMessage = err.message || this.t('upload.fromUrlError', 'Import depuis URL impossible.');
-        this.uploadUrlStatus = 'error';
-      }
-      this.uploadUrlLoading = false;
+      return success > 0;
     },
     setUpload(msg, status = 'ok') {
       this.uploadMessage = msg;

@@ -1,5 +1,5 @@
 import { coreSection } from '/admin/js/core.js';
-import { pixabayMixin } from '/admin/js/pixabay.js';
+import { uploadModalMixin } from '/admin/js/upload-modal.js';
 import { loadLocale, t as translate } from '/admin/js/i18n.js';
 
 export function gallerySection() {
@@ -15,16 +15,13 @@ export function gallerySection() {
     galleryLoading: true,
     uploadMessage: '',
     uploadStatus: 'ok',
-    uploadModalOpen: false,
-    uploadTab: 'drop',
-    uploadDragActive: false,
-    uploadUrl: '',
-    uploadUrlMessage: '',
-    uploadUrlStatus: 'ok',
-    uploadUrlLoading: false,
     lang: localStorage.getItem("lang") || (navigator.language || "fr").slice(0, 2) || "fr",
     texts: {},
-    ...pixabayMixin(),
+    ...uploadModalMixin({
+      async onFilesSelected(files) {
+        return this.uploadImages(files);
+      }
+    }),
 
     async loadTexts() {
       this.texts = await loadLocale(this.lang, "gallery");
@@ -70,43 +67,12 @@ export function gallerySection() {
         return 0;
       }
     },
-    openUploadModal() {
-      this.uploadModalOpen = true;
-      this.uploadTab = 'drop';
-      this.uploadDragActive = false;
-    },
-    closeUploadModal() {
-      this.uploadModalOpen = false;
-      this.uploadDragActive = false;
-    },
-    setUploadTab(tab) {
-      this.uploadTab = tab;
-      this.uploadUrlMessage = '';
-      this.uploadUrlStatus = 'ok';
-      this.pixabayMessage = '';
-      this.pixabayStatus = 'ok';
-      if (tab === 'pixabay' && !this.pixabayInitialized && !this.pixabayLoading) {
-        if (!this.pixabayKey) {
-          this.pixabayMessage = this.t("upload.pixabayMissingKey", "Clé API Pixabay manquante (variable d'environnement PIXABAY_KEY)");
-          this.pixabayStatus = 'error';
-          return;
-        }
-        this.searchPixabay({ allowEmpty: true });
-      }
-    },
-    handleUploadDrop(event) {
-      event.preventDefault();
-      const files = Array.from(event.dataTransfer?.files || []);
-      this.uploadDragActive = false;
-      if (!files.length) return;
-      this.uploadFile(files);
-    },
-    async uploadFile(eventOrFiles) {
+    async uploadImages(eventOrFiles) {
       const files = Array.isArray(eventOrFiles)
         ? Array.from(eventOrFiles)
         : Array.from(eventOrFiles?.target?.files || []);
       if (eventOrFiles?.target) eventOrFiles.target.value = '';
-      if (!files.length || !this.tenantId) return;
+      if (!files.length || !this.tenantId) return false;
 
       let success = 0;
       let errors = [];
@@ -153,33 +119,7 @@ export function gallerySection() {
         const msg = [base, errors.join(' | ')].join(' ');
         this.setUpload(msg, 'error');
       }
-    },
-    async uploadFromUrl(urlOverride = '') {
-      const targetUrl = urlOverride || this.uploadUrl;
-      if (!targetUrl || !this.tenantId) return;
-      this.uploadUrlLoading = true;
-      this.uploadUrlMessage = '';
-      this.uploadUrlStatus = 'ok';
-      try {
-        const res = await fetch(targetUrl, { mode: 'cors' }).catch(() => null);
-        if (!res || !res.ok) throw new Error(this.t("messages.urlFetchError", "Impossible de récupérer le fichier."));
-        const blob = await res.blob();
-        const contentType = res.headers.get('content-type') || '';
-        if (!contentType.startsWith('image/')) throw new Error(this.t("messages.urlNotImage", "Le lien ne pointe pas vers une image."));
-        const urlPath = targetUrl.split('/').pop() || 'image';
-        const extFromType = contentType.split('/')[1]?.split(';')[0] || 'jpg';
-        const safeName = urlPath.match(/[^?#]+/)?.[0] || `remote.${extFromType}`;
-        const fileName = safeName.includes('.') ? safeName : `${safeName}.${extFromType}`;
-        const file = new File([blob], fileName, { type: contentType || 'image/jpeg' });
-        await this.uploadFile([file]);
-        this.uploadUrlMessage = this.t("messages.urlImported", "Image importée avec succès.");
-        this.uploadUrlStatus = 'ok';
-        this.uploadUrl = '';
-      } catch (err) {
-        this.uploadUrlMessage = err.message || this.t("messages.urlImportFail", "Import depuis URL impossible.");
-        this.uploadUrlStatus = 'error';
-      }
-      this.uploadUrlLoading = false;
+      return success > 0;
     },
     setUpload(msg, status = 'ok') {
       this.uploadMessage = msg;

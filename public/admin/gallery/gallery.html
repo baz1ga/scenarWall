@@ -185,119 +185,7 @@
       </div>
 
 
-    <div
-      class="fixed inset-0 z-50 flex items-start justify-center px-3 pt-[5vh]"
-      x-show="uploadModalOpen"
-      x-transition
-      x-cloak
-      @keydown.escape.window="closeUploadModal()"
-    >
-      <div class="fixed inset-0 bg-black/60" @click="closeUploadModal()"></div>
-      <div class="relative w-full max-w-3xl max-h-[800px] rounded-2xl bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-800 shadow-2xl p-6 flex flex-col space-y-4 overflow-y-auto">
-        <div class="flex items-center gap-2 border-b border-slate-200 dark:border-gray-800">
-          <button
-            class="px-4 py-2 text-sm font-semibold"
-            :class="uploadTab === 'drop' ? 'gallery-text border-b-2 gallery-border' : 'text-slate-500 dark:text-slate-200'"
-            @click="setUploadTab('drop')"
-          >
-            <span x-text="t('upload.fromComputer', 'Depuis votre ordinateur')"></span>
-          </button>
-          <button
-            class="px-4 py-2 text-sm font-semibold"
-            :class="uploadTab === 'url' ? 'gallery-text border-b-2 gallery-border' : 'text-slate-500 dark:text-slate-200'"
-            @click="setUploadTab('url')"
-          >
-            <span x-text="t('upload.fromUrl', 'Import via URL')"></span>
-          </button>
-          <button
-            class="px-4 py-2 text-sm font-semibold inline-flex items-center gap-2"
-            :class="uploadTab === 'pixabay' ? 'gallery-text border-b-2 gallery-border' : 'text-slate-500 dark:text-slate-200'"
-            @click="setUploadTab('pixabay')"
-          >
-              <img src="https://pixabay.com/favicon-16x16.png" alt="" class="h-4 w-4">
-              <span x-text="t('upload.pixabay', 'Pixabay')"></span>
-          </button>
-        </div>
-
-        <div class="space-y-4" x-show="uploadTab === 'drop'">
-          <div
-            class="rounded-2xl border-2 border-dashed p-6 text-center transition cursor-pointer"
-            :class="uploadDragActive ? 'gallery-border bg-yellow-50 dark:bg-yellow-900/20' : 'gallery-border bg-yellow-50/50 dark:bg-yellow-900/10'"
-            @dragover.prevent="uploadDragActive = true"
-            @dragleave.prevent="uploadDragActive = false"
-            @drop="handleUploadDrop($event)"
-            @click="$refs.uploadInput.click()"
-          >
-            <div class="text-3xl gallery-text mb-2"><i class="fa-solid fa-cloud-arrow-up"></i></div>
-            <div class="text-xs text-slate-500 dark:text-slate-200 mt-1" x-text="t('upload.dropHint', 'PNG, JPG, WEBP — Taille max 6 Mo par fichier')"></div>
-            <div class="mt-3">
-              <span class="inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm bg-white dark:bg-transparent hover:bg-yellow-50 dark:hover:bg-yellow-900/20" :class="['gallery-border','gallery-text']" x-text="t('upload.browse', 'Parcourir')"></span>
-            </div>
-            <input type="file" multiple accept="image/*" class="hidden" x-ref="uploadInput" @change="uploadFile($event)">
-          </div>
-        </div>
-        <div class="space-y-3" x-show="uploadTab === 'url'">
-          <div class="flex items-center gap-2">
-            <input
-              type="url"
-              x-model="uploadUrl"
-              class="flex-1 rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm focus:ring-2 focus:outline-none"
-              style="--tw-ring-color: var(--gallery-accent);"
-              :placeholder="t('upload.urlPlaceholder', `Coller l'url de votre image ici`)"
-            >
-            <button
-              class="inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm bg-white dark:bg-transparent transition hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
-              :class="['gallery-border','gallery-text']"
-              @click="uploadFromUrl()"
-              :disabled="uploadUrlLoading || !uploadUrl"
-            >
-              <i class="fa-solid fa-cloud-arrow-down"></i>
-              <span x-text="uploadUrlLoading ? t('upload.urlLoading', 'Chargement...') : t('upload.urlImport', 'Importer')"></span>
-            </button>
-          </div>
-          <p class="text-xs" :class="uploadUrlStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'gallery-text'" x-text="uploadUrlMessage"></p>
-        </div>
-        <div class="space-y-3 flex-1 overflow-y-auto pr-1" x-show="uploadTab === 'pixabay'">
-          <div class="flex items-center gap-2">
-            <input
-              type="text"
-              x-model="pixabayQuery"
-              class="flex-1 rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm focus:ring-2 focus:outline-none disabled:opacity-50"
-              style="--tw-ring-color: var(--gallery-accent);"
-              :placeholder="pixabayKey ? t('upload.pixabayPlaceholder', 'Rechercher sur Pixabay (ex: dungeon, cthulhu, orc...)') : t('upload.pixabayNoKey', 'Clé API manquante')"
-              :disabled="!pixabayKey"
-              @keydown.enter.prevent="searchPixabay()"
-            >
-            <button
-              class="inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm bg-white dark:bg-transparent transition hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
-              :class="['gallery-border','gallery-text']"
-              @click="searchPixabay()"
-              :disabled="pixabayLoading || !pixabayQuery.trim() || !pixabayKey"
-            >
-              <i class="fa-solid fa-magnifying-glass"></i>
-              <span x-text="pixabayLoading ? t('upload.pixabayLoading', 'Recherche...') : t('upload.pixabaySearch', 'Rechercher')"></span>
-            </button>
-          </div>
-          <p class="text-xs" :class="pixabayStatus === 'error' ? 'text-rose-500 dark:text-rose-400' : 'gallery-text'" x-text="pixabayMessage || (!pixabayKey ? t('upload.pixabayMissingKey', `Clé API Pixabay manquante (variable d'environnement PIXABAY_KEY)`) : '')"></p>
-            <div class="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-3" x-show="pixabayResults.length > 0">
-              <template x-for="img in pixabayResults" :key="img.id">
-                <div class="relative rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-800 overflow-hidden shadow-sm">
-                  <img :src="img.webformatURL" :alt="img.tags" class="h-32 w-full object-cover">
-                  <button
-                    class="absolute top-2 right-2 inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold bg-yellow-500 text-slate-900 hover:bg-yellow-400 shadow"
-                    @click="importFromPixabay(img.largeImageURL || img.webformatURL)"
-                    :disabled="uploadUrlLoading"
-                  >
-                    <i class="fa-solid fa-cloud-arrow-down"></i> <span x-text="t('upload.pixabayImport', 'Importer')"></span>
-                  </button>
-                </div>
-              </template>
-            </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="fixed inset-0 bg-black/80 flex items-center justify-center z-50" x-show="zoomUrl" x-transition x-cloak @click="zoomUrl = ''" :title="t('zoomClose', 'Cliquer pour fermer')">
+<div class="fixed inset-0 bg-black/80 flex items-center justify-center z-50" x-show="zoomUrl" x-transition x-cloak @click="zoomUrl = ''" :title="t('zoomClose', 'Cliquer pour fermer')">
       <div class="relative max-w-4xl w-full px-6">
         <button
           class="absolute -top-10 right-0 text-slate-200 text-xl"
@@ -333,6 +221,7 @@
     </div>
     </section>
   </template>
+<div data-include="upload-modal"></div>
 </div>
 <script src="/admin/js/layout-loader.js"></script>
 <script type="module" src="/admin/gallery/gallery.js" data-page-script></script>
