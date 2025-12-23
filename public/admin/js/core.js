@@ -5,12 +5,24 @@ export function coreSection() {
   const storedSidebarCollapsed = typeof window !== 'undefined'
     ? localStorage.getItem('sw_admin_sidebar_collapsed') === '1'
     : false;
+  const detectSectionFromPath = () => {
+    if (typeof window === 'undefined') return 'galerie';
+    const path = ((window.location && window.location.pathname) || '').toLowerCase();
+    if (path.includes('/admin/users')) return 'users';
+    if (path.includes('/admin/games')) return 'games';
+    if (path.includes('/admin/audio')) return 'audio';
+    if (path.includes('/admin/gallery')) return 'galerie';
+    if (path.includes('/admin/notes')) return 'notes';
+    if (path.includes('/admin/scenarios') || path.includes('/admin/sessions')) return 'scenarios';
+    return 'galerie';
+  };
+  const initialSection = detectSectionFromPath();
   return {
     API: getApiBase(),
     token: getToken(),
     tenantId: getTenant(),
     isSuperAdmin: isAdmin(),
-    section: 'galerie',
+    section: initialSection,
     breadcrumb: 'Administration',
     title: 'ScenarWall',
     theme: 'dark',
