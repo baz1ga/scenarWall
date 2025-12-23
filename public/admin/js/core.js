@@ -2,6 +2,9 @@ import { DEFAULT_SCENARIO_ICON } from './icon-picker-utils.js';
 import { loadLocale, t as translate } from './i18n.js';
 
 export function coreSection() {
+  const storedSidebarCollapsed = typeof window !== 'undefined'
+    ? localStorage.getItem('sw_admin_sidebar_collapsed') === '1'
+    : false;
   return {
     API: getApiBase(),
     token: getToken(),
@@ -11,7 +14,7 @@ export function coreSection() {
     breadcrumb: 'Administration',
     title: 'ScenarWall',
     theme: 'dark',
-    sidebarCollapsed: false,
+    sidebarCollapsed: storedSidebarCollapsed,
     userMenu: false,
     avatarUrl: getAvatar() || '',
     avatarInitial: 'A',
