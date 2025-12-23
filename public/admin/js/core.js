@@ -11,6 +11,7 @@ export function coreSection() {
     if (path.includes('/admin/users')) return 'users';
     if (path.includes('/admin/games')) return 'games';
     if (path.includes('/admin/audio')) return 'audio';
+    if (path.includes('/admin/characters')) return 'characters';
     if (path.includes('/admin/gallery')) return 'galerie';
     if (path.includes('/admin/notes')) return 'notes';
     if (path.includes('/admin/scenarios') || path.includes('/admin/sessions')) return 'scenarios';
@@ -44,6 +45,22 @@ export function coreSection() {
     recentScenarios: [],
     defaultScenarioIcon: DEFAULT_SCENARIO_ICON,
     recentSessionsIndex: {},
+    async fetchMe() {
+      try {
+        const res = await fetch(`${this.API}/api/me`, {
+          headers: this.headersAuth(),
+          credentials: 'include'
+        });
+        if (!res.ok) return;
+        const me = await res.json();
+        if (me?.avatarUrl) {
+          this.avatarUrl = me.avatarUrl;
+          setAvatar(me.avatarUrl);
+        }
+        if (me?.displayName) this.displayName = me.displayName;
+        if (!this.avatarInitial && me?.email) this.avatarInitial = me.email.charAt(0).toUpperCase();
+      } catch (_) {}
+    },
 
     async init() {
       if (window.API_READY && typeof window.API_READY.then === 'function') {
@@ -68,6 +85,8 @@ export function coreSection() {
           setAvatar(payload.avatarUrl);
         }
       } catch (e) {}
+      // Rafraîchir les infos de session (avatar, displayName) à chaque init
+      await this.fetchMe();
 
       if (!this.tenantId) {
         this.section = this.isSuperAdmin ? 'users' : 'galerie';
@@ -82,7 +101,7 @@ export function coreSection() {
       // section depuis l'URL ?section=...
       const params = new URLSearchParams(window.location.search || '');
       const requested = params.get('section');
-      const allowed = ['home', 'galerie', 'audio', 'tension', 'users', 'gm', 'scenarios'];
+      const allowed = ['home', 'galerie', 'audio', 'tension', 'users', 'gm', 'scenarios', 'characters'];
       if (requested && allowed.includes(requested)) {
         this.section = requested;
       }

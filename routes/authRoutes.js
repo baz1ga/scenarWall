@@ -1,6 +1,7 @@
 const path = require("path");
 const crypto = require("crypto");
 const fs = require("fs");
+// requireLogin est fourni par server.js via options, pas de module middleware dédié.
 
 function registerAuthRoutes({
   app,
@@ -12,7 +13,8 @@ function registerAuthRoutes({
   DEFAULT_CONFIG,
   DEFAULT_DISCORD_SCOPES,
   TENANTS_DIR,
-  logger
+  logger,
+  requireLogin
 }) {
   // SIGNUP / LOGIN fallback
   app.post("/api/signup", async (req, res) => {
@@ -154,6 +156,18 @@ function registerAuthRoutes({
       logger.error("Discord OAuth error", { reqId: req.id, err: err?.message, stack: err?.stack });
       res.status(500).send("Discord OAuth error");
     }
+  });
+
+  // Expose current session user
+  app.get('/api/me', requireLogin, (req, res) => {
+    const user = req.session?.user || {};
+    res.json({
+      email: user.email || null,
+      displayName: user.displayName || null,
+      avatarUrl: user.avatarUrl || null,
+      tenantId: user.tenantId || null,
+      admin: user.admin === true
+    });
   });
 }
 

@@ -1257,7 +1257,8 @@ registerAuthRoutes({
   DEFAULT_CONFIG,
   DEFAULT_DISCORD_SCOPES,
   TENANTS_DIR,
-  logger
+  logger,
+  requireLogin
 });
 
 registerRunStateRoutes({

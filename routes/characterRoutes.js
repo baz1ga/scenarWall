@@ -11,6 +11,23 @@ function registerCharacterRoutes({ app, requireLogin, limiterUpload, uploadHandl
   const avatarDir = (tenantId) => path.join(characterDir(tenantId), "avatars");
   const avatarPath = (tenantId, file) => path.join(avatarDir(tenantId), file);
   const avatarThumbPath = (tenantId, file) => path.join(avatarDir(tenantId), "thumbs", `thumb-${file}`);
+  function cloneAvatar(tenantId, sourceFile, targetId) {
+    if (!sourceFile) return null;
+    const src = avatarPath(tenantId, sourceFile);
+    if (!fs.existsSync(src)) return null;
+    const ext = path.extname(sourceFile) || ".jpg";
+    const newName = `avatar-${targetId}${ext}`;
+    ensureAvatarDir(tenantId);
+    const dest = avatarPath(tenantId, newName);
+    try {
+      fs.copyFileSync(src, dest);
+      ensureAvatarThumb(tenantId, newName);
+      return newName;
+    } catch (err) {
+      logger?.error?.("Failed to clone avatar", { tenantId, sourceFile, targetId, err: err?.message });
+      return null;
+    }
+  }
 
   function ensureCharacterDir(tenantId) {
     const dir = characterDir(tenantId);
@@ -139,6 +156,10 @@ function registerCharacterRoutes({ app, requireLogin, limiterUpload, uploadHandl
       createdAt: now,
       updatedAt: now
     };
+    if (req.body?.avatar) {
+      const cloned = cloneAvatar(tenantId, req.body.avatar, id);
+      if (cloned) payload.avatar = cloned;
+    }
     writeCharacter(tenantId, payload);
     res.status(201).json(payload);
   });

@@ -39,3 +39,14 @@ export function t(dict = {}, key = "", fallback = "") {
   if (typeof cur === "string" || typeof cur === "number") return cur;
   return fallback || key;
 }
+
+// Nettoie un fallback pour éviter les soucis de quotes dans les bindings inline.
+export function sanitizeFallback(text) {
+  if (typeof text !== "string") return text;
+  return text.replace(/'/g, "’");
+}
+
+// Version sécurisée de t qui sanitise le fallback.
+export function tSafe(dict = {}, key = "", fallback = "") {
+  return t(dict, key, sanitizeFallback(fallback));
+}

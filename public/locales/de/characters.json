@@ -1,0 +1,36 @@
+{
+  "title": "Charaktere",
+  "subtitle": "Alle deine NSC und SC über alle Szenarien hinweg",
+  "loading": "Seite wird geladen",
+  "actions": {
+    "refresh": "Aktualisieren",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "save": "Speichern",
+    "saving": "Speichern...",
+    "cancel": "Abbrechen"
+  },
+  "filters": {
+    "role": "Rolle",
+    "all": "Alle",
+    "npc": "NSC",
+    "pc": "SC",
+    "search": "Suche",
+    "placeholder": "Name, Typ, Rasse...",
+    "session": "Session",
+    "sessionPlaceholder": "Session-ID"
+  },
+  "empty": "Keine Charaktere gefunden",
+  "labels": {
+    "npc": "NSC",
+    "pc": "SC",
+    "sessions": "Sessions",
+    "scenario": "Szenario"
+  },
+  "noHistory": "Keine Historie",
+  "confirm": {
+    "title": "Bestätigung"
+  },
+  "confirmDelete": "Diesen Charakter löschen?",
+  "confirmDeleteWithSessions": "Diesen Charakter löschen? Er wird in folgenden Sessions verwendet: {list}."
+}

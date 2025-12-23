@@ -126,6 +126,17 @@
               <i class="fa-solid fa-note-sticky text-base"></i>
               <span x-show="!sidebarCollapsed" x-text="tLayout('nav.notes','Notes')" data-i18n-key="nav.notes"></span>
             </a>
+            <a
+              href="/admin/characters/characters.html"
+              class="flex items-center rounded-lg text-xs font-medium text-left transition mb-1"
+              :class="[
+            sidebarCollapsed ? 'justify-center gap-0 px-0 py-2' : 'justify-start gap-2 px-3 py-1',
+              section === 'characters' ? 'bg-slate-800 text-emerald-300' : 'text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-700 dark:hover:text-emerald-200'
+            ]"
+              :aria-label="tLayout('nav.characters','Personnages')">
+              <i class="fa-solid fa-person text-base"></i>
+              <span x-show="!sidebarCollapsed" x-text="tLayout('nav.characters','Personnages')" data-i18n-key="nav.characters"></span>
+            </a>
           </div>
         </div>
         <!-- liste des entrées admin -->

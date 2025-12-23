@@ -1,0 +1,36 @@
+{
+  "title": "Characters",
+  "subtitle": "All your NPCs and PCs across every scenario",
+  "loading": "Loading page",
+  "actions": {
+    "refresh": "Refresh",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel"
+  },
+  "filters": {
+    "role": "Role",
+    "all": "All",
+    "npc": "NPC",
+    "pc": "PC",
+    "search": "Search",
+    "placeholder": "Name, type, race...",
+    "session": "Session",
+    "sessionPlaceholder": "Session ID"
+  },
+  "empty": "No characters found",
+  "labels": {
+    "npc": "NPC",
+    "pc": "PC",
+    "sessions": "Sessions",
+    "scenario": "Scenario"
+  },
+  "noHistory": "No history",
+  "confirm": {
+    "title": "Confirmation"
+  },
+  "confirmDelete": "Delete this character?",
+  "confirmDeleteWithSessions": "Delete this character? It is used in sessions: {list}."
+}

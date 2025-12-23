@@ -1,4 +1,5 @@
 import { pixabayMixin } from '/admin/js/pixabay.js';
+import { sanitizeFallback } from '/admin/js/i18n.js';
 
 export function uploadModalMixin({ onFilesSelected } = {}) {
   const handleFiles = typeof onFilesSelected === 'function' ? onFilesSelected : null;
@@ -13,6 +14,16 @@ export function uploadModalMixin({ onFilesSelected } = {}) {
     uploadUrlMessage: '',
     uploadUrlStatus: 'ok',
     uploadUrlLoading: false,
+    // Helpers
+    ts(key, fallback = '') {
+      const safe = sanitizeFallback(fallback);
+      if (typeof this.t === 'function') return this.t(key, safe);
+      if (key) return safe || key;
+      return safe || '';
+    },
+    safeText(text) {
+      return sanitizeFallback(text);
+    },
 
     openUploadModal(context = 'gallery') {
       this.uploadContext = context || 'gallery';
@@ -39,7 +50,9 @@ export function uploadModalMixin({ onFilesSelected } = {}) {
       this.pixabayStatus = 'ok';
       if (tab === 'pixabay' && !this.pixabayInitialized && !this.pixabayLoading) {
         if (!this.pixabayKey) {
-          this.pixabayMessage = this.t ? this.t("upload.pixabayMissingKey", "Clé API Pixabay manquante (PIXABAY_KEY)") : '';
+          this.pixabayMessage = typeof this.t === 'function'
+            ? this.ts("upload.pixabayMissingKey", "Clé API Pixabay manquante (PIXABAY_KEY)")
+            : '';
           this.pixabayStatus = 'error';
           return;
         }
@@ -90,8 +103,12 @@ export function uploadModalMixin({ onFilesSelected } = {}) {
         const urlPath = targetUrl.split('/').pop() || 'image';
         const extFromType = contentType.split('/')[1]?.split(';')[0] || 'jpg';
         const safeName = urlPath.match(/[^?#]+/)?.[0] || `upload.${extFromType}`;
-        const fileName = safeName.includes('.') ? safeName : `${safeName}.${extFromType}`;
-        const file = new File([blob], fileName, { type: contentType || 'image/jpeg' });
+        const baseName = safeName.includes('.') ? safeName.slice(0, 120) : safeName;
+        const avatarName = `avatar_${Date.now()}.${extFromType || 'jpg'}`;
+        const finalName = (this.uploadContext || '').toLowerCase() === 'avatar'
+          ? avatarName
+          : (baseName.includes('.') ? baseName : `${baseName}.${extFromType}`);
+        const file = new File([blob], finalName, { type: contentType || 'image/jpeg' });
         const result = await this.processSelectedFiles([file]);
         if (result === false) {
           this.uploadUrlMessage = this.uploadUrlMessage || (this.t ? this.t("characters.upload.urlImportFail", "Import depuis URL impossible.") : 'URL import failed');

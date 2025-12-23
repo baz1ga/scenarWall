@@ -50,6 +50,11 @@ export function sessionViewSection(baseInit) {
     availableCharactersLoading: false,
     availableCharacters: [],
     characterRole: 'npc',
+    confirmModal: {
+      open: false,
+      message: '',
+      onConfirm: null
+    },
     characterModal: {
       open: false,
       editing: false,
@@ -491,19 +496,36 @@ export function sessionViewSection(baseInit) {
         this.importModal.error = err?.message || this.t('characters.errors.save', 'Sauvegarde impossible');
       }
     },
-    async deleteCharacter(id) {
+    canUseCharacter(ch) {
+      if (!ch) return false;
+      if (!this.scenarioId) return false;
+      return ch.parentScenario === this.scenarioId;
+    },
+    async deleteCharacter(idOrObj) {
+      const ch = typeof idOrObj === 'object' ? idOrObj : this.characters.find(c => c.id === idOrObj);
+      const id = ch?.id || idOrObj;
       if (!this.tenantId || !id) return;
-      const ok = window.confirm(this.t('characters.confirmDelete', 'Supprimer ce personnage ?'));
-      if (!ok) return;
-      try {
-        await fetch(`${this.API}/api/tenant/${this.tenantId}/characters/${encodeURIComponent(id)}`, {
-          method: 'DELETE',
-          headers: this.headersAuth()
-        });
-        await this.loadCharacters();
-      } catch (err) {
-        // silent
-      }
+      const sessions = Array.isArray(ch?.sessions) ? ch.sessions : [];
+      const msg = sessions.length
+        ? this.t('characters.confirmDeleteWithSessions', 'Supprimer ce personnage ? Utilisé dans : {list}.').replace('{list}', this.sessionTitles ? this.sessionTitles(sessions) : sessions.join(', '))
+        : this.t('characters.confirmDelete', 'Supprimer ce personnage ?');
+      this.confirmModal = {
+        open: true,
+        message: msg,
+        onConfirm: async () => {
+          try {
+            await fetch(`${this.API}/api/tenant/${this.tenantId}/characters/${encodeURIComponent(id)}`, {
+              method: 'DELETE',
+              headers: this.headersAuth()
+            });
+            this.confirmModal.open = false;
+            await this.loadCharacters();
+          } catch (err) {
+            this.confirmModal.open = false;
+            this.error = err?.message || this.t('characters.deleteError', 'Suppression impossible');
+          }
+        }
+      };
     },
 
     async deleteSessionConfirm() {

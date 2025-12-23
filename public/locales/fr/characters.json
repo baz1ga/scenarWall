@@ -1,0 +1,36 @@
+{
+  "title": "Personnages",
+  "subtitle": "Tous vos personnages, PNJ et PJ, tous scénarios",
+  "loading": "Chargement de la page",
+  "actions": {
+    "refresh": "Rafraîchir",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "save": "Enregistrer",
+    "saving": "Enregistrement...",
+    "cancel": "Annuler"
+  },
+  "filters": {
+    "role": "Rôle",
+    "all": "Tous",
+    "npc": "PNJ",
+    "pc": "PJ",
+    "search": "Recherche",
+    "placeholder": "Nom, type, race...",
+    "session": "Session",
+    "sessionPlaceholder": "ID de session"
+  },
+  "empty": "Aucun personnage trouvé",
+  "labels": {
+    "npc": "PNJ",
+    "pc": "PJ",
+    "sessions": "Sessions",
+    "scenario": "Scénario"
+  },
+  "noHistory": "Pas d'historique",
+  "confirm": {
+    "title": "Confirmation"
+  },
+  "confirmDelete": "Supprimer ce personnage ?",
+  "confirmDeleteWithSessions": "Supprimer ce personnage ? Il est utilisé dans les sessions : {list}."
+}

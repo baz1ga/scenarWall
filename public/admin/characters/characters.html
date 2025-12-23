@@ -1,0 +1,196 @@
+<div id="page-content" x-data="charactersPage()" x-init="init()" x-cloak>
+  <style>
+    :root {
+      --chars-accent: #0ea5e9;
+      --chars-accent-strong: #0284c7;
+    }
+    .chars-text { color: var(--chars-accent); }
+    .chars-border { border-color: var(--chars-accent); }
+    .chars-bg { background-color: var(--chars-accent); color: #0f172a; border-color: var(--chars-accent); }
+  </style>
+
+  <template x-if="loading">
+    <div class="justify-center max-w-4xl mx-auto rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-6 shadow-sm flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
+      <div class="h-5 w-5 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
+      <span x-text="t('loading', 'Chargement de la page')"></span>
+    </div>
+  </template>
+
+  <template x-if="!loading">
+    <section class="space-y-4 max-w-7xl mx-auto">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex items-center gap-3">
+          <span class="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-sky-50 text-sky-600 dark:bg-sky-900/30">
+            <i class="fa-solid fa-people-roof text-lg"></i>
+          </span>
+          <div>
+            <h1 class="text-2xl font-semibold chars-text" x-text="t('title', 'Personnages')"></h1>
+            <p class="text-sm text-slate-500 dark:text-slate-200" x-text="t('subtitle', 'Tous vos personnages, PNJ et PJ, tous scénarios')"></p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="inline-flex items-center gap-2 rounded-lg border border-slate-300 dark:border-gray-700 px-3 py-1.5 text-sm bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                  @click="refresh()" :disabled="loading">
+            <i class="fa-solid fa-rotate"></i>
+            <span x-text="t('actions.refresh','Rafraîchir')"></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-950 rounded-2xl border border-slate-200 dark:border-gray-800 shadow-sm p-4 space-y-3">
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="flex items-center gap-2">
+            <label class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-200" x-text="t('filters.role','Rôle')"></label>
+            <select class="rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-slate-800 px-2 py-1 text-sm"
+                    x-model="filters.role" @change="refresh()">
+              <option value="" x-text="t('filters.all','Tous')"></option>
+              <option value="npc" x-text="t('filters.npc','PNJ')"></option>
+              <option value="pc" x-text="t('filters.pc','PJ')"></option>
+            </select>
+          </div>
+          <div class="flex items-center gap-2">
+            <label class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-200" x-text="t('filters.search','Recherche')"></label>
+            <input type="search" class="rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-slate-800 px-3 py-1.5 text-sm"
+                   x-model="filters.query" @input.debounce.300ms="refresh()" :placeholder="t('filters.placeholder','Nom, type, race...')">
+          </div>
+          <div class="flex items-center gap-2">
+            <label class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-200" x-text="t('filters.session','Session')"></label>
+            <input type="text" class="rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-slate-800 px-3 py-1.5 text-sm"
+                   x-model="filters.session" @input.debounce.300ms="refresh()" :placeholder="t('filters.sessionPlaceholder','ID de session')">
+          </div>
+        </div>
+
+        <template x-if="items.length === 0">
+          <div class="text-sm text-slate-600 dark:text-slate-200 border border-dashed border-slate-300 dark:border-gray-800 rounded-lg p-4 text-center" x-text="t('empty','Aucun personnage trouvé')"></div>
+        </template>
+
+        <div class="grid gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4" x-show="items.length">
+          <template x-for="ch in items" :key="ch.id">
+            <div class="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-4 shadow-sm space-y-3 flex flex-col items-center text-center">
+              <div class="h-20 w-20 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden text-lg font-semibold text-slate-700 dark:text-slate-100 border-2 border-emerald-200 dark:border-emerald-700/60 shadow">
+                <template x-if="ch.avatar">
+                  <img :src="avatarThumbUrl(ch)" class="h-full w-full object-cover" alt="">
+                </template>
+                <template x-if="!ch.avatar">
+                  <span x-text="(ch.name || ch.id || '?').slice(0,2).toUpperCase()"></span>
+                </template>
+              </div>
+              <div class="space-y-1">
+                <div class="text-lg font-semibold text-slate-900 dark:text-slate-100" x-text="ch.name || ch.id"></div>
+                <div class="text-xs text-slate-500 dark:text-slate-300" x-text="ch.type || '—'"></div>
+                <div class="text-xs text-slate-500 dark:text-slate-300" x-text="ch.race || ''"></div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-1 rounded-full text-[11px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-200" x-text="ch.role === 'npc' ? t('labels.npc','PNJ') : t('labels.pc','PJ')"></span>
+                <span class="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-100" x-text="`${ch.hpCurrent || 0} / ${ch.hpMax || 0} HP`"></span>
+              </div>
+              <div class="w-full text-left space-y-1 text-xs text-slate-500 dark:text-slate-300">
+                <div x-show="Array.isArray(ch.sessions) && ch.sessions.length">
+                  <span class="font-semibold" x-text="t('labels.sessions','Sessions') + ' :'"></span>
+                  <span x-text="sessionTitles(ch.sessions)"></span>
+                </div>
+                <div x-show="ch.parentScenario">
+                  <span class="font-semibold" x-text="t('labels.scenario','Scénario') + ' :'"></span>
+                  <span x-text="scenarioTitle(ch.parentScenario)"></span>
+                </div>
+              </div>
+              <div class="flex items-center justify-center gap-2 w-full">
+                <button class="h-9 w-9 inline-flex items-center justify-center rounded-lg border border-slate-300 dark:border-gray-700 text-slate-600 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                        @click="openCharacterModal(ch)"
+                        :title="t('actions.edit','Modifier')"
+                        :aria-label="t('actions.edit','Modifier')">
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+                <button class="h-9 w-9 inline-flex items-center justify-center rounded-lg border border-rose-200 dark:border-rose-900 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition"
+                        @click="deleteCharacter(ch.id)"
+                        :title="t('actions.delete','Supprimer')"
+                        :aria-label="t('actions.delete','Supprimer')">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </section>
+  </template>
+
+  <!-- Edit modal -->
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center px-4"
+    x-show="editModal.open"
+    x-transition
+    x-cloak
+    @keydown.escape.window="closeCharacterModal()"
+  >
+    <div class="absolute inset-0 bg-black/60" @click="closeCharacterModal()"></div>
+    <div class="relative w-full max-w-lg rounded-2xl bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-800 shadow-2xl p-6 space-y-4">
+      <div class="flex items-center gap-3">
+        <div class="h-10 w-10 rounded-full text-white flex items-center justify-center text-xl" style="background: var(--chars-accent, #0ea5e9);">
+          <i class="fa-solid fa-pen"></i>
+        </div>
+        <div class="text-lg font-semibold text-slate-900 dark:text-slate-100" x-text="t('modal.edit','Modifier le personnage')"></div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="space-y-1 sm:col-span-2">
+          <label class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-200 font-semibold" x-text="t('fields.name','Nom')"></label>
+          <input type="text" class="w-full rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm" x-model="editModal.form.name">
+        </div>
+        <div class="space-y-1">
+          <label class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-200 font-semibold" x-text="t('fields.role','Rôle')"></label>
+          <select class="w-full rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm" x-model="editModal.form.role">
+            <option value="" x-text="t('filters.all','Tous')"></option>
+            <option value="npc" x-text="t('filters.npc','PNJ')"></option>
+            <option value="pc" x-text="t('filters.pc','PJ')"></option>
+          </select>
+        </div>
+        <div class="space-y-1">
+          <label class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-200 font-semibold" x-text="t('fields.type','Type')"></label>
+          <input type="text" class="w-full rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm" x-model="editModal.form.type">
+        </div>
+        <div class="space-y-1">
+          <label class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-200 font-semibold" x-text="t('fields.race','Race')"></label>
+          <input type="text" class="w-full rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm" x-model="editModal.form.race">
+        </div>
+        <div class="space-y-1">
+          <label class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-200 font-semibold" x-text="t('fields.hpCurrent','PV actuels')"></label>
+          <input type="number" min="0" class="w-full rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm" x-model.number="editModal.form.hpCurrent">
+        </div>
+        <div class="space-y-1">
+          <label class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-200 font-semibold" x-text="t('fields.hpMax','PV max')"></label>
+          <input type="number" min="0" class="w-full rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm" x-model.number="editModal.form.hpMax">
+        </div>
+        <div class="space-y-1 sm:col-span-2">
+          <label class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-200 font-semibold" x-text="t('fields.sessions','Sessions (IDs séparés par des virgules)')"></label>
+          <input type="text" class="w-full rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm" x-model="editModal.sessionsInput">
+        </div>
+        <div class="space-y-1 sm:col-span-2">
+          <label class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-200 font-semibold" x-text="t('fields.scenario','Scénario (ID)')"></label>
+          <input type="text" class="w-full rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm" x-model="editModal.form.parentScenario">
+        </div>
+        <div class="space-y-1 sm:col-span-2">
+          <label class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-200 font-semibold" x-text="t('fields.history','Historique')"></label>
+          <textarea rows="4" class="w-full rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm" x-model="editModal.form.history"></textarea>
+        </div>
+      </div>
+      <p class="text-xs text-rose-500" x-text="editModal.error" x-show="editModal.error"></p>
+      <div class="flex justify-end gap-2 pt-2">
+        <button
+          class="px-4 py-2 rounded-lg border border-slate-300 dark:border-gray-700 text-slate-700 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800"
+          @click="closeCharacterModal()"
+          x-text="t('actions.cancel','Annuler')"
+        ></button>
+        <button
+          class="px-4 py-2 rounded-lg text-white font-semibold bg-emerald-500 hover:bg-emerald-400 transition disabled:opacity-50"
+          :disabled="editModal.saving"
+          @click="saveCharacter()"
+          x-text="editModal.saving ? t('actions.saving','Enregistrement...') : t('actions.save','Enregistrer')"
+        ></button>
+      </div>
+    </div>
+  </div>
+
+  <div data-include="confirm-delete-character"></div>
+</div>
+<script src="/admin/js/layout-loader.js"></script>
+<script type="module" src="/admin/characters/characters.js" data-page-script></script>

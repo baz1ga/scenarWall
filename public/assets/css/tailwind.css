@@ -1120,6 +1120,10 @@ video {
   max-width: 80rem;
 }
 
+.max-w-lg{
+  max-width: 32rem;
+}
+
 .max-w-md{
   max-width: 28rem;
 }
@@ -1495,6 +1499,11 @@ video {
 .border-amber-500{
   --tw-border-opacity: 1;
   border-color: rgb(245 158 11 / var(--tw-border-opacity, 1));
+}
+
+.border-emerald-200{
+  --tw-border-opacity: 1;
+  border-color: rgb(167 243 208 / var(--tw-border-opacity, 1));
 }
 
 .border-emerald-400{
@@ -2915,6 +2924,10 @@ video {
   border-color: rgb(245 158 11 / var(--tw-border-opacity, 1));
 }
 
+.dark\:border-emerald-700\/60:is(.dark *){
+  border-color: rgb(4 120 87 / 0.6);
+}
+
 .dark\:border-emerald-800:is(.dark *){
   --tw-border-opacity: 1;
   border-color: rgb(6 95 70 / var(--tw-border-opacity, 1));
@@ -3402,6 +3415,10 @@ video {
 @media (min-width: 1280px){
   .xl\:grid-cols-3{
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .xl\:grid-cols-4{
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .xl\:grid-cols-5{

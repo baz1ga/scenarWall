@@ -1,0 +1,30 @@
+<div
+  class="fixed inset-0 z-50 flex items-center justify-center px-4"
+  x-show="confirmModal.open"
+  x-transition
+  x-cloak
+  @keydown.escape.window="confirmModal.open = false"
+>
+  <div class="absolute inset-0 bg-black/60" @click="confirmModal.open = false"></div>
+  <div class="relative w-full max-w-lg rounded-2xl bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-800 shadow-2xl p-6 space-y-4">
+    <div class="flex items-center gap-3">
+      <div class="h-10 w-10 rounded-full text-white flex items-center justify-center text-xl" style="background: var(--chars-accent, #0ea5e9);">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <div class="text-lg font-semibold text-slate-900 dark:text-slate-100" x-text="t ? t('characters.confirmTitle','Confirmer la suppression') : 'Confirmer la suppression'"></div>
+    </div>
+    <p class="text-sm text-slate-700 dark:text-slate-200 whitespace-pre-line" x-text="confirmModal.message || (t ? t('characters.confirmDelete','Supprimer ce personnage ?') : 'Supprimer ce personnage ?')"></p>
+    <div class="flex justify-end gap-2 pt-2">
+      <button
+        class="px-4 py-2 rounded-lg border border-slate-300 dark:border-gray-700 text-slate-700 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800"
+        @click="confirmModal.open = false"
+        x-text="t ? t('characters.actions.cancel','Annuler') : 'Annuler'"
+      ></button>
+      <button
+        class="px-4 py-2 rounded-lg text-white font-semibold bg-rose-500 hover:bg-rose-400 transition"
+        @click="(confirmModal.onConfirm && confirmModal.onConfirm())"
+        x-text="t ? t('characters.actions.delete','Supprimer') : 'Supprimer'"
+      ></button>
+    </div>
+  </div>
+</div>

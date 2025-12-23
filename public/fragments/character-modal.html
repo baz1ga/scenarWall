@@ -1,0 +1,82 @@
+<div
+  class="fixed inset-0 z-50 flex items-center justify-center px-4"
+  x-show="characterModal.open"
+  x-transition
+  x-cloak
+  @keydown.escape.window="typeof closeCharacterModal === 'function' && closeCharacterModal()"
+>
+  <div class="absolute inset-0 bg-black/60" @click="typeof closeCharacterModal === 'function' && closeCharacterModal()"></div>
+  <div class="relative w-full max-w-xl rounded-2xl bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-800 shadow-2xl p-6 space-y-4">
+    <div class="flex items-center gap-3">
+      <div class="h-10 w-10 rounded-full text-white flex items-center justify-center text-xl" style="background: var(--users-accent, #10b981);">
+        <i class="fa-solid fa-user-ninja"></i>
+      </div>
+      <div class="text-lg font-semibold text-slate-900 dark:text-slate-100" x-text="characterModal.editing ? t('characters.modal.edit','Modifier le personnage') : t('characters.modal.new','Nouveau personnage')"></div>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div class="space-y-1 sm:col-span-2">
+        <label class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-200 font-semibold" x-text="t('characters.fields.name','Nom')"></label>
+        <input type="text" class="w-full rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm" x-model="characterModal.form.name">
+      </div>
+      <div class="space-y-1 sm:col-span-2">
+        <label class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-200 font-semibold" x-text="t('characters.fields.avatar','Avatar')"></label>
+        <button
+          type="button"
+          class="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm bg-white dark:bg-slate-800 border-slate-300 dark:border-gray-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
+          @click="typeof openAvatarUpload === 'function' && openAvatarUpload()"
+        >
+          <i class="fa-solid fa-upload"></i>
+          <span x-text="t('characters.actions.uploadAvatar','Choisir un avatar')"></span>
+        </button>
+        <template x-if="characterModal.avatarFileName">
+          <div class="text-xs text-slate-500 dark:text-slate-200" x-text="characterModal.avatarFileName"></div>
+        </template>
+        <div class="flex items-center gap-2 mt-2" x-show="characterModal.form.avatar">
+          <div class="h-14 w-14 rounded-full overflow-hidden border border-slate-200 dark:border-gray-700 bg-slate-100 dark:bg-slate-800">
+            <img :src="avatarThumbUrl(characterModal.form)" class="h-full w-full object-cover" alt="">
+          </div>
+          <div class="text-xs text-slate-500 dark:text-slate-200" x-text="characterModal.form.avatar"></div>
+        </div>
+      </div>
+      <div class="space-y-1">
+        <label class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-200 font-semibold" x-text="t('characters.fields.type','Type')"></label>
+        <input type="text" class="w-full rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm" x-model="characterModal.form.type">
+      </div>
+      <div class="space-y-1">
+        <label class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-200 font-semibold" x-text="t('characters.fields.race','Race')"></label>
+        <input type="text" class="w-full rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm" x-model="characterModal.form.race">
+      </div>
+      <template x-if="characterModal.editing">
+        <div class="space-y-1">
+          <label class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-200 font-semibold" x-text="t('characters.fields.hp','PV actuels')"></label>
+          <input type="number" class="w-full rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm" x-model.number="characterModal.form.hpCurrent" min="0">
+        </div>
+      </template>
+      <div class="space-y-1">
+        <label class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-200 font-semibold" x-text="t('characters.fields.hpMax','PV max')"></label>
+        <input type="number" class="w-full rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm" x-model.number="characterModal.form.hpMax" min="0">
+      </div>
+      <div class="space-y-1 sm:col-span-2">
+        <label class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-200 font-semibold" x-text="t('characters.fields.history','Historique')"></label>
+        <textarea rows="4" class="w-full rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-slate-800 px-3 py-2 text-sm" x-model="characterModal.form.history"></textarea>
+      </div>
+    </div>
+    <p class="text-xs text-rose-500" x-text="characterModal.error" x-show="characterModal.error"></p>
+    <div class="flex justify-end gap-2 pt-2">
+      <button
+        class="px-4 py-2 rounded-lg border border-slate-300 dark:border-gray-700 text-slate-700 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800"
+        @click="typeof closeCharacterModal === 'function' && closeCharacterModal()"
+        x-text="t('characters.actions.cancel', 'Annuler')"
+        :aria-label="t('characters.actions.cancel','Annuler')"
+        :title="t('characters.actions.cancel','Annuler')"
+      ></button>
+      <button
+        class="px-4 py-2 rounded-lg text-white font-semibold bg-emerald-500 hover:bg-emerald-400 transition"
+        @click="typeof saveCharacter === 'function' && saveCharacter()"
+        x-text="t('characters.actions.save', 'Enregistrer')"
+        :aria-label="t('characters.actions.save','Enregistrer')"
+        :title="t('characters.actions.save','Enregistrer')"
+      ></button>
+    </div>
+  </div>
+</div>
