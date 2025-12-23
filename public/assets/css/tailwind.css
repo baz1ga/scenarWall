@@ -3155,6 +3155,11 @@ video {
   color: rgb(202 138 4 / var(--tw-text-opacity, 1));
 }
 
+.dark\:text-gray-200:is(.dark *){
+  --tw-text-opacity: 1;
+  color: rgb(229 231 235 / var(--tw-text-opacity, 1));
+}
+
 .dark\:ring-indigo-500\/80:is(.dark *){
   --tw-ring-color: rgb(99 102 241 / 0.8);
 }

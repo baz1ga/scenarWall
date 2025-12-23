@@ -79,6 +79,11 @@
       .replace('{{CONTENT}}', pageContent);
     const parser = new DOMParser();
     const parsed = parser.parseFromString(mergedHtml, 'text/html');
+    parsed.querySelectorAll('[data-i18n-key]').forEach(element => {
+      const key = element.dataset.i18nKey;
+      if (!key) return;
+      element.textContent = t(key, '');
+    });
     const secondaryNavContainer = parsed.querySelector('[data-secondary-nav-container]');
     if (secondaryNavContainer && !secondaryNavHtml) {
       secondaryNavContainer.remove();

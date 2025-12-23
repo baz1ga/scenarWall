@@ -64,7 +64,7 @@
           ]"
           :aria-label="tLayout('nav.scenarios','Scénarios')">
           <i class="fa-solid fa-scroll text-base"></i>
-          <span x-show="!sidebarCollapsed" x-text="tLayout('nav.scenarios','Scénarios')"></span>
+          <span x-show="!sidebarCollapsed" x-text="tLayout('nav.scenarios','Scénarios')" data-i18n-key="nav.scenarios"></span>
         </a>
         <!-- liste des scenar & sessions -->
         <div class="space-y-0 mt-0 ml-4" x-show="!sidebarCollapsed">
@@ -91,7 +91,7 @@
         
         <!-- liste des entrées -->
         <div class="mt-3">
-          <div class="px-3 text-[11px] mb-1 uppercase tracking-[0.08em] text-slate-500 dark:text-slate-200" x-show="!sidebarCollapsed" x-text="tLayout('nav.library','Bibliothèque')"></div>
+        <div class="px-3 text-[11px] mb-1 uppercase tracking-[0.08em] text-slate-500 dark:text-slate-200" x-show="!sidebarCollapsed" x-text="tLayout('nav.library','Bibliothèque')" data-i18n-key="nav.library"></div>
           <div :class="[sidebarCollapsed ? '' : 'ml-4']">
             <a
               href="/admin/gallery/gallery.html"
@@ -102,7 +102,7 @@
             ]"
               :aria-label="tLayout('nav.gallery','Galerie')">
               <i class="fa-regular fa-image text-base"></i>
-              <span x-show="!sidebarCollapsed" x-text="tLayout('nav.gallery','Galerie')"></span>
+              <span x-show="!sidebarCollapsed" x-text="tLayout('nav.gallery','Galerie')" data-i18n-key="nav.gallery"></span>
             </a>
             <a
               href="/admin/audio/audio.html"
@@ -113,7 +113,7 @@
             ]"
               :aria-label="tLayout('nav.audio','Audio')">
               <i class="fa-solid fa-music text-base"></i>
-              <span x-show="!sidebarCollapsed" x-text="tLayout('nav.audio','Audio')"></span>
+              <span x-show="!sidebarCollapsed" x-text="tLayout('nav.audio','Audio')" data-i18n-key="nav.audio"></span>
             </a>
             <a
               href="/admin/notes/notes.html"
@@ -124,13 +124,13 @@
             ]"
               :aria-label="tLayout('nav.notes','Notes')">
               <i class="fa-solid fa-note-sticky text-base"></i>
-              <span x-show="!sidebarCollapsed" x-text="tLayout('nav.notes','Notes')"></span>
+              <span x-show="!sidebarCollapsed" x-text="tLayout('nav.notes','Notes')" data-i18n-key="nav.notes"></span>
             </a>
           </div>
         </div>
         <!-- liste des entrées admin -->
         <div class="mt-3" x-show="isSuperAdmin">
-          <div class="px-3 text-[11px] mb-1 uppercase tracking-[0.08em] text-slate-500 dark:text-slate-200" x-show="!sidebarCollapsed" x-text="tLayout('nav.admin','Administration')"></div>
+          <div class="px-3 text-[11px] mb-1 uppercase tracking-[0.08em] text-slate-500 dark:text-slate-200" x-show="!sidebarCollapsed" x-text="tLayout('nav.admin','Administration')" data-i18n-key="nav.admin"></div>
           <div :class="[sidebarCollapsed ? '' : 'ml-4']">
             <a
               href="/admin/games/games.html"
@@ -141,7 +141,7 @@
             ]"
               :aria-label="tLayout('nav.games','Parties jouées')">
               <i class="fa-solid fa-dice text-base"></i>
-              <span x-show="!sidebarCollapsed" x-text="tLayout('nav.games','Parties jouées')"></span>
+              <span x-show="!sidebarCollapsed" x-text="tLayout('nav.games','Parties jouées')" data-i18n-key="nav.games"></span>
             </a>
             <a
               href="/admin/users/users.html"
@@ -152,7 +152,7 @@
             ]"
               :aria-label="tLayout('nav.users','Utilisateurs')">
               <i class="fa-solid fa-user-gear text-base"></i>
-              <span x-show="!sidebarCollapsed" x-text="tLayout('nav.users','Utilisateurs')"></span>
+              <span x-show="!sidebarCollapsed" x-text="tLayout('nav.users','Utilisateurs')" data-i18n-key="nav.users"></span>
             </a>
           </div>
         </div>
