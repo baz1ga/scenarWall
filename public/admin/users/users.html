@@ -50,7 +50,7 @@
           <div class="text-sm text-slate-700 dark:text-slate-200" x-text="totalUsageText()"></div>
         </div>
       </div>
-      <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 shadow-sm  max-w-4xl mx-auto">
+      <div class="max-w-6xl mx-auto overflow-x-auto rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950 shadow-sm  max-w-4xl mx-auto">
         <table class="min-w-full text-sm">
           <thead class="bg-slate-100 text-slate-800 dark:bg-gray-700 dark:text-slate-50">
             <tr>
@@ -58,6 +58,12 @@
                 <div class="inline-flex items-center gap-2"><span x-text="t('table.columns.name', 'Nom')"></span> <i :class="sortIcon('name','users')" class="text-xs users-text"></i></div>
               </th>
               <th class="px-4 py-2 text-left" x-text="t('table.columns.tenant', 'Tenant')"></th>
+              <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('scenarios')">
+                <div class="inline-flex items-center gap-2"><span x-text="t('table.columns.scenarios', 'Scénarios')"></span> <i :class="sortIcon('scenarios','users')" class="text-xs users-text"></i></div>
+              </th>
+              <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('notes')">
+                <div class="inline-flex items-center gap-2"><span x-text="t('table.columns.notes', 'Notes')"></span> <i :class="sortIcon('notes','users')" class="text-xs users-text"></i></div>
+              </th>
               <th class="px-4 py-2 text-left cursor-pointer" @click="setUserSort('images')">
                 <div class="inline-flex items-center gap-2"><span x-text="t('table.columns.images', 'Images')"></span> <i :class="sortIcon('images','users')" class="text-xs users-text"></i></div>
               </th>
@@ -75,10 +81,10 @@
           </thead>
           <tbody>
             <template x-if="usersLoading">
-              <tr><td colspan="7" class="px-4 py-3 text-center text-slate-400" x-text="t('table.loading', 'Chargement...')"></td></tr>
+              <tr><td colspan="9" class="px-4 py-3 text-center text-slate-400" x-text="t('table.loading', 'Chargement...')"></td></tr>
             </template>
             <template x-if="!usersLoading && filteredUsers('users').length === 0">
-              <tr><td colspan="7" class="px-4 py-3 text-center text-slate-500" x-text="t('table.empty', 'Aucun utilisateur')"></td></tr>
+              <tr><td colspan="9" class="px-4 py-3 text-center text-slate-500" x-text="t('table.empty', 'Aucun utilisateur')"></td></tr>
             </template>
             <template x-for="u in filteredUsers('users')" :key="u.email">
               <tr class="border-t border-slate-200 dark:border-gray-800">
@@ -88,6 +94,8 @@
                     <span x-text="u.tenantId || '—'"></span>
                   </div>
                 </td>
+                <td class="px-4 py-2" x-text="u.scenarioCount || 0"></td>
+                <td class="px-4 py-2" x-text="u.noteCount || 0"></td>
                 <td class="px-4 py-2" x-text="u.imageCount || 0"></td>
                 <td class="px-4 py-2" x-text="u.audioCount || 0"></td>
                 <td class="px-4 py-2">

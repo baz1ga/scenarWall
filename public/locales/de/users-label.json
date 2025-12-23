@@ -35,6 +35,8 @@
     "columns": {
       "name": "Name",
       "tenant": "Mandant",
+      "scenarios": "Szenarien",
+      "notes": "Notizen",
       "images": "Bilder",
       "audio": "Audio",
       "usage": "Nutzung",

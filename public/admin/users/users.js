@@ -66,6 +66,8 @@ export function usersSection(baseInit) {
         case 'email': return (u.email || '').toLowerCase();
         case 'images': return u.imageCount || 0;
         case 'audios': return u.audioCount || 0;
+        case 'scenarios': return u.scenarioCount || 0;
+        case 'notes': return u.noteCount || 0;
         case 'usage': return usageMB;
         case 'lastLogin': return u.lastLogin ? new Date(u.lastLogin).getTime() : 0;
         default: return 0;

@@ -59,13 +59,30 @@ function registerGodmodeRoutes({
         override = tq.override;
       }
 
+      const scenarioDir = path.join(tenantDir, "scenario");
+      let scenarioCount = 0;
+      if (fs.existsSync(scenarioDir)) {
+        try {
+          scenarioCount = fs.readdirSync(scenarioDir).filter(f => /\.json$/i.test(f)).length;
+        } catch {}
+      }
+      const notesDir = path.join(tenantDir, "notes");
+      let noteCount = 0;
+      if (fs.existsSync(notesDir)) {
+        try {
+          noteCount = fs.readdirSync(notesDir).filter(f => /\.md$/i.test(f)).length;
+        } catch {}
+      }
+
       return {
         ...u,
         imageCount: count,
         audioCount,
         quotaUsedBytes: quota,
         quotaMB: effectiveQuotaMB,
-        quotaOverride: override
+        quotaOverride: override,
+        scenarioCount,
+        noteCount
       };
     });
 
