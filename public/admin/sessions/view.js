@@ -50,6 +50,7 @@ export function sessionViewSection(baseInit) {
     availableCharactersLoading: false,
     availableCharacters: [],
     characterRole: 'npc',
+    cardTemplate: '',
     confirmModal: {
       open: false,
       message: '',
@@ -241,6 +242,7 @@ export function sessionViewSection(baseInit) {
       if (typeof baseInit === 'function') {
         await baseInit.call(this);
       }
+      this.loadCardTemplate();
       // harmonise la langue avec la config/LS avant de charger les textes
       this.lang = (localStorage.getItem('lang') || (navigator.language || 'fr').slice(0, 2) || 'fr').toLowerCase();
       this.texts = await loadLocale(this.lang, 'sessions-scenes');
@@ -273,6 +275,74 @@ export function sessionViewSection(baseInit) {
         this.loading = false;
       }
     },
+    loadCardTemplate() {
+      const tpl = document.getElementById('character-card-template');
+      this.cardTemplate = tpl ? tpl.innerHTML : '';
+    },
+    escapeHtml(str = '') {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    },
+    renderCharacterCard(ch) {
+      if (!this.cardTemplate) this.loadCardTemplate();
+      if (!this.cardTemplate) return '';
+      const avatarUrl = this.characterAvatarUrl(ch);
+      const initials = this.escapeHtml((ch.name || ch.id || '?').slice(0, 2).toUpperCase());
+      const avatarBlock = avatarUrl
+        ? `<img src="${this.escapeHtml(avatarUrl)}" class="h-full w-full object-cover" alt="">`
+        : `<span>${initials}</span>`;
+      const roleLabel = ch.role === 'npc'
+        ? this.t('characters.role.npc', 'PNJ')
+        : this.t('characters.role.pc', 'PJ');
+      const hpLabel = `${ch.hpCurrent || 0} / ${ch.hpMax || 0} HP`;
+      const hpPct = Math.max(0, Math.min(100, Math.round(((ch.hpCurrent || 0) / (ch.hpMax || 1)) * 100)));
+      const scenarioTitle = this.scenarioTitle || ch.parentScenario || '';
+      const sessionTitle = this.sessionTitle || this.session?.title || '';
+      const sessionsTitle = sessionTitle || (Array.isArray(ch.sessions) && ch.sessions.length ? ch.sessions.join(', ') : '');
+      const metaHtml = '';
+      const contextBlock = metaHtml
+        ? `<div class="sw-story p-3.5 bg-white/98 dark:bg-slate-900/70 rounded-xl border border-slate-200/70 dark:border-slate-800/70 shadow-sm">
+            <div class="sw-serif sw-smallcaps text-[11px] text-slate-500 dark:text-slate-400 mb-1">Contexte</div>
+            <div class="text-sm text-slate-700 dark:text-slate-200 meta-slot">${metaHtml}</div>
+          </div>`
+        : '';
+      const historyText = ch.history || this.t('characters.noHistory', "Pas d'historique");
+      const historyHtml = this.escapeHtml(historyText);
+      const actions = `
+        <button class="h-9 w-9 inline-flex items-center justify-center rounded-lg border border-slate-300 dark:border-gray-700 text-slate-600 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                data-action="edit" data-id="${this.escapeHtml(ch.id)}" title="${this.t('characters.actions.edit','Modifier')}" aria-label="${this.t('characters.actions.edit','Modifier')}">
+          <i class="fa-solid fa-pen"></i>
+        </button>
+        <button class="h-9 w-9 inline-flex items-center justify-center rounded-lg border border-rose-200 dark:border-rose-900 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition"
+                data-action="delete" data-id="${this.escapeHtml(ch.id)}" title="${this.t('characters.actions.delete','Supprimer')}" aria-label="${this.t('characters.actions.delete','Supprimer')}">
+          <i class="fa-solid fa-trash"></i>
+        </button>`;
+      return this.cardTemplate
+        .replace(/__AVATAR__/g, avatarBlock)
+        .replace(/__NAME__/g, this.escapeHtml(ch.name || ch.id || ''))
+        .replace(/__TYPE__/g, this.escapeHtml(ch.type || '—'))
+        .replace(/__RACE__/g, this.escapeHtml(ch.race || ''))
+        .replace(/__ROLE__/g, this.escapeHtml(roleLabel))
+        .replace(/__HP__/g, this.escapeHtml(hpLabel))
+        .replace(/__HPBAR__/g, `${hpPct}%`)
+        .replace(/__HISTORY__/g, historyHtml)
+        .replace(/__CONTEXT_BLOCK__/g, contextBlock)
+        .replace(/__ACTIONS__/g, actions);
+    },
+    handleCardClick(evt) {
+      const btn = evt.target.closest('[data-action]');
+      if (!btn) return;
+      const action = btn.dataset.action;
+      const id = btn.dataset.id;
+      if (!id) return;
+      const ch = this.characters.find(c => c.id === id);
+      if (action === 'edit' && ch) this.openCharacterModal(ch);
+      if (action === 'delete' && id) this.deleteCharacter(id);
+    },
 
     t(key, fallback = '') {
       return translate(this.texts, key, fallback);
@@ -296,7 +366,16 @@ export function sessionViewSection(baseInit) {
         ? this.t('characters.role.pc', 'PJ')
         : this.t('characters.role.npc', 'PNJ');
     },
-    avatarUrl(ch) {
+    sessionName(id) {
+      if (!id) return this.t('characters.labels.session', 'Session');
+      if (this.session?.id === id) return this.session?.title || this.t('characters.labels.session', 'Session');
+      return this.t('characters.labels.session', 'Session');
+    },
+    sessionTitles(ids = []) {
+      if (!Array.isArray(ids) || !ids.length) return '';
+      return ids.map(id => this.sessionName(id)).join(', ');
+    },
+    characterAvatarUrl(ch) {
       if (!ch?.avatar || !this.tenantId) return '';
       return `${this.API}/api/tenant/${this.tenantId}/characters/${encodeURIComponent(ch.id)}/avatar`;
     },
@@ -507,7 +586,7 @@ export function sessionViewSection(baseInit) {
       if (!this.tenantId || !id) return;
       const sessions = Array.isArray(ch?.sessions) ? ch.sessions : [];
       const msg = sessions.length
-        ? this.t('characters.confirmDeleteWithSessions', 'Supprimer ce personnage ? Utilisé dans : {list}.').replace('{list}', this.sessionTitles ? this.sessionTitles(sessions) : sessions.join(', '))
+        ? this.t('characters.confirmDeleteWithSessions', 'Supprimer ce personnage ? Utilisé dans : {list}.').replace('{list}', this.sessionTitles(sessions))
         : this.t('characters.confirmDelete', 'Supprimer ce personnage ?');
       this.confirmModal = {
         open: true,

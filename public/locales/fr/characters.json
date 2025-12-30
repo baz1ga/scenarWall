@@ -15,10 +15,10 @@
     "all": "Tous",
     "npc": "PNJ",
     "pc": "PJ",
-    "search": "Recherche",
-    "placeholder": "Nom, type, race...",
-    "session": "Session",
-    "sessionPlaceholder": "ID de session"
+    "search": "Personnage",
+    "placeholder": "Par Nom",
+    "session": "session ou scénario",
+    "sessionPlaceholder": "Nom de session ou de scénario"
   },
   "empty": "Aucun personnage trouvé",
   "labels": {
