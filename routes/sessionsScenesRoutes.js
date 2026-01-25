@@ -15,7 +15,6 @@ function registerSessionsScenesRoutes({
   } = defaults;
 
   const {
-    normalizeIconClass,
     listSessions,
     readSessionFile,
     writeSessionFile,
@@ -36,6 +35,7 @@ function registerSessionsScenesRoutes({
     notePath,
     tenantNotesDir
   } = stores;
+  const { normalizeIconClass } = utils;
 
   // Nettoie/normalise une session entrante avant écriture.
   function sanitizeSessionInput(body = {}, existing = null) {
