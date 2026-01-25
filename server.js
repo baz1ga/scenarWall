@@ -210,7 +210,7 @@ const audioUpload = multer({
       cb(null, finalName);
     }
   }),
-  limits: { fileSize: 1 * 1024 * 1024 },
+  limits: { fileSize: 40 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const okMime = (file.mimetype || '').startsWith("audio/");
     const okExt = AUDIO_EXT.test(file.originalname || "");
