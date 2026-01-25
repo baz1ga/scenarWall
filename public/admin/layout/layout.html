@@ -50,9 +50,16 @@
     <!-- SIDEBAR -->
     <aside class="bg-white dark:bg-gray-950 border-r border-slate-200 dark:border-gray-800 flex flex-col sticky top-0 h-screen transition-all duration-200" 
       :class="sidebarCollapsed ? 'w-[54px]' : 'w-56'">
-      <div class="px-3 py-5 flex items-center justify-center">
+      <div class="px-3 py-4 flex items-center justify-between">
         <div class="text-3xl font-semibold text-emerald-500 font-pangolin text-center" x-show="!sidebarCollapsed">.ScenarWall.</div>
-        <div class="text-xl font-semibold text-emerald-500 font-pangolin" x-show="sidebarCollapsed">.SW.</div>
+        <div class="text-xl font-semibold text-emerald-500 font-pangolin" x-show="false">.SW.</div>
+        <button
+          class="text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition rounded-lg flex items-center justify-center h-9 w-9"
+          @click="toggleSidebar()"
+          :aria-label="sidebarCollapsed ? tLayout('sidebar.expand','Déplier la barre latérale') : tLayout('sidebar.collapse','Réduire la barre latérale')"
+          :title="sidebarCollapsed ? tLayout('sidebar.expandShort','Déplier') : tLayout('sidebar.collapseShort','Réduire')">
+          <i class="text-base" :class="sidebarCollapsed ? 'fa-solid fa-angles-right' : 'fa-solid fa-angles-left'"></i>
+        </button>
       </div>
       <nav class="flex-1" :class="sidebarCollapsed ? 'px-1' : 'px-3'">
         <a
@@ -256,17 +263,7 @@
           </div>
         </div>
         <div :class="sidebarCollapsed ? 'hidden' : 'flex-1'"></div>
-        <!-- collapse button-->
-        <button
-          class="text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition rounded-lg flex items-center"
-          :class="sidebarCollapsed
-            ? 'w-full px-1 py-3 justify-center flex-1'
-            : 'px-3 py-3 justify-center'"
-          @click="toggleSidebar()"
-          :aria-label="sidebarCollapsed ? tLayout('sidebar.expand','Déplier la barre latérale') : tLayout('sidebar.collapse','Réduire la barre latérale')"
-          :title="sidebarCollapsed ? tLayout('sidebar.expandShort','Déplier') : tLayout('sidebar.collapseShort','Réduire')">
-          <i class="text-base" :class="sidebarCollapsed ? 'fa-solid fa-angles-right' : 'fa-solid fa-angles-left'"></i>
-        </button>
+        <!-- collapse button moved to header -->
       </div>
     </aside>
 
